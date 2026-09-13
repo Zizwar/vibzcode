@@ -295,6 +295,41 @@ document.addEventListener('alpine:init', () => {
           this.showToast('تم نسخ الرابط المباشر للعضو', 'success');
         });
       }
+    },
+
+    // Remote MCP Helpers
+    showRemoteMcpModal: false,
+    selectedMcpSession: null,
+
+    openRemoteMcpModal(sess) {
+      this.selectedMcpSession = sess;
+      this.showRemoteMcpModal = true;
+    },
+
+    getRemoteMcpUrl(token) {
+      return `${window.location.origin}/mcp?token=${token}`;
+    },
+
+    getOpenApiUrl(token) {
+      return `${window.location.origin}/openapi.json?token=${token}`;
+    },
+
+    copyRemoteMcpUrl(token) {
+      const url = this.getRemoteMcpUrl(token);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          this.showToast('تم نسخ رابط Remote MCP لـ Claude & Cursor', 'success');
+        });
+      }
+    },
+
+    copyOpenApiUrl(token) {
+      const url = this.getOpenApiUrl(token);
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          this.showToast('تم نسخ رابط OpenAPI Schema لـ ChatGPT Actions', 'success');
+        });
+      }
     }
   }));
 });

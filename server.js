@@ -6,6 +6,7 @@ const express = require('express');
 const { WebSocketServer } = require('ws');
 const { execFile } = require('child_process');
 const pty = require('node-pty');
+const { setupRemoteMcp } = require('./lib/remoteMcp');
 
 const PORT = process.env.PORT || 3333;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -120,6 +121,12 @@ function getSessionByToken(token) {
   if (!token) return null;
   return sessions.find(s => s.token === token && s.status !== 'closed');
 }
+
+// Initialize Agyz Remote MCP Server for Claude, ChatGPT, Cursor, and Windsurf
+setupRemoteMcp(app, {
+  getSessionByToken,
+  ADMIN_SECRET
+});
 
 // ==================== AUTH & ADMIN APIS ====================
 

@@ -322,6 +322,10 @@
                 </div>
 
                 <div class="flex items-center gap-2">
+                  <button @click="openRemoteMcpModal(sess)" class="btn btn-xs bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 gap-1.5" title="ربط الجلسة مع Claude أو ChatGPT عبر Remote MCP">
+                    <i class="fa-solid fa-satellite-dish text-[11px] text-purple-400"></i>
+                    <span>ربط Remote MCP</span>
+                  </button>
                   <a :href="`/agent.html?token=${sess.token}`" target="_blank"
                      class="btn btn-xs btn-outline btn-info gap-1 text-xs">
                     <span>فتح الجلسة</span>
@@ -532,6 +536,116 @@
       </template>
 
     </div>
+  </dialog>
+
+  <!-- MODAL: REMOTE MCP CONNECTION DETAILS -->
+  <dialog class="modal modal-bottom sm:modal-middle" :class="showRemoteMcpModal ? 'modal-open' : ''">
+    <div class="modal-box bg-slate-900/95 border border-purple-500/30 text-slate-100 max-w-2xl space-y-4 shadow-2xl backdrop-blur-xl p-0 overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-purple-950/90 via-slate-900 to-indigo-950/90 border-b border-purple-500/20 px-6 py-4 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 shadow-md">
+            <i class="fa-solid fa-satellite-dish text-lg"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white flex items-center gap-2">
+              <span>ربط Remote MCP مع Claude و ChatGPT</span>
+              <span class="badge badge-xs badge-secondary font-mono text-[10px]">Active</span>
+            </h3>
+            <p class="text-xs text-purple-300/70">
+              تحكم كامل في مساحة العمل الخاصة بالجلسة عبر بروتوكول MCP برابط موحد
+            </p>
+          </div>
+        </div>
+        <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="p-6 space-y-5 text-xs">
+        
+        <!-- Session Info Banner -->
+        <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <div class="font-bold text-sm text-white" x-text="selectedMcpSession?.name"></div>
+            <div class="text-slate-400 font-mono text-[11px] flex items-center gap-1.5 pt-0.5">
+              <i class="fa-solid fa-folder text-amber-400"></i>
+              <span x-text="selectedMcpSession?.targetDir"></span>
+            </div>
+          </div>
+          <span class="badge badge-sm badge-success bg-emerald-950 text-emerald-300 border-emerald-500/30 py-1 font-mono text-[10px]">
+            جاهز للربط السحابي
+          </span>
+        </div>
+
+        <!-- 1. Remote MCP Endpoint for Claude / Cursor -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-purple-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-bolt text-xs"></i>
+              <span>1. رابط Remote MCP الموحد (Claude Web / Mobile / Desktop / Cursor):</span>
+            </span>
+            <span class="text-[10px] text-slate-500">Streamable HTTP + SSE</span>
+          </div>
+          <div class="join w-full">
+            <input type="text" readonly :value="getRemoteMcpUrl(selectedMcpSession?.token)"
+                   class="input input-sm input-bordered join-item w-full bg-slate-950 border-slate-700 text-purple-200 font-mono text-xs select-all">
+            <button @click="copyRemoteMcpUrl(selectedMcpSession?.token)" 
+                    class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-none text-white join-item px-4 gap-1">
+              <i class="fa-solid fa-copy text-xs"></i>
+              <span>نسخ الرابط</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            في تطبيق <strong>Claude Desktop</strong> أو <strong>Claude Web</strong> أو <strong>Cursor</strong>: أضف خادم MCP وضع هذا الرابط برابط واحد مباشر.
+          </p>
+        </div>
+
+        <!-- 2. OpenAPI 3.1 Schema for ChatGPT -->
+        <div class="space-y-1.5 pt-1">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-cyan-300 flex items-center gap-1.5">
+              <i class="fa-solid fa-robot text-xs"></i>
+              <span>2. رابط OpenAPI 3.1 Schema (مخصص لـ ChatGPT Actions / Custom GPTs):</span>
+            </span>
+            <span class="text-[10px] text-slate-500">OpenAPI 3.1.0</span>
+          </div>
+          <div class="join w-full">
+            <input type="text" readonly :value="getOpenApiUrl(selectedMcpSession?.token)"
+                   class="input input-sm input-bordered join-item w-full bg-slate-950 border-slate-700 text-cyan-200 font-mono text-xs select-all">
+            <button @click="copyOpenApiUrl(selectedMcpSession?.token)" 
+                    class="btn btn-sm bg-cyan-600 hover:bg-cyan-500 border-none text-white join-item px-4 gap-1">
+              <i class="fa-solid fa-copy text-xs"></i>
+              <span>نسخ الرابط</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            في <strong>ChatGPT (Create a GPT)</strong>: اذهب إلى <strong>Configure → Actions → Import from URL</strong> وضع هذا الرابط لاستيراد الأدوات فوراً!
+          </p>
+        </div>
+
+        <!-- Instructions Accordion / Steps -->
+        <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2.5">
+          <div class="font-semibold text-slate-200 flex items-center gap-1.5 text-xs">
+            <i class="fa-solid fa-circle-question text-purple-400"></i>
+            <span>كيف يتحكم ChatGPT أو Claude في الكود والمشروع عبر هذه الجلسة؟</span>
+          </div>
+          <ul class="list-disc list-inside space-y-1.5 text-slate-400 text-[11px] leading-relaxed">
+            <li>بمجرد الربط، تظهر لـ ChatGPT/Claude أداة <code>ask_agent</code> لتنفيذ أي أمر برمجي وتعديل الملفات بواسطة Antigravity (agy).</li>
+            <li>تظهر أدوات <code>list_workspace_files</code> و <code>read_workspace_file</code> لتصفح وقراءة ملفات المشروع.</li>
+            <li>يتم تطبيق ساندبوكس الأمان وحصر العمليات داخل المجلد المحدد للجلسة تلقائياً.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-end">
+        <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+      </div>
+
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+      <button @click="showRemoteMcpModal = false">إغلاق</button>
+    </form>
   </dialog>
 
 </body>

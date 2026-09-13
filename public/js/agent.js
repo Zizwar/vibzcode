@@ -33,6 +33,7 @@ document.addEventListener('alpine:init', () => {
       content: ''
     },
     mcpStatus: null,
+    showRemoteMcpModal: false,
 
     // Terminal State
     connected: false,
@@ -412,6 +413,37 @@ document.addEventListener('alpine:init', () => {
           this.mcpStatus = data;
         }
       } catch (e) {}
+    },
+
+    // Remote MCP Connector Methods
+    openRemoteMcpModal() {
+      this.showRemoteMcpModal = true;
+    },
+
+    getRemoteMcpUrl() {
+      return `${window.location.origin}/mcp?token=${this.token}`;
+    },
+
+    getOpenApiUrl() {
+      return `${window.location.origin}/openapi.json?token=${this.token}`;
+    },
+
+    copyRemoteMcpUrl() {
+      const url = this.getRemoteMcpUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          this.showToast('تم نسخ رابط Remote MCP لـ Claude و Cursor', 'success');
+        });
+      }
+    },
+
+    copyOpenApiUrl() {
+      const url = this.getOpenApiUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          this.showToast('تم نسخ رابط OpenAPI لـ ChatGPT Actions', 'success');
+        });
+      }
     },
 
     // ==================== TERMINAL LOGIC ====================

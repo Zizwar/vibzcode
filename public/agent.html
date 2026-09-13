@@ -227,6 +227,13 @@
             <span>ذاكرة MemoryZ (MCP)</span>
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           </button>
+
+          <!-- Remote MCP Endpoint Button for Claude / ChatGPT -->
+          <button @click="openRemoteMcpModal" class="btn btn-xs bg-gradient-to-r from-cyan-950/90 to-blue-950/90 hover:from-cyan-900 hover:to-blue-900 border border-cyan-500/40 text-cyan-200 gap-1.5 shadow-sm" title="ربط هذه الجلسة مع Claude أو ChatGPT عبر رابط Remote MCP">
+            <i class="fa-solid fa-satellite-dish text-cyan-400"></i>
+            <span>ربط Remote MCP (Claude / ChatGPT)</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+          </button>
         </div>
 
         <div class="flex items-center gap-4 flex-wrap">
@@ -636,6 +643,118 @@
       </div>
       <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
         <button @click="showMemoryModal = false">إغلاق</button>
+      </form>
+    </dialog>
+
+    <!-- ==================== REMOTE MCP CONNECTOR MODAL ==================== -->
+    <dialog id="remote_mcp_modal" class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': showRemoteMcpModal }">
+      <div class="modal-box max-w-2xl bg-slate-900/95 border border-cyan-500/30 text-slate-100 p-0 shadow-2xl backdrop-blur-2xl overflow-hidden">
+        
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-cyan-950/90 via-slate-900 to-blue-950/90 border-b border-cyan-500/20 px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-300 shadow-md">
+              <i class="fa-solid fa-satellite-dish text-lg"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <span>ربط الجلسة مع Claude و ChatGPT (Remote MCP)</span>
+                <span class="badge badge-xs badge-info font-mono text-[10px]">MCP Active</span>
+              </h3>
+              <p class="text-xs text-cyan-300/70">تحكم بالوكيل ومساحة المشروع مباشرة من داخل محادثات ChatGPT أو Claude برابط موحد</p>
+            </div>
+          </div>
+          <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-5 text-xs">
+          
+          <!-- Workspace Overview -->
+          <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 flex items-center justify-between gap-3 flex-wrap">
+            <div>
+              <div class="font-bold text-sm text-white" x-text="session?.name"></div>
+              <div class="text-slate-400 font-mono text-[11px] flex items-center gap-1.5 pt-0.5">
+                <i class="fa-solid fa-folder text-amber-400"></i>
+                <span x-text="session?.targetDir"></span>
+              </div>
+            </div>
+            <span class="badge badge-sm badge-success bg-emerald-950 text-emerald-300 border-emerald-500/30 py-1 font-mono text-[10px]">
+              ساندبوكس مقيّد ونشط
+            </span>
+          </div>
+
+          <!-- Link 1: Claude & Cursor Remote MCP -->
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-purple-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-bolt text-xs"></i>
+                <span>1. رابط Remote MCP لـ Claude و Cursor و Windsurf:</span>
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono">Streamable HTTP / SSE</span>
+            </div>
+            <div class="join w-full">
+              <input type="text" readonly :value="getRemoteMcpUrl()"
+                     class="input input-sm input-bordered join-item w-full bg-slate-950 border-slate-700 text-purple-200 font-mono text-xs select-all">
+              <button @click="copyRemoteMcpUrl()" 
+                      class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-none text-white join-item px-4 gap-1">
+                <i class="fa-solid fa-copy text-xs"></i>
+                <span>نسخ الرابط</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400">
+              في تطبيق <strong>Claude Desktop</strong> أو <strong>Claude Web</strong> أو <strong>Cursor</strong>: أضف خادم MCP واختر النوع URL وضع هذا الرابط مباشرة.
+            </p>
+          </div>
+
+          <!-- Link 2: ChatGPT OpenAPI Schema -->
+          <div class="space-y-1.5 pt-1">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-cyan-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-robot text-xs"></i>
+                <span>2. رابط OpenAPI 3.1 Schema لـ ChatGPT Actions (Custom GPTs):</span>
+              </span>
+              <span class="text-[10px] text-slate-500 font-mono">OpenAPI 3.1.0</span>
+            </div>
+            <div class="join w-full">
+              <input type="text" readonly :value="getOpenApiUrl()"
+                     class="input input-sm input-bordered join-item w-full bg-slate-950 border-slate-700 text-cyan-200 font-mono text-xs select-all">
+              <button @click="copyOpenApiUrl()" 
+                      class="btn btn-sm bg-cyan-600 hover:bg-cyan-500 border-none text-white join-item px-4 gap-1">
+                <i class="fa-solid fa-copy text-xs"></i>
+                <span>نسخ الرابط</span>
+              </button>
+            </div>
+            <p class="text-[11px] text-slate-400">
+              في <strong>ChatGPT (Create a GPT)</strong>: اذهب إلى <strong>Configure → Actions → Import from URL</strong> وضع هذا الرابط لاستيراد الأدوات فوراً!
+            </p>
+          </div>
+
+          <!-- Quick Guide -->
+          <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2.5">
+            <div class="font-semibold text-slate-200 flex items-center gap-1.5 text-xs">
+              <i class="fa-solid fa-circle-info text-cyan-400"></i>
+              <span>الأدوات المتاحة لـ Claude و ChatGPT للتحكم في مشروعك:</span>
+            </div>
+            <ul class="list-disc list-inside space-y-1 text-slate-400 text-[11px] leading-relaxed">
+              <li><code>ask_agent</code>: إرسال مهام برمجية وأوامر للوكيل لينفذها ويعدل الملفات داخل المشروع.</li>
+              <li><code>list_workspace_files</code>: تصفح هيكلية المجلدات والملفات.</li>
+              <li><code>read_workspace_file</code>: قراءة محتوى أي كود أو ملف.</li>
+              <li><code>write_workspace_file</code>: إنشاء أو تعديل ملفات الكود مباشرة.</li>
+              <li><code>run_shell_command</code>: تشغيل أوامر تيرمنال داخل مجلد المشروع.</li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-end">
+          <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+        </div>
+
+      </div>
+      <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+        <button @click="showRemoteMcpModal = false">إغلاق</button>
       </form>
     </dialog>
 
