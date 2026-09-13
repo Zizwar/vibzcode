@@ -1,0 +1,15 @@
+{
+  "name": "agyz",
+  "version": "1.0.0",
+  "description": "Multi-Agent Workspace Platform for Antigravity (AGY) with Admin Sandbox Control and Secure Team Sessions",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "node-pty": "^1.1.0",
+    "ws": "^8.18.0"
+  }
+}

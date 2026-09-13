@@ -1,0 +1,4 @@
+node_modules/
+data/chats/
+.DS_Store
+*.log
