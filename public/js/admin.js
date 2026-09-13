@@ -25,7 +25,8 @@ document.addEventListener('alpine:init', () => {
       sandbox: true,
       autoApprove: true,
       continueSession: true,
-      allowedModes: 'both'
+      allowedModes: 'both',
+      enableMcp: true
     },
 
     // Edit Modal State

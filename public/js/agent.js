@@ -19,6 +19,21 @@ document.addEventListener('alpine:init', () => {
     chatConversationId: null,
     chatContinue: true,
 
+    // MemoryZ MCP State
+    showMemoryModal: false,
+    memoryActiveTab: 'recall',
+    useMemoryzMcp: true,
+    memorySearchQuery: '',
+    memoriesList: [],
+    memoryLoading: false,
+    memoryStoring: false,
+    newMemory: {
+      type: 'note',
+      title: '',
+      content: ''
+    },
+    mcpStatus: null,
+
     // Terminal State
     connected: false,
     currentFontSize: 14,
@@ -212,7 +227,8 @@ document.addEventListener('alpine:init', () => {
             token: this.token,
             prompt: prompt,
             conversationId: this.chatContinue ? this.chatConversationId : null,
-            continueSession: this.chatContinue
+            continueSession: this.chatContinue,
+            useMemoryz: this.useMemoryzMcp
           })
         });
 
@@ -295,9 +311,107 @@ document.addEventListener('alpine:init', () => {
     copyMessageText(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(text).then(() => {
-          this.showToast('تم نسخ الرد', 'success');
+          this.showToast('تم نسخ المحتوى', 'success');
         });
       }
+    },
+
+    // ==================== MEMORYZ MCP LOGIC ====================
+
+    openMemoryModal() {
+      this.showMemoryModal = true;
+      if (this.memoriesList.length === 0) {
+        this.recallMemories();
+      }
+    },
+
+    async recallMemories() {
+      this.memoryLoading = true;
+      try {
+        const res = await fetch('/api/mcp/memoryz/recall', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.token
+          },
+          body: JSON.stringify({
+            query: this.memorySearchQuery.trim() || 'all',
+            limit: 8
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success && Array.isArray(data.memories)) {
+          this.memoriesList = data.memories;
+        } else {
+          this.memoriesList = [];
+        }
+      } catch (e) {
+        this.showToast('تعذر استرجاع الذكريات: ' + e.message, 'error');
+      } finally {
+        this.memoryLoading = false;
+      }
+    },
+
+    insertMemoryToPrompt(item) {
+      const memorySnippet = `[سياق من ذاكرة MemoryZ (${item.title || item.type})]:\n${item.content}`;
+      this.chatInputText = this.chatInputText ? `${this.chatInputText}\n\n${memorySnippet}` : memorySnippet;
+      this.showMemoryModal = false;
+      this.showToast('تم إدراج الذاكرة في خانة الإدخال', 'success');
+      this.$nextTick(() => {
+        const el = document.getElementById('agent-input-textarea');
+        if (el) {
+          el.focus();
+          el.scrollTop = el.scrollHeight;
+        }
+      });
+    },
+
+    async storeNewMemory() {
+      if (!this.newMemory.content || !this.newMemory.content.trim()) return;
+
+      this.memoryStoring = true;
+      try {
+        const res = await fetch('/api/mcp/memoryz/store', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.token
+          },
+          body: JSON.stringify({
+            type: this.newMemory.type,
+            title: this.newMemory.title.trim(),
+            content: this.newMemory.content.trim()
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.showToast('تم حفظ الذاكرة في MemoryZ بنجاح', 'success');
+          this.newMemory.title = '';
+          this.newMemory.content = '';
+          this.memoryActiveTab = 'recall';
+          this.memorySearchQuery = '';
+          this.recallMemories();
+        } else {
+          this.showToast(data.error || 'تعذر حفظ الذاكرة', 'error');
+        }
+      } catch (e) {
+        this.showToast('تعذر حفظ الذاكرة: ' + e.message, 'error');
+      } finally {
+        this.memoryStoring = false;
+      }
+    },
+
+    async fetchMcpStatus() {
+      try {
+        const res = await fetch('/api/mcp/status', {
+          headers: { 'Authorization': this.token }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.mcpStatus = data;
+        }
+      } catch (e) {}
     },
 
     // ==================== TERMINAL LOGIC ====================

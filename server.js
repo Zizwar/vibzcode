@@ -43,6 +43,7 @@ function loadSessions() {
       autoApprove: true,
       continueSession: true,
       allowedModes: 'both', // 'chat', 'terminal', 'both'
+      enableMcp: true, // MemoryZ MCP support
       status: 'active', // 'active', 'paused', 'closed'
       createdAt: new Date().toISOString(),
       lastActive: new Date().toISOString(),
@@ -58,6 +59,7 @@ function loadSessions() {
       autoApprove: true,
       continueSession: true,
       allowedModes: 'both',
+      enableMcp: true,
       status: 'active',
       createdAt: new Date().toISOString(),
       lastActive: new Date().toISOString(),
@@ -80,6 +82,18 @@ let sessions = loadSessions();
 
 // Track active processes per session
 const activeChatProcesses = new Map();
+
+// Ensure MemoryZ MCP server is registered in agy
+function ensureMemoryzMcp() {
+  execFile('agy', ['mcp', 'list'], (err, stdout) => {
+    if (!err && !stdout.includes('memoryz')) {
+      execFile('agy', ['mcp', 'add', 'memoryz', 'npx', '-y', 'memoryz', 'mcp'], (addErr) => {
+        if (!addErr) console.log('✔ Automatically registered MemoryZ MCP server in agy');
+      });
+    }
+  });
+}
+ensureMemoryzMcp();
 
 const app = express();
 app.use(express.json());
@@ -185,6 +199,7 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
     autoApprove: autoApprove !== false,
     continueSession: continueSession !== false,
     allowedModes: allowedModes || 'both',
+    enableMcp: req.body.enableMcp !== false,
     status: 'active',
     createdAt: new Date().toISOString(),
     lastActive: new Date().toISOString(),
@@ -205,7 +220,7 @@ app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
     return res.status(404).json({ success: false, error: 'الجلسة غير موجودة' });
   }
 
-  const allowedUpdates = ['name', 'assignee', 'targetDir', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'status'];
+  const allowedUpdates = ['name', 'assignee', 'targetDir', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'status'];
   for (const key of allowedUpdates) {
     if (req.body[key] !== undefined) {
       if (key === 'targetDir') {
@@ -289,6 +304,7 @@ app.post('/api/session/verify', (req, res) => {
       autoApprove: session.autoApprove,
       continueSession: session.continueSession,
       allowedModes: session.allowedModes,
+      enableMcp: session.enableMcp !== false,
       status: session.status
     }
   });
@@ -444,6 +460,75 @@ app.post('/api/session/messages/:sessionId', (req, res) => {
     }
   }
   return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
+});
+
+// ==================== MCP (MEMORYZ) APIS ====================
+
+// Check MCP / MemoryZ status
+app.get('/api/mcp/status', (req, res) => {
+  execFile('agy', ['mcp', 'list'], (error, stdout) => {
+    const isConfigured = !error && stdout.includes('memoryz');
+    return res.json({
+      success: true,
+      mcpEnabled: true,
+      serverName: 'memoryz',
+      configured: isConfigured,
+      rawList: stdout || ''
+    });
+  });
+});
+
+// Recall memories from MemoryZ
+app.post('/api/mcp/memoryz/recall', (req, res) => {
+  const { query, limit } = req.body;
+  const q = (query || '').trim();
+  const lim = limit ? parseInt(limit, 10) : 5;
+
+  const args = ['recall', q || 'all', '--json', `--limit=${lim}`];
+  execFile('memoryz', args, { timeout: 15000 }, (err, stdout, stderr) => {
+    if (err && !stdout) {
+      return res.status(500).json({ success: false, error: stderr || err.message });
+    }
+    try {
+      const memories = JSON.parse(stdout.trim());
+      return res.json({ success: true, memories });
+    } catch (e) {
+      return res.json({ success: true, memories: [], raw: stdout });
+    }
+  });
+});
+
+// Store a new memory atom into MemoryZ
+app.post('/api/mcp/memoryz/store', (req, res) => {
+  const { type, content, title } = req.body;
+  if (!content || !content.trim()) {
+    return res.status(400).json({ success: false, error: 'المحتوى مطلوب' });
+  }
+
+  const args = ['store', `--type=${type || 'note'}`, `--content=${content.trim()}`];
+  if (title && title.trim()) {
+    args.push(`--title=${title.trim()}`);
+  }
+
+  execFile('memoryz', args, { timeout: 15000 }, (err, stdout, stderr) => {
+    if (err && !stdout) {
+      return res.status(500).json({ success: false, error: stderr || err.message });
+    }
+    return res.json({ success: true, message: stdout.trim() || 'تم حفظ الذاكرة بنجاح' });
+  });
+});
+
+// Get Context block for prompt injection
+app.post('/api/mcp/memoryz/context', (req, res) => {
+  const { query } = req.body;
+  const q = (query || '').trim();
+
+  execFile('memoryz', ['context', q || 'general'], { timeout: 15000 }, (err, stdout, stderr) => {
+    if (err && !stdout) {
+      return res.status(500).json({ success: false, error: stderr || err.message });
+    }
+    return res.json({ success: true, context: stdout.trim() });
+  });
 });
 
 // Serve Static Assets

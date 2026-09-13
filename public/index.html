@@ -291,6 +291,9 @@
                     <i class="fa-solid fa-desktop"></i>
                     <span x-text="sess.allowedModes === 'both' ? 'دردشة وترمنال' : (sess.allowedModes === 'chat' ? 'دردشة فقط' : 'ترمنال فقط')"></span>
                   </span>
+                  <span x-show="sess.enableMcp !== false" class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="بروتوكول الذاكرة السحابية MCP مفعّل">
+                    <i class="fa-solid fa-brain text-purple-400"></i> MemoryZ MCP
+                  </span>
                 </div>
               </div>
 
@@ -416,6 +419,18 @@
               <div class="text-[11px] text-slate-400">تذكر الأوامر والرسائل السابقة ضمن نفس الجلسة</div>
             </div>
           </label>
+
+          <!-- MemoryZ MCP Integration -->
+          <label class="label cursor-pointer p-0 justify-start gap-3">
+            <input type="checkbox" x-model="newSession.enableMcp" class="checkbox checkbox-sm checkbox-secondary">
+            <div>
+              <div class="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
+                <i class="fa-solid fa-brain text-xs"></i>
+                <span>ربط بروتوكول الذاكرة السحابية (MemoryZ MCP)</span>
+              </div>
+              <div class="text-[11px] text-slate-400">تمكين الوكيل من استرجاع وحفظ الذكريات والمعرفة الدلالية عبر MCP</div>
+            </div>
+          </label>
         </div>
 
         <!-- Allowed Modes -->
@@ -486,6 +501,13 @@
             <label class="label cursor-pointer p-0 justify-start gap-3">
               <input type="checkbox" x-model="editingSession.continueSession" class="checkbox checkbox-sm checkbox-info">
               <span class="text-xs text-slate-200">متابعة سياق المحادثة (--continue)</span>
+            </label>
+            <label class="label cursor-pointer p-0 justify-start gap-3">
+              <input type="checkbox" x-model="editingSession.enableMcp" class="checkbox checkbox-sm checkbox-secondary">
+              <span class="text-xs text-purple-300 flex items-center gap-1.5 font-semibold">
+                <i class="fa-solid fa-brain text-xs"></i>
+                <span>ربط بروتوكول الذاكرة السحابية (MemoryZ MCP)</span>
+              </span>
             </label>
           </div>
 

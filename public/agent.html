@@ -220,12 +220,29 @@
             <i class="fa-solid fa-bolt text-emerald-400"></i>
             <span>تنفيذ تلقائي</span>
           </span>
+
+          <!-- MemoryZ MCP Badge Button -->
+          <button @click="openMemoryModal" class="btn btn-xs bg-gradient-to-r from-purple-950/90 to-indigo-950/90 hover:from-purple-900 hover:to-indigo-900 border border-purple-500/40 text-purple-200 gap-1.5 shadow-sm" title="فتح لوحة استرجاع وحفظ الذكريات عبر بروتوكول MCP">
+            <i class="fa-solid fa-brain text-purple-400"></i>
+            <span>ذاكرة MemoryZ (MCP)</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          </button>
         </div>
 
         <div class="flex items-center gap-4 flex-wrap">
+          <!-- Continue context -->
           <label class="label cursor-pointer p-0 gap-1.5 select-none" title="الاستمرار في نفس سياق المحادثة وتذكر الرسائل السابقة">
             <input type="checkbox" x-model="chatContinue" class="checkbox checkbox-xs checkbox-accent">
             <span class="label-text text-xs text-slate-300 font-semibold">متابعة السياق (Continue)</span>
+          </label>
+
+          <!-- MemoryZ MCP Context Toggle -->
+          <label class="label cursor-pointer p-0 gap-1.5 select-none" title="تفعيل ربط بروتوكول سياق النماذج (MCP) والذاكرة السحابية">
+            <input type="checkbox" x-model="useMemoryzMcp" class="checkbox checkbox-xs checkbox-secondary">
+            <span class="label-text text-xs text-purple-300 font-semibold flex items-center gap-1">
+              <i class="fa-solid fa-brain text-[10px]"></i>
+              <span>ربط MCP نشط</span>
+            </span>
           </label>
         </div>
       </div>
@@ -393,6 +410,234 @@
         </form>
       </div>
     </div>
+
+    <!-- ==================== MEMORYZ MCP MODAL ==================== -->
+    <dialog id="memoryz_modal" class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': showMemoryModal }">
+      <div class="modal-box max-w-3xl bg-slate-900/95 border border-purple-500/30 text-slate-100 p-0 shadow-2xl backdrop-blur-2xl">
+        
+        <!-- Modal Header -->
+        <div class="bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border-b border-purple-500/20 px-6 py-4 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-purple-300 shadow-md">
+              <i class="fa-solid fa-brain text-lg"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white flex items-center gap-2">
+                <span>ذاكرة المعرفة السحابية (MemoryZ MCP)</span>
+                <span class="badge badge-xs badge-secondary font-mono text-[10px]">MCP Active</span>
+              </h3>
+              <p class="text-xs text-purple-300/70">استرجاع وحفظ الذاكرة المعرفية للوكيل وربط سياق النماذج عبر بروتوكول MCP</p>
+            </div>
+          </div>
+          <button @click="showMemoryModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="px-6 pt-3 pb-2 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between gap-2 flex-wrap">
+          <div class="tabs tabs-boxed bg-slate-900/80 p-1 border border-slate-800 gap-1">
+            <button @click="memoryActiveTab = 'recall'" 
+                    class="tab tab-sm transition-all rounded-lg gap-2 text-xs font-semibold"
+                    :class="memoryActiveTab === 'recall' ? 'tab-active bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'">
+              <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
+              <span>استرجاع الذكريات (Recall)</span>
+            </button>
+            <button @click="memoryActiveTab = 'store'" 
+                    class="tab tab-sm transition-all rounded-lg gap-2 text-xs font-semibold"
+                    :class="memoryActiveTab === 'store' ? 'tab-active bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'">
+              <i class="fa-solid fa-plus text-[11px]"></i>
+              <span>حفظ ذاكرة جديدة (Store)</span>
+            </button>
+            <button @click="memoryActiveTab = 'status'; fetchMcpStatus();" 
+                    class="tab tab-sm transition-all rounded-lg gap-2 text-xs font-semibold"
+                    :class="memoryActiveTab === 'status' ? 'tab-active bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'">
+              <i class="fa-solid fa-network-wired text-[11px]"></i>
+              <span>حالة خادم MCP</span>
+            </button>
+          </div>
+
+          <div class="text-[11px] text-slate-400 flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>خادم الذاكرة متصل ومربوط بالوكيل</span>
+          </div>
+        </div>
+
+        <!-- Tab 1: Recall Memories -->
+        <div x-show="memoryActiveTab === 'recall'" class="p-6 space-y-4 max-h-[60vh] overflow-y-auto">
+          <!-- Search Bar -->
+          <form @submit.prevent="recallMemories()" class="flex gap-2">
+            <div class="relative flex-1">
+              <input type="text" x-model="memorySearchQuery" 
+                     placeholder="ابحث دلالياً في الذاكرة (مثلاً: تفضيلات، مشاريع، أسلوب الكود، قرارات)..."
+                     class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-purple-500 pl-3 pr-9 text-xs">
+              <i class="fa-solid fa-search absolute right-3 top-2.5 text-slate-500 text-xs"></i>
+            </div>
+            <button type="submit" :disabled="memoryLoading" 
+                    class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-none text-white text-xs px-4 gap-1.5 shadow-md shadow-purple-600/20">
+              <span x-show="memoryLoading" class="loading loading-spinner loading-xs"></span>
+              <i x-show="!memoryLoading" class="fa-solid fa-bolt text-xs"></i>
+              <span>استرجاع</span>
+            </button>
+          </form>
+
+          <!-- Quick Filters -->
+          <div class="flex items-center gap-2 flex-wrap text-xs">
+            <span class="text-slate-400 text-[11px]">اقتراحات سريعة:</span>
+            <button type="button" @click="memorySearchQuery = 'تفضيلات المطور'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">تفضيلات المطور</button>
+            <button type="button" @click="memorySearchQuery = 'معمارية الواجهة alpine daisyui'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">Alpine & DaisyUI</button>
+            <button type="button" @click="memorySearchQuery = 'mcp connector architecture'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">معمارية MCP</button>
+            <button type="button" @click="memorySearchQuery = 'all'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">عرض الكل (All)</button>
+          </div>
+
+          <!-- Memories Results List -->
+          <div class="space-y-3 pt-2">
+            <template x-if="memoryLoading">
+              <div class="text-center py-8 space-y-2 text-slate-400 text-xs">
+                <span class="loading loading-spinner loading-md text-purple-400"></span>
+                <p>جاري الاسترجاع الدلالي للذكريات عبر التضمينات المتجهة (Gemini Embeddings)...</p>
+              </div>
+            </template>
+
+            <template x-if="!memoryLoading && memoriesList.length === 0">
+              <div class="text-center py-8 space-y-2 border border-dashed border-slate-800 rounded-xl p-6 text-slate-500 text-xs">
+                <i class="fa-solid fa-box-open text-2xl text-slate-600"></i>
+                <p>لا توجد ذكريات تطابق بحثك حالياً. يمكنك الضغط على "عرض الكل" أو حفظ ذاكرة جديدة.</p>
+              </div>
+            </template>
+
+            <template x-for="item in memoriesList" :key="item.hash || item.title || Math.random()">
+              <div class="bg-slate-950/80 border border-slate-800/90 hover:border-purple-500/40 rounded-xl p-4 transition-all space-y-2.5 shadow-sm group">
+                <!-- Item Header -->
+                <div class="flex items-center justify-between gap-2 flex-wrap">
+                  <div class="flex items-center gap-2">
+                    <span class="badge badge-xs text-[10px] font-mono uppercase"
+                          :class="{
+                            'badge-primary bg-purple-900/50 text-purple-300 border-purple-500/30': item.type === 'skill',
+                            'badge-info bg-cyan-900/50 text-cyan-300 border-cyan-500/30': item.type === 'preference',
+                            'badge-accent bg-emerald-900/50 text-emerald-300 border-emerald-500/30': item.type === 'env',
+                            'badge-neutral text-slate-300': !['skill', 'preference', 'env'].includes(item.type)
+                          }" x-text="item.type || 'note'"></span>
+                    <span class="font-bold text-xs text-white" x-text="item.title || 'بدون عنوان'"></span>
+                  </div>
+                  <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400">
+                    <span x-show="item.recall_count" class="text-purple-300" x-text="`🔁 ${item.recall_count} استرجاع`"></span>
+                    <span x-show="item.score" class="text-emerald-400" x-text="`🎯 تطابق ${(item.score * 100).toFixed(0)}%`"></span>
+                  </div>
+                </div>
+
+                <!-- Item Content -->
+                <div class="text-xs text-slate-300 whitespace-pre-wrap leading-relaxed bg-slate-900/60 p-3 rounded-lg border border-slate-800/60 font-arabic select-text" x-text="item.content"></div>
+
+                <!-- Actions -->
+                <div class="flex items-center justify-end gap-2 pt-1">
+                  <button type="button" @click="copyMessageText(item.content)" class="btn btn-xs btn-ghost text-slate-400 hover:text-white gap-1 text-[11px]">
+                    <i class="fa-solid fa-copy text-[10px]"></i>
+                    <span>نسخ</span>
+                  </button>
+                  <button type="button" @click="insertMemoryToPrompt(item)" class="btn btn-xs btn-outline btn-secondary hover:bg-purple-600 border-purple-500/40 text-purple-200 gap-1 text-[11px]">
+                    <i class="fa-solid fa-arrow-down-left-and-up-right-to-center text-[10px]"></i>
+                    <span>إدراج في المحادثة</span>
+                  </button>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
+
+        <!-- Tab 2: Store Memory -->
+        <div x-show="memoryActiveTab === 'store'" class="p-6 space-y-4">
+          <form @submit.prevent="storeNewMemory()" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="space-y-1">
+                <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold">نوع الذاكرة (Type)</span></label>
+                <select x-model="newMemory.type" class="select select-sm select-bordered w-full bg-slate-950 border-slate-700 text-xs">
+                  <option value="note">ملاحظة عامة (Note)</option>
+                  <option value="preference">تفضيل عمل أو أسلوب (Preference)</option>
+                  <option value="skill">خبرة أو مهارة (Skill)</option>
+                  <option value="decision">قرار معماري أو تقني (Decision)</option>
+                  <option value="env">بيئة تشغيل أو سيرفر (Environment)</option>
+                  <option value="fact">حقيقة ثابتة (Fact)</option>
+                </select>
+              </div>
+              <div class="space-y-1">
+                <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold">عنوان الذاكرة (Title)</span></label>
+                <input type="text" x-model="newMemory.title" placeholder="مثلاً: تفضيل استخدام Tailwind مع DaisyUI" class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-xs">
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold">محتوى الذاكرة والمعرفة (Content) *</span></label>
+              <textarea x-model="newMemory.content" rows="4" placeholder="اكتب التفاصيل بدقة حتى يتمكن الوكيل من فهمها وتطبيقها تلقائياً عند استدعائه..." class="textarea textarea-bordered w-full bg-slate-950 border-slate-700 text-xs leading-relaxed font-arabic" required></textarea>
+            </div>
+
+            <div class="bg-purple-950/30 border border-purple-500/20 rounded-xl p-3 text-[11px] text-purple-300/80 flex items-start gap-2">
+              <i class="fa-solid fa-lightbulb text-purple-400 mt-0.5"></i>
+              <div>
+                <span>سيتم تخزين الذاكرة في خادم <strong>MemoryZ</strong> السحابي وتوليد متجهات التضمين دلالياً، لتكون متاحة للوكيل عبر بروتوكول MCP تلقائياً.</span>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-2">
+              <button type="button" @click="showMemoryModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إلغاء</button>
+              <button type="submit" :disabled="memoryStoring || !newMemory.content.trim()" class="btn btn-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none text-white text-xs px-5 gap-1.5 shadow-md shadow-purple-600/20">
+                <span x-show="memoryStoring" class="loading loading-spinner loading-xs"></span>
+                <i x-show="!memoryStoring" class="fa-solid fa-cloud-arrow-up text-xs"></i>
+                <span>حفظ في MemoryZ MCP</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Tab 3: MCP Server Status -->
+        <div x-show="memoryActiveTab === 'status'" class="p-6 space-y-4">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <span class="text-slate-400 text-[11px]">اسم خادم MCP:</span>
+              <div class="font-mono font-bold text-purple-300">memoryz</div>
+            </div>
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <span class="text-slate-400 text-[11px]">بروتوكول الاتصال:</span>
+              <div class="font-bold text-emerald-400 flex items-center gap-1.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Model Context Protocol (Stdio / SSE)</span>
+              </div>
+            </div>
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1 sm:col-span-2">
+              <span class="text-slate-400 text-[11px]">نقطة النهاية السحابية (Endpoint):</span>
+              <div class="font-mono text-slate-200 truncate">https://memoryz.wino.deno.net/mcp</div>
+            </div>
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <span class="text-slate-400 text-[11px]">محرك التضمينات الدلالية:</span>
+              <div class="text-slate-200">Google Gemini 768-dim Embeddings</div>
+            </div>
+            <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
+              <span class="text-slate-400 text-[11px]">الأدوات المتاحة للوكيل:</span>
+              <div class="font-mono text-cyan-300 text-[11px]">recall, store, reflect, context</div>
+            </div>
+          </div>
+
+          <!-- CLI / Integration Command Hint -->
+          <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2">
+            <span class="text-[11px] font-semibold text-slate-400">أمر تسجيل خادم MCP في الوكيل (مسجل تلقائياً):</span>
+            <div class="bg-black/80 rounded-lg p-2.5 font-mono text-[11px] text-purple-300 select-all flex items-center justify-between">
+              <code>agy mcp add memoryz npx -y memoryz mcp</code>
+              <button type="button" @click="copyMessageText('agy mcp add memoryz npx -y memoryz mcp')" class="btn btn-ghost btn-xs text-slate-400 hover:text-white">
+                <i class="fa-solid fa-copy text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex justify-end pt-2">
+            <button @click="showMemoryModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+          </div>
+        </div>
+
+      </div>
+      <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+        <button @click="showMemoryModal = false">إغلاق</button>
+      </form>
+    </dialog>
 
   </div>
 
