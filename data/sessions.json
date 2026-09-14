@@ -1,19 +1,20 @@
 [
   {
-    "id": "sess_mu00okxf_cd7b2b79",
-    "name": "وكيل تطوير الواجهة - سارة",
-    "assignee": "سارة",
-    "token": "agyz_9d48609f4fd8b79f63fe87d0ffc83a15",
-    "targetDir": "/root/wino/ferme",
+    "id": "sess_mu1ha1w3_ee0d4a65",
+    "name": "vps",
+    "assignee": "عضو الفريق",
+    "token": "agyz_09e7ad544214a716be23e385222ba7ca",
+    "targetDir": "/root/test",
     "sandbox": true,
     "autoApprove": true,
     "continueSession": true,
-    "allowedModes": "chat",
+    "allowedModes": "both",
+    "enableMcp": true,
     "status": "active",
-    "createdAt": "2026-09-13T16:17:07.059Z",
-    "lastActive": "2026-09-13T18:51:11.776Z",
+    "createdAt": "2026-09-14T16:49:28.855Z",
+    "lastActive": "2026-09-14T17:01:05.363Z",
     "stats": {
-      "messagesCount": 3
+      "messagesCount": 1
     }
   },
   {

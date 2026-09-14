@@ -81,8 +81,9 @@ function saveSessions(sessions) {
 
 let sessions = loadSessions();
 
-// Track active processes per session
+// Track active processes and background jobs per session
 const activeChatProcesses = new Map();
+const activeChatJobs = new Map();
 
 // Ensure MemoryZ MCP server is registered in agy
 function ensureMemoryzMcp() {
@@ -317,7 +318,108 @@ app.post('/api/session/verify', (req, res) => {
   });
 });
 
-// Member / Agent Chat Execution
+// Workspace File Tree Helper
+function buildFileTree(dirPath, rootPath = dirPath, depth = 0, maxDepth = 6) {
+  if (depth > maxDepth) return null;
+  const ignoreList = new Set(['.git', 'node_modules', '.tmp', 'dist', 'build', '.cache', '.npm']);
+  const result = {};
+
+  try {
+    const items = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const item of items) {
+      if (ignoreList.has(item.name)) continue;
+      const fullPath = path.join(dirPath, item.name);
+      const relPath = path.relative(rootPath, fullPath).replace(/\\/g, '/');
+
+      if (item.isDirectory()) {
+        const children = buildFileTree(fullPath, rootPath, depth + 1, maxDepth);
+        result[item.name] = {
+          type: 'directory',
+          path: relPath,
+          children: children || {}
+        };
+      } else if (item.isFile()) {
+        let size = 0;
+        try { size = fs.statSync(fullPath).size; } catch (e) {}
+        result[item.name] = {
+          type: 'file',
+          path: relPath,
+          size
+        };
+      }
+    }
+  } catch (err) {
+    console.error(`Error reading tree at ${dirPath}:`, err.message);
+  }
+  return result;
+}
+
+// Workspace File Tree API
+app.get('/api/session/workspace/tree', (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).json({ success: false, error: 'غير مصرح' });
+  const targetDir = path.resolve(session.targetDir);
+  if (!fs.existsSync(targetDir)) {
+    return res.status(404).json({ success: false, error: 'المجلد غير موجود' });
+  }
+
+  const tree = buildFileTree(targetDir, targetDir);
+  return res.json({ success: true, tree, targetDir });
+});
+
+// Workspace File Content Preview API
+app.get('/api/session/workspace/file', (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).json({ success: false, error: 'غير مصرح' });
+  const targetDir = path.resolve(session.targetDir);
+  const requestedPath = req.query.path;
+  if (!requestedPath) return res.status(400).json({ success: false, error: 'المسار مطلوب' });
+
+  const fullPath = path.resolve(targetDir, requestedPath);
+  if (!fullPath.startsWith(targetDir)) {
+    return res.status(403).json({ success: false, error: 'مسار غير مسموح' });
+  }
+
+  if (!fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
+    return res.status(404).json({ success: false, error: 'الملف غير موجود' });
+  }
+
+  try {
+    const stat = fs.statSync(fullPath);
+    if (stat.size > 2 * 1024 * 1024) {
+      return res.status(400).json({ success: false, error: 'حجم الملف كبير جداً للمعاينة (> 2MB)' });
+    }
+    const content = fs.readFileSync(fullPath, 'utf8');
+    return res.json({ success: true, path: requestedPath, content, size: stat.size });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Helper to append a single message to session chat log
+function appendSessionChatMessage(sessionId, msg) {
+  try {
+    const file = path.join(CHAT_LOGS_DIR, `${sessionId}.json`);
+    let list = [];
+    if (fs.existsSync(file)) {
+      list = JSON.parse(fs.readFileSync(file, 'utf8'));
+    }
+    list.push(msg);
+    fs.writeFileSync(file, JSON.stringify(list, null, 2), 'utf8');
+  } catch (e) {
+    console.error(`Error saving message to session ${sessionId}:`, e);
+  }
+}
+
+// Member / Agent Chat Execution (Background-Persistent)
 app.post('/api/session/chat', (req, res) => {
   const token = getAuthToken(req);
   let session = null;
@@ -327,7 +429,7 @@ app.post('/api/session/chat', (req, res) => {
     isAdmin = true;
     const targetDir = req.body.targetDir || '/root/wino/ferme';
     session = {
-      id: 'admin_exec',
+      id: req.body.sessionId || 'admin_exec',
       token: ADMIN_SECRET,
       targetDir: targetDir,
       sandbox: req.body.sandbox !== false,
@@ -346,11 +448,28 @@ app.post('/api/session/chat', (req, res) => {
     return res.status(403).json({ success: false, error: 'الجلسة موقوفة حالياً من قبل الإدارة' });
   }
 
+  // Check if a task is already executing for this session
+  const existingJob = activeChatJobs.get(session.id);
+  if (existingJob && existingJob.status === 'running') {
+    return res.json({
+      success: true,
+      jobAlreadyRunning: true,
+      job: {
+        jobId: existingJob.jobId,
+        prompt: existingJob.prompt,
+        elapsedSeconds: ((Date.now() - existingJob.startTime) / 1000).toFixed(1),
+        startTime: existingJob.startTime,
+        status: 'running'
+      }
+    });
+  }
+
   const { prompt, conversationId, continueSession } = req.body;
   if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
     return res.status(400).json({ success: false, error: 'نص البرومبت فارغ' });
   }
 
+  const userPrompt = prompt.trim();
   const targetDir = session.targetDir;
   const args = [];
 
@@ -374,10 +493,32 @@ app.post('/api/session/chat', (req, res) => {
     args.push('--continue');
   }
 
-  args.push('-p', prompt.trim(), '--output-format', 'json', '--print-timeout', '10m');
+  args.push('-p', userPrompt, '--output-format', 'json', '--print-timeout', '10m');
 
   const startTime = Date.now();
-  const child = execFile('agy', args, { cwd: targetDir, maxBuffer: 20 * 1024 * 1024, timeout: 600000 }, (error, stdout, stderr) => {
+  const jobId = 'job_' + Date.now();
+
+  // 1. Immediately record user prompt in server chat log
+  appendSessionChatMessage(session.id, {
+    id: Date.now(),
+    role: 'user',
+    content: userPrompt,
+    time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+  });
+
+  // 2. Register job state
+  const jobRecord = {
+    jobId,
+    sessionId: session.id,
+    prompt: userPrompt,
+    startTime,
+    status: 'running',
+    response: null
+  };
+  activeChatJobs.set(session.id, jobRecord);
+
+  // Execute agy - child process continues running in background across client disconnects
+  const child = execFile('agy', args, { cwd: targetDir, maxBuffer: 30 * 1024 * 1024, timeout: 600000 }, (error, stdout, stderr) => {
     activeChatProcesses.delete(session.token);
     const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
 
@@ -388,31 +529,63 @@ app.post('/api/session/chat', (req, res) => {
       saveSessions(sessions);
     }
 
-    if (error && !stdout) {
-      console.error(`Session [${session.id}] error:`, error.message, stderr);
-      return res.status(500).json({
-        success: false,
-        error: error.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر',
-        stderr: stderr
-      });
-    }
-
+    let parsed = null;
     try {
-      const parsed = JSON.parse(stdout.trim());
+      if (stdout && stdout.trim()) {
+        parsed = JSON.parse(stdout.trim());
+      }
+    } catch (e) {}
+
+    const isErr = !!(error && !stdout);
+    const responseText = parsed?.response || stdout || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر') : 'تمت المعالجة.');
+    const convId = parsed?.conversation_id || null;
+    const durationVal = parsed?.duration_seconds || parseFloat(elapsedSeconds);
+
+    const assistantMsg = {
+      id: Date.now(),
+      role: 'assistant',
+      content: responseText,
+      conversationId: convId,
+      duration: durationVal,
+      isError: isErr,
+      time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+    };
+
+    // 3. Immediately save assistant response in server chat log!
+    appendSessionChatMessage(session.id, assistantMsg);
+
+    // 4. Update job record
+    jobRecord.status = isErr ? 'error' : 'done';
+    jobRecord.response = responseText;
+    jobRecord.conversationId = convId;
+    jobRecord.duration = durationVal;
+    jobRecord.isError = isErr;
+    jobRecord.completedAt = Date.now();
+
+    // Retain completed job for 3 minutes for reconnecting clients
+    setTimeout(() => {
+      if (activeChatJobs.get(session.id) === jobRecord) {
+        activeChatJobs.delete(session.id);
+      }
+    }, 180000);
+
+    // 5. Send response if HTTP socket is still open
+    if (!res.headersSent) {
+      if (isErr) {
+        return res.status(500).json({
+          success: false,
+          error: responseText,
+          duration: durationVal,
+          conversationId: convId
+        });
+      }
       return res.json({
         success: true,
-        response: parsed.response || stdout,
-        conversationId: parsed.conversation_id,
-        duration: parsed.duration_seconds || parseFloat(elapsedSeconds),
-        status: parsed.status,
-        usage: parsed.usage
-      });
-    } catch (e) {
-      return res.json({
-        success: true,
-        response: stdout || stderr || 'تمت المعالجة.',
-        conversationId: null,
-        duration: parseFloat(elapsedSeconds)
+        response: responseText,
+        conversationId: convId,
+        duration: durationVal,
+        status: parsed?.status || 'completed',
+        usage: parsed?.usage
       });
     }
   });
@@ -420,19 +593,73 @@ app.post('/api/session/chat', (req, res) => {
   activeChatProcesses.set(session.token, child);
 });
 
+// Check Active Background Chat Job for Session
+app.get('/api/session/chat/active/:sessionId', (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.params.sessionId) || { id: req.params.sessionId })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).json({ success: false, error: 'غير مصرح' });
+
+  const job = activeChatJobs.get(session.id);
+  if (!job) {
+    return res.json({ success: true, active: false });
+  }
+
+  if (job.status === 'running') {
+    const elapsedSeconds = ((Date.now() - job.startTime) / 1000).toFixed(1);
+    return res.json({
+      success: true,
+      active: true,
+      job: {
+        jobId: job.jobId,
+        prompt: job.prompt,
+        startTime: job.startTime,
+        elapsedSeconds,
+        status: 'running'
+      }
+    });
+  }
+
+  return res.json({
+    success: true,
+    active: false,
+    completed: true,
+    job: {
+      jobId: job.jobId,
+      status: job.status,
+      response: job.response,
+      conversationId: job.conversationId,
+      duration: job.duration,
+      isError: job.isError
+    }
+  });
+});
+
 // Abort Chat Task for Session
 app.post('/api/session/chat/abort', (req, res) => {
   const token = getAuthToken(req);
-  if (activeChatProcesses.has(token)) {
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.body.sessionId) || { token: ADMIN_SECRET, id: req.body.sessionId || 'admin_exec' })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).json({ success: false, error: 'غير مصرح' });
+
+  if (activeChatProcesses.has(session.token)) {
     try {
-      activeChatProcesses.get(token).kill('SIGTERM');
-      activeChatProcesses.delete(token);
-      return res.json({ success: true, message: 'تم إيقاف تنفيذ المهمة' });
-    } catch (e) {
-      return res.status(500).json({ success: false, error: e.message });
-    }
+      activeChatProcesses.get(session.token).kill('SIGTERM');
+      activeChatProcesses.delete(session.token);
+    } catch (e) {}
   }
-  return res.json({ success: true, message: 'لا توجد مهمة نشطة' });
+
+  if (activeChatJobs.has(session.id)) {
+    const job = activeChatJobs.get(session.id);
+    job.status = 'aborted';
+    activeChatJobs.delete(session.id);
+  }
+
+  return res.json({ success: true, message: 'تم إيقاف تنفيذ المهمة' });
 });
 
 // Get / Save Session Chat Messages (Persistent Chat across devices)

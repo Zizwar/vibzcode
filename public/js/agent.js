@@ -16,8 +16,23 @@ document.addEventListener('alpine:init', () => {
     chatInputText: '',
     chatLoading: false,
     chatElapsedTime: 0,
+    chatTimerInterval: null,
     chatConversationId: null,
     chatContinue: true,
+    activePollTimer: null,
+
+    // Workspace File Explorer State (Inspired by Vibzcode)
+    fileStructure: null,
+    fileSearchQuery: '',
+    expandedFolders: {},
+    showFileDrawer: false,
+    fileTreeLoading: false,
+    totalFilesCount: 0,
+    previewModalOpen: false,
+    previewFilePath: '',
+    previewFileContent: '',
+    previewFileSize: 0,
+    previewLoading: false,
 
     // MemoryZ MCP State
     showMemoryModal: false,
@@ -50,6 +65,9 @@ document.addEventListener('alpine:init', () => {
     toasts: [],
 
     init() {
+      // Expose to window for filetree click callbacks
+      window._agent = this;
+
       // Check token in URL parameters (?token=...)
       const urlParams = new URLSearchParams(window.location.search);
       const urlToken = urlParams.get('token');
@@ -104,7 +122,14 @@ document.addEventListener('alpine:init', () => {
             this.activeView = 'chat';
           }
 
-          this.loadChatHistory();
+          // Hydrate Chat History
+          await this.loadChatHistory();
+
+          // Fetch Workspace File Tree
+          this.fetchWorkspaceTree();
+
+          // Check if there is an active background task running
+          this.checkActiveChatJob();
 
           // If terminal is enabled, init it
           if (this.session.allowedModes !== 'chat') {
@@ -132,6 +157,8 @@ document.addEventListener('alpine:init', () => {
     },
 
     handleLogout() {
+      if (this.activePollTimer) clearInterval(this.activePollTimer);
+      if (this.chatTimerInterval) clearInterval(this.chatTimerInterval);
       localStorage.removeItem('agyz_session_token');
       this.authenticated = false;
       this.token = '';
@@ -162,7 +189,212 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    // ==================== CHAT LOGIC ====================
+    // ==================== WORKSPACE FILE EXPLORER (VibzCode Inspired) ====================
+
+    async fetchWorkspaceTree() {
+      if (!this.session) return;
+      this.fileTreeLoading = true;
+      try {
+        const res = await fetch('/api/session/workspace/tree', {
+          headers: { 'Authorization': this.token }
+        });
+        const data = await res.json();
+        if (res.ok && data.success && data.tree) {
+          this.fileStructure = data.tree;
+          this.countFiles(this.fileStructure);
+          // Expand top-level folders automatically
+          for (const key of Object.keys(data.tree)) {
+            if (data.tree[key].type === 'directory') {
+              this.expandedFolders[key] = true;
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Error loading workspace tree:', e);
+      } finally {
+        this.fileTreeLoading = false;
+      }
+    },
+
+    countFiles(structure) {
+      let count = 0;
+      if (!structure) return 0;
+      for (const [, item] of Object.entries(structure)) {
+        if (item.type === 'file') count++;
+        else if (item.type === 'directory' && item.children) {
+          count += this.countFiles(item.children);
+        }
+      }
+      this.totalFilesCount = count;
+      return count;
+    },
+
+    getAllFilePaths(structure) {
+      const files = [];
+      if (!structure) return files;
+      for (const [, item] of Object.entries(structure)) {
+        if (item.type === 'file') files.push(item.path);
+        else if (item.type === 'directory' && item.children) {
+          files.push(...this.getAllFilePaths(item.children));
+        }
+      }
+      return files;
+    },
+
+    toggleFolder(folderPath) {
+      this.expandedFolders[folderPath] = !this.expandedFolders[folderPath];
+    },
+
+    getFileIcon(filePath) {
+      const ext = (filePath || '').toLowerCase().split('.').pop();
+      const icons = {
+        js: 'fa-brands fa-js text-yellow-400',
+        ts: 'fa-brands fa-js text-blue-400',
+        jsx: 'fa-brands fa-react text-cyan-400',
+        tsx: 'fa-brands fa-react text-cyan-400',
+        py: 'fa-brands fa-python text-emerald-400',
+        html: 'fa-brands fa-html5 text-orange-400',
+        css: 'fa-brands fa-css3-alt text-blue-400',
+        json: 'fa-solid fa-gear text-slate-400',
+        md: 'fa-solid fa-file-lines text-cyan-300',
+        yml: 'fa-solid fa-file-code text-purple-400',
+        yaml: 'fa-solid fa-file-code text-purple-400',
+        sh: 'fa-solid fa-terminal text-emerald-400',
+        bash: 'fa-solid fa-terminal text-emerald-400',
+        sql: 'fa-solid fa-database text-blue-400',
+        php: 'fa-brands fa-php text-indigo-400',
+        vue: 'fa-brands fa-vuejs text-emerald-400',
+        env: 'fa-solid fa-key text-amber-400',
+        lock: 'fa-solid fa-lock text-slate-500',
+        txt: 'fa-solid fa-file-lines text-slate-400',
+        svg: 'fa-solid fa-bezier-curve text-pink-400',
+        png: 'fa-solid fa-file-image text-purple-300',
+        jpg: 'fa-solid fa-file-image text-purple-300',
+        jpeg: 'fa-solid fa-file-image text-purple-300'
+      };
+      return icons[ext] || 'fa-solid fa-file-code text-slate-400';
+    },
+
+    renderTree(structure, parentPath = '', depth = 0) {
+      if (!structure) return '';
+      let html = '';
+      const entries = Object.entries(structure).sort((a, b) => {
+        const da = a[1].type === 'directory' ? 0 : 1;
+        const db = b[1].type === 'directory' ? 0 : 1;
+        if (da !== db) return da - db;
+        return a[0].localeCompare(b[0]);
+      });
+
+      const q = (this.fileSearchQuery || '').trim().toLowerCase();
+
+      for (const [name, item] of entries) {
+        const fullPath = parentPath ? parentPath + '/' + name : name;
+
+        if (item.type === 'directory') {
+          const childPaths = this.getAllFilePaths(item.children);
+          if (q && !childPaths.some(p => p.toLowerCase().includes(q)) && !name.toLowerCase().includes(q)) {
+            continue;
+          }
+          const isExpanded = !!this.expandedFolders[fullPath];
+          const count = childPaths.length;
+
+          html += `<div style="padding-right:${depth * 12}px" class="select-none">`;
+          html += `<div class="flex items-center gap-1.5 py-1 px-1.5 hover:bg-slate-800/80 rounded-lg cursor-pointer text-xs group transition-colors" onclick="window._agent.toggleFolder('${fullPath.replace(/'/g, "\\'")}')">`;
+          html += `<i class="fa-solid fa-chevron-left text-[9px] w-3 text-center text-slate-500 transition-transform duration-150 ${isExpanded ? '-rotate-90 text-cyan-400' : ''}"></i>`;
+          html += `<i class="fa-solid ${isExpanded ? 'fa-folder-open text-amber-400' : 'fa-folder text-amber-500/80'} text-xs"></i>`;
+          html += `<span class="flex-1 truncate font-sans text-slate-200">${this._escapeHtml(name)}</span>`;
+          html += `<span class="text-[10px] text-slate-500 font-mono">${count}</span>`;
+          html += `</div>`;
+
+          if (isExpanded && item.children) {
+            html += this.renderTree(item.children, fullPath, depth + 1);
+          }
+          html += `</div>`;
+        } else {
+          if (q && !name.toLowerCase().includes(q) && !item.path.toLowerCase().includes(q)) {
+            continue;
+          }
+          const icon = this.getFileIcon(item.path);
+          const escapedPath = item.path.replace(/'/g, "\\'");
+
+          html += `<div style="padding-right:${depth * 12}px" class="select-none">`;
+          html += `<div class="flex items-center gap-1.5 py-1 px-1.5 hover:bg-slate-800/80 rounded-lg text-xs group transition-colors">`;
+          html += `<i class="${icon} text-xs w-3.5 text-center"></i>`;
+          html += `<span class="flex-1 truncate font-mono text-slate-300 cursor-pointer hover:text-cyan-300" onclick="window._agent.openFilePreview('${escapedPath}')" title="${this._escapeHtml(item.path)}">${this._escapeHtml(name)}</span>`;
+
+          // Action buttons: Insert in Chat & View
+          html += `<div class="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">`;
+          html += `<button class="btn btn-ghost btn-xs h-5 min-h-5 px-1 text-cyan-400 hover:bg-cyan-500/20 tooltip tooltip-bottom" data-tip="إدراج في الدردشة" onclick="event.stopPropagation(); window._agent.insertPathIntoChat('${escapedPath}')"><i class="fa-solid fa-plus text-[10px]"></i></button>`;
+          html += `<button class="btn btn-ghost btn-xs h-5 min-h-5 px-1 text-slate-400 hover:text-white hover:bg-slate-700 tooltip tooltip-bottom" data-tip="معاينة الملف" onclick="event.stopPropagation(); window._agent.openFilePreview('${escapedPath}')"><i class="fa-solid fa-eye text-[10px]"></i></button>`;
+          html += `</div>`;
+
+          html += `</div></div>`;
+        }
+      }
+      return html;
+    },
+
+    _escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    },
+
+    async openFilePreview(filePath) {
+      this.previewFilePath = filePath;
+      this.previewFileContent = '';
+      this.previewFileSize = 0;
+      this.previewLoading = true;
+      this.previewModalOpen = true;
+
+      try {
+        const res = await fetch(`/api/session/workspace/file?path=${encodeURIComponent(filePath)}`, {
+          headers: { 'Authorization': this.token }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.previewFileContent = data.content;
+          this.previewFileSize = data.size;
+          this.$nextTick(() => {
+            const el = document.getElementById('preview-code-block');
+            if (el && window.hljs) {
+              el.textContent = data.content;
+              el.removeAttribute('data-highlighted');
+              delete el.dataset.highlighted;
+              window.hljs.highlightElement(el);
+            }
+          });
+        } else {
+          this.previewFileContent = '// تعذر قراءة الملف: ' + (data.error || 'خطأ غير معروف');
+        }
+      } catch (err) {
+        this.previewFileContent = '// خطأ في الاتصال: ' + err.message;
+      } finally {
+        this.previewLoading = false;
+      }
+    },
+
+    closeFilePreview() {
+      this.previewModalOpen = false;
+      this.previewFilePath = '';
+      this.previewFileContent = '';
+    },
+
+    insertPathIntoChat(filePath) {
+      const mention = `\`${filePath}\``;
+      if (this.chatInputText) {
+        this.chatInputText += ' ' + mention;
+      } else {
+        this.chatInputText = mention + ' ';
+      }
+      this.showToast('تم إدراج مسار الملف في صندوق الرسائل', 'info');
+      this.$nextTick(() => {
+        const el = document.getElementById('agent-input-textarea');
+        if (el) el.focus();
+      });
+    },
+
+    // ==================== CHAT LOGIC (Background-Persistent) ====================
 
     async loadChatHistory() {
       if (!this.session?.id) return;
@@ -175,7 +407,9 @@ document.addEventListener('alpine:init', () => {
           this.chatMessages = data.messages;
           this.$nextTick(() => this.scrollChatToBottom());
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('Error loading chat history:', e);
+      }
     },
 
     async saveChatHistory() {
@@ -197,23 +431,67 @@ document.addEventListener('alpine:init', () => {
       if (el) el.scrollTop = el.scrollHeight;
     },
 
+    async checkActiveChatJob() {
+      if (!this.session?.id) return;
+      try {
+        const res = await fetch(`/api/session/chat/active/${this.session.id}`, {
+          headers: { 'Authorization': this.token }
+        });
+        const data = await res.json();
+        if (res.ok && data.active && data.job) {
+          this.chatLoading = true;
+          this.chatElapsedTime = Math.max(1, Math.round(parseFloat(data.job.elapsedSeconds) || 1));
+          this.startActiveJobPolling();
+        }
+      } catch (e) {}
+    },
+
+    startActiveJobPolling() {
+      if (this.activePollTimer) clearInterval(this.activePollTimer);
+      this.activePollTimer = setInterval(async () => {
+        this.chatElapsedTime++;
+        // Poll status every 2 seconds
+        if (this.chatElapsedTime % 2 === 0) {
+          try {
+            const res = await fetch(`/api/session/chat/active/${this.session.id}`, {
+              headers: { 'Authorization': this.token }
+            });
+            const data = await res.json();
+            if (!data.active) {
+              // Task finished! Stop polling and hydrate messages
+              clearInterval(this.activePollTimer);
+              this.activePollTimer = null;
+              this.chatLoading = false;
+              await this.loadChatHistory();
+              this.$nextTick(() => this.scrollChatToBottom());
+            }
+          } catch (e) {
+            // Keep polling across temporary hiccups
+          }
+        }
+      }, 1000);
+    },
+
     async sendChatMessage(customPrompt = null) {
       const prompt = (customPrompt || this.chatInputText).trim();
       if (!prompt || this.chatLoading) return;
 
       this.chatInputText = '';
+
+      // Add user message to local state immediately
       this.chatMessages.push({
         id: Date.now(),
         role: 'user',
         content: prompt,
         time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
       });
-      this.saveChatHistory();
       this.chatLoading = true;
       this.chatElapsedTime = 0;
       this.$nextTick(() => this.scrollChatToBottom());
 
-      const timer = setInterval(() => {
+      // Start elapsed timer
+      if (this.chatTimerInterval) clearInterval(this.chatTimerInterval);
+      this.chatTimerInterval = setInterval(() => {
         this.chatElapsedTime++;
       }, 1000);
 
@@ -234,40 +512,53 @@ document.addEventListener('alpine:init', () => {
         });
 
         const data = await res.json();
-        clearInterval(timer);
+        clearInterval(this.chatTimerInterval);
 
         if (res.ok && data.success) {
+          if (data.jobAlreadyRunning) {
+            // Task is still running on server, start active polling
+            this.startActiveJobPolling();
+            return;
+          }
+
           if (data.conversationId) {
             this.chatConversationId = data.conversationId;
           }
-          this.chatMessages.push({
-            id: Date.now(),
-            role: 'assistant',
-            content: data.response || 'تم التنفيذ بنجاح.',
-            duration: data.duration,
-            time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-          });
+
+          // Reload fresh chat history directly from server to ensure perfect sync
+          await this.loadChatHistory();
+          this.chatLoading = false;
         } else {
+          this.chatLoading = false;
           this.chatMessages.push({
             id: Date.now(),
             role: 'assistant',
             isError: true,
-            content: `⚠️ **خطأ:**\n\n${data.error || 'تعذر استلام الرد'}`,
+            content: `**خطأ:**\n\n${data.error || 'تعذر استلام الرد'}`,
             time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
           });
         }
       } catch (err) {
-        clearInterval(timer);
-        this.chatMessages.push({
-          id: Date.now(),
-          role: 'assistant',
-          isError: true,
-          content: `⚠️ **تعذر الاتصال بالخادم:**\n\n${err.message}`,
-          time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-        });
-      } finally {
+        clearInterval(this.chatTimerInterval);
+        // If connection dropped (e.g. tab closed or wifi flicker), don't immediately fail!
+        // Check if the backend is still running the task in the background:
+        console.warn('Chat fetch connection interrupted, checking backend job status...', err);
+        try {
+          const checkRes = await fetch(`/api/session/chat/active/${this.session.id}`, {
+            headers: { 'Authorization': this.token }
+          });
+          const checkData = await checkRes.json();
+          if (checkData.active) {
+            // It is still running in the background!
+            this.startActiveJobPolling();
+            return;
+          }
+        } catch (e) {}
+
+        // If not active, reload history or display error
+        await this.loadChatHistory();
         this.chatLoading = false;
-        this.saveChatHistory();
+      } finally {
         this.$nextTick(() => {
           this.scrollChatToBottom();
           const el = document.getElementById('agent-input-textarea');
@@ -277,6 +568,8 @@ document.addEventListener('alpine:init', () => {
     },
 
     async abortChat() {
+      if (this.activePollTimer) clearInterval(this.activePollTimer);
+      if (this.chatTimerInterval) clearInterval(this.chatTimerInterval);
       try {
         await fetch('/api/session/chat/abort', {
           method: 'POST',
@@ -286,7 +579,9 @@ document.addEventListener('alpine:init', () => {
           },
           body: JSON.stringify({ token: this.token })
         });
+        this.chatLoading = false;
         this.showToast('تم إرسال طلب إلغاء الأمر', 'warning');
+        await this.loadChatHistory();
       } catch (e) {}
     },
 
@@ -353,22 +648,11 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    insertMemoryToPrompt(item) {
-      const memorySnippet = `[سياق من ذاكرة MemoryZ (${item.title || item.type})]:\n${item.content}`;
-      this.chatInputText = this.chatInputText ? `${this.chatInputText}\n\n${memorySnippet}` : memorySnippet;
-      this.showMemoryModal = false;
-      this.showToast('تم إدراج الذاكرة في خانة الإدخال', 'success');
-      this.$nextTick(() => {
-        const el = document.getElementById('agent-input-textarea');
-        if (el) {
-          el.focus();
-          el.scrollTop = el.scrollHeight;
-        }
-      });
-    },
-
-    async storeNewMemory() {
-      if (!this.newMemory.content || !this.newMemory.content.trim()) return;
+    async storeMemory() {
+      if (!this.newMemory.content.trim()) {
+        this.showToast('يرجى كتابة محتوى الذاكرة أولاً', 'warning');
+        return;
+      }
 
       this.memoryStoring = true;
       try {
@@ -384,20 +668,18 @@ document.addEventListener('alpine:init', () => {
             content: this.newMemory.content.trim()
           })
         });
-
         const data = await res.json();
         if (res.ok && data.success) {
           this.showToast('تم حفظ الذاكرة في MemoryZ بنجاح', 'success');
           this.newMemory.title = '';
           this.newMemory.content = '';
           this.memoryActiveTab = 'recall';
-          this.memorySearchQuery = '';
           this.recallMemories();
         } else {
-          this.showToast(data.error || 'تعذر حفظ الذاكرة', 'error');
+          this.showToast('خطأ أثناء حفظ الذاكرة: ' + (data.error || 'غير معروف'), 'error');
         }
       } catch (e) {
-        this.showToast('تعذر حفظ الذاكرة: ' + e.message, 'error');
+        this.showToast('تعذر الاتصال بخادم MCP: ' + e.message, 'error');
       } finally {
         this.memoryStoring = false;
       }
@@ -405,9 +687,7 @@ document.addEventListener('alpine:init', () => {
 
     async fetchMcpStatus() {
       try {
-        const res = await fetch('/api/mcp/status', {
-          headers: { 'Authorization': this.token }
-        });
+        const res = await fetch('/api/mcp/status');
         const data = await res.json();
         if (res.ok && data.success) {
           this.mcpStatus = data;
@@ -415,7 +695,6 @@ document.addEventListener('alpine:init', () => {
       } catch (e) {}
     },
 
-    // Remote MCP Connector Methods
     openRemoteMcpModal() {
       this.showRemoteMcpModal = true;
     },
@@ -424,24 +703,45 @@ document.addEventListener('alpine:init', () => {
       return `${window.location.origin}/mcp?token=${this.token}`;
     },
 
+    getMcpSseUrl() {
+      return `${window.location.origin}/mcp/sse?token=${this.token}`;
+    },
+
+    getMcpMessagesUrl() {
+      return `${window.location.origin}/mcp/messages?token=${this.token}`;
+    },
+
     getOpenApiUrl() {
-      return `${window.location.origin}/openapi.json?token=${this.token}`;
+      return `${window.location.origin}/api/openapi.json?token=${this.token}`;
     },
 
     copyRemoteMcpUrl() {
-      const url = this.getRemoteMcpUrl();
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          this.showToast('تم نسخ رابط Remote MCP لـ Claude و Cursor', 'success');
-        });
-      }
+      this.copyText(this.getRemoteMcpUrl());
     },
 
     copyOpenApiUrl() {
-      const url = this.getOpenApiUrl();
+      this.copyText(this.getOpenApiUrl());
+    },
+
+    insertMemoryToPrompt(item) {
+      const text = `[ذاكرة سياقية: ${item.title || ''} - ${item.content}]`;
+      if (this.chatInputText) {
+        this.chatInputText += '\n' + text;
+      } else {
+        this.chatInputText = text + '\n';
+      }
+      this.showMemoryModal = false;
+      this.showToast('تم إدراج الذاكرة في صندوق الرسائل', 'info');
+    },
+
+    storeNewMemory() {
+      this.storeMemory();
+    },
+
+    copyText(text) {
       if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(() => {
-          this.showToast('تم نسخ رابط OpenAPI لـ ChatGPT Actions', 'success');
+        navigator.clipboard.writeText(text).then(() => {
+          this.showToast('تم نسخ الرابط بنجاح إلى الحافظة', 'success');
         });
       }
     },
