@@ -505,16 +505,111 @@
           <div x-html="renderTree(fileStructure)"></div>
         </div>
 
-        <!-- Footer / Target Dir Summary -->
-        <div class="p-2.5 border-t border-slate-800 bg-slate-950/80 text-[10px] text-slate-400 font-mono truncate">
-          <span class="text-slate-500">المسار: </span>
-          <span class="text-cyan-400" x-text="session?.targetDir"></span>
+        <!-- Upload & Download Actions Toolbar -->
+        <div class="p-2 border-t border-slate-800 bg-slate-950 space-y-2">
+          
+          <!-- Uploading Spinner Banner -->
+          <div x-show="uploadingFiles" class="flex items-center gap-2 p-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-[11px]">
+            <span class="loading loading-spinner loading-xs text-cyan-400"></span>
+            <span>جاري رفع ونقل الملفات إلى مجلد المشروع...</span>
+          </div>
+
+          <div class="grid grid-cols-3 gap-1">
+            <!-- Upload File Button -->
+            <button type="button" @click="$refs.fileInput.click()" :disabled="uploadingFiles"
+                    class="btn btn-xs btn-ghost bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800 text-slate-200 gap-1 tooltip tooltip-top h-7 px-1"
+                    data-tip="رفع ملفات من جهازك">
+              <i class="fa-solid fa-file-arrow-up text-cyan-400 text-xs"></i>
+              <span class="text-[10px]">ملف</span>
+            </button>
+
+            <!-- Upload Folder Button -->
+            <button type="button" @click="$refs.folderInput.click()" :disabled="uploadingFiles"
+                    class="btn btn-xs btn-ghost bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800 text-slate-200 gap-1 tooltip tooltip-top h-7 px-1"
+                    data-tip="رفع مجلد كامل بمحتوياته">
+              <i class="fa-solid fa-folder-plus text-amber-400 text-xs"></i>
+              <span class="text-[10px]">مجلد</span>
+            </button>
+
+            <!-- Fetch URL Button -->
+            <button type="button" @click="showUrlFetchModal = true"
+                    class="btn btn-xs btn-ghost bg-slate-900 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-800 text-slate-200 gap-1 tooltip tooltip-top h-7 px-1"
+                    data-tip="جلب صورة أو ملف عبر رابط URL">
+              <i class="fa-solid fa-cloud-arrow-down text-purple-400 text-xs"></i>
+              <span class="text-[10px]">رابط</span>
+            </button>
+          </div>
+
+          <!-- Hidden Input Elements -->
+          <input type="file" x-ref="fileInput" @change="handleFileUpload($event)" multiple class="hidden" />
+          <input type="file" x-ref="folderInput" @change="handleFolderUpload($event)" webkitdirectory directory multiple class="hidden" />
+
+          <!-- Target Dir summary -->
+          <div class="text-[10px] text-slate-500 font-mono truncate flex items-center justify-between pt-0.5">
+            <span class="text-slate-400 truncate" x-text="session?.targetDir"></span>
+            <span class="text-[9px] text-cyan-400 shrink-0">ساندبوكس</span>
+          </div>
         </div>
 
       </aside>
     </div>
 
   </div>
+
+  <!-- ==================== URL FETCH MODAL ==================== -->
+  <dialog id="url_fetch_modal" class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': showUrlFetchModal }">
+    <div class="modal-box max-w-md bg-slate-900 border border-purple-500/40 text-slate-100 p-0 shadow-2xl backdrop-blur-2xl">
+      <div class="bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border-b border-purple-500/20 px-5 py-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-lg bg-purple-500/20 border border-purple-500/30 flex items-center justify-center text-purple-300">
+            <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">جلب ملف أو صورة عبر رابط URL</h3>
+            <p class="text-[10px] text-purple-300/70">تحميل ملف من الإنترنت وحفظه مباشرة في مجلد المشروع</p>
+          </div>
+        </div>
+        <button @click="showUrlFetchModal = false" class="btn btn-xs btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <form @submit.prevent="executeFetchUrl()" class="p-5 space-y-3.5 text-xs">
+        <div class="form-control">
+          <label class="label pb-1"><span class="label-text text-xs text-slate-300 font-semibold">رابط الملف أو الصورة (URL): *</span></label>
+          <input type="url" x-model="fetchUrlInput" required placeholder="https://example.com/images/sample.png"
+                 class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-purple-500">
+        </div>
+
+        <div class="grid grid-cols-2 gap-2.5">
+          <div class="form-control">
+            <label class="label pb-1"><span class="label-text text-[11px] text-slate-300">اسم الملف (اختياري):</span></label>
+            <input type="text" x-model="fetchFilenameInput" placeholder="مثال: banner.png"
+                   class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs">
+          </div>
+          <div class="form-control">
+            <label class="label pb-1"><span class="label-text text-[11px] text-slate-300">مجلد فرعي (اختياري):</span></label>
+            <input type="text" x-model="fetchSubdirInput" placeholder="مثال: assets/images"
+                   class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs">
+          </div>
+        </div>
+
+        <div class="text-[11px] text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-1">
+          <div><i class="fa-solid fa-folder-tree text-amber-400 ml-1"></i> مجلد الحفظ: <code class="text-cyan-300 font-mono" x-text="session?.targetDir"></code></div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" @click="showUrlFetchModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إلغاء</button>
+          <button type="submit" :disabled="fetchingUrl || !fetchUrlInput.trim()" class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-none text-white text-xs px-4 gap-1.5 shadow-md shadow-purple-600/20">
+            <span x-show="fetchingUrl" class="loading loading-spinner loading-xs"></span>
+            <i x-show="!fetchingUrl" class="fa-solid fa-download text-xs"></i>
+            <span>جلب وحفظ في المشروع</span>
+          </button>
+        </div>
+      </form>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+      <button @click="showUrlFetchModal = false">إغلاق</button>
+    </form>
+  </dialog>
 
   <!-- ==================== FILE PREVIEW MODAL (Vibzcode Style) ==================== -->
   <dialog id="file_preview_modal" class="modal modal-bottom sm:modal-middle" :class="{ 'modal-open': previewModalOpen }">

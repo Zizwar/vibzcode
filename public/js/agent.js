@@ -29,10 +29,16 @@ document.addEventListener('alpine:init', () => {
     fileTreeLoading: false,
     totalFilesCount: 0,
     previewModalOpen: false,
-    previewFilePath: '',
-    previewFileContent: '',
     previewFileSize: 0,
     previewLoading: false,
+
+    // Workspace Upload & URL Fetch State
+    uploadingFiles: false,
+    showUrlFetchModal: false,
+    fetchUrlInput: '',
+    fetchFilenameInput: '',
+    fetchSubdirInput: '',
+    fetchingUrl: false,
 
     // MemoryZ MCP State
     showMemoryModal: false,
@@ -392,6 +398,98 @@ document.addEventListener('alpine:init', () => {
         const el = document.getElementById('agent-input-textarea');
         if (el) el.focus();
       });
+    },
+
+    // ==================== WORKSPACE UPLOAD & URL FETCH METHODS ====================
+
+    async handleFileUpload(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+      await this.uploadFilesToServer(files, false);
+      event.target.value = '';
+    },
+
+    async handleFolderUpload(event) {
+      const files = event.target.files;
+      if (!files || files.length === 0) return;
+      await this.uploadFilesToServer(files, true);
+      event.target.value = '';
+    },
+
+    async uploadFilesToServer(fileList, isFolder = false) {
+      const formData = new FormData();
+      const relPaths = [];
+
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        formData.append('files', file);
+        const relPath = isFolder && file.webkitRelativePath ? file.webkitRelativePath : file.name;
+        relPaths.push(relPath);
+      }
+
+      formData.append('relPaths', JSON.stringify(relPaths));
+      this.uploadingFiles = true;
+
+      try {
+        const res = await fetch('/api/session/workspace/upload', {
+          method: 'POST',
+          headers: {
+            'Authorization': this.token
+          },
+          body: formData
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.showToast(data.message || 'تم رفع الملفات بنجاح إلى المشروع', 'success');
+          await this.fetchWorkspaceTree();
+        } else {
+          this.showToast('فشل رفع الملفات: ' + (data.error || 'خطأ غير معروف'), 'error');
+        }
+      } catch (err) {
+        this.showToast('خطأ أثناء الرفع: ' + err.message, 'error');
+      } finally {
+        this.uploadingFiles = false;
+      }
+    },
+
+    async executeFetchUrl() {
+      if (!this.fetchUrlInput || !this.fetchUrlInput.trim()) {
+        this.showToast('يرجى إدخال رابط URL صحيح', 'warning');
+        return;
+      }
+
+      this.fetchingUrl = true;
+      try {
+        const res = await fetch('/api/session/workspace/fetch-url', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.token
+          },
+          body: JSON.stringify({
+            url: this.fetchUrlInput.trim(),
+            filename: this.fetchFilenameInput.trim(),
+            subDir: this.fetchSubdirInput.trim()
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.showToast(data.message || 'تم جلب وحفظ الملف في المشروع بنجاح', 'success');
+          this.showUrlFetchModal = false;
+          this.fetchUrlInput = '';
+          this.fetchFilenameInput = '';
+          this.fetchSubdirInput = '';
+          await this.fetchWorkspaceTree();
+        } else {
+          this.showToast('تعذر جلب الملف: ' + (data.error || 'خطأ غير معروف'), 'error');
+        }
+      } catch (err) {
+        this.showToast('خطأ أثناء جلب الرابط: ' + err.message, 'error');
+      } finally {
+        this.fetchingUrl = false;
+      }
     },
 
     // ==================== CHAT LOGIC (Background-Persistent) ====================

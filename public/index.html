@@ -137,9 +137,8 @@
 
       <!-- Header Actions -->
       <div class="flex items-center gap-2">
-        <button @click="openCreateModal" class="btn btn-sm btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 border-none text-white gap-1.5 shadow-md shadow-cyan-500/20">
-          <i class="fa-solid fa-plus text-xs"></i>
-          <span>إنشاء جلسة وكيل جديدة</span>
+        <button @click="openCreateModal" class="btn btn-sm btn-circle btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white shadow-md shadow-cyan-500/20 tooltip tooltip-bottom" data-tip="إنشاء جلسة جديدة">
+          <i class="fa-solid fa-plus text-sm"></i>
         </button>
 
         <button @click="loadSessions" class="btn btn-sm btn-ghost border border-slate-800 text-slate-300 hover:text-white" title="تحديث البيانات">
@@ -371,24 +370,55 @@
                  class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 focus:border-cyan-500">
         </div>
 
-        <!-- Target Workspace Folder -->
-        <div class="form-control">
-          <label class="label pb-1 font-semibold text-slate-300">مجلد الساندبوكس المسموح بالعمل داخله:</label>
-          
-          <select x-model="newSession.targetDir" class="select select-sm select-bordered bg-slate-950 border-slate-700 text-slate-100 mb-2">
-            <template x-for="f in availableFolders" :key="f.path">
-              <option :value="f.path" x-text="f.path"></option>
-            </template>
-            <option value="custom">مسار مخصص آخر...</option>
-          </select>
-
-          <!-- Custom Path input if selected -->
-          <div x-show="newSession.targetDir === 'custom'" class="pt-1">
-            <input type="text" x-model="newSession.customTargetDir" placeholder="/root/path/to/directory"
-                   class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 font-mono">
+        <!-- Target Workspace Folder with Elegant Tree Picker -->
+        <div class="form-control space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="label p-0 font-semibold text-slate-300">مجلد ساندبوكس المشروع (Workspace Folder):</label>
+            <span class="text-[10px] text-cyan-400 font-mono" x-text="newSession.targetDir"></span>
           </div>
-          <span class="text-[11px] text-slate-400 mt-1">
-            <i class="fa-solid fa-lock text-cyan-400"></i>
+
+          <!-- Current Selected Folder Box -->
+          <div class="bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-inner">
+            <div class="flex items-center gap-2 min-w-0">
+              <i class="fa-solid fa-folder-open text-amber-400 text-sm shrink-0"></i>
+              <span class="font-mono text-xs text-white truncate" x-text="newSession.targetDir || 'لم يتم اختيار مجلد'"></span>
+            </div>
+            <span class="badge badge-xs badge-info font-mono text-[9px] py-1 px-1.5 shrink-0">محدد</span>
+          </div>
+
+          <!-- Tree Search Input -->
+          <div class="relative">
+            <input type="text" x-model="adminFolderSearch" placeholder="بحث وتصفية شجرة المجلدات..."
+                   class="input input-xs input-bordered w-full bg-slate-950 border-slate-700 text-slate-200 placeholder-slate-500 pl-2 pr-7 text-xs font-arabic">
+            <i class="fa-solid fa-search text-[10px] absolute right-2.5 top-2 text-slate-500"></i>
+          </div>
+
+          <!-- Elegant Directory Tree Container -->
+          <div class="max-h-48 overflow-y-auto border border-slate-800 rounded-xl bg-slate-950/90 p-2 scrollbar-thin space-y-1">
+            <template x-if="loadingFolderTree">
+              <div class="text-center py-6 text-slate-400 space-y-1.5">
+                <span class="loading loading-spinner loading-xs text-cyan-400"></span>
+                <p class="text-[11px]">جاري قراءة شجرة المجلدات...</p>
+              </div>
+            </template>
+            <div x-show="!loadingFolderTree" x-html="renderAdminFolderTree(folderTree)"></div>
+          </div>
+
+          <!-- Custom Path Option -->
+          <details class="collapse collapse-arrow bg-slate-950 border border-slate-800 rounded-xl">
+            <summary class="collapse-title text-[11px] font-semibold py-1.5 px-3 min-h-0 text-slate-400 hover:text-white">
+              <i class="fa-solid fa-terminal text-[10px] ml-1"></i> كتابة مسار مخصص يدوياً...
+            </summary>
+            <div class="collapse-content px-3 pb-2 pt-1 space-y-1.5">
+              <input type="text" x-model="newSession.customTargetDir" @input="if (newSession.customTargetDir.trim()) newSession.targetDir = newSession.customTargetDir.trim()"
+                     placeholder="/root/path/to/custom-project"
+                     class="input input-xs input-bordered w-full bg-slate-900 border-slate-700 text-slate-100 font-mono text-xs">
+              <p class="text-[10px] text-slate-500">سيتم إنشاء المجلد تلقائياً في حال لم يكن موجوداً.</p>
+            </div>
+          </details>
+
+          <span class="text-[11px] text-slate-400">
+            <i class="fa-solid fa-lock text-cyan-400 text-[10px]"></i>
             لن يتمكن الوكيل في هذه الجلسة من تجاوز هذا المجلد عند تفعيل الساندبوكس.
           </span>
         </div>

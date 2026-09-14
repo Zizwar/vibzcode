@@ -1,8 +1,10 @@
 const http = require('http');
+const https = require('https');
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
+const multer = require('multer');
 const { WebSocketServer } = require('ws');
 const { execFile } = require('child_process');
 const pty = require('node-pty');
@@ -19,9 +21,17 @@ const ADMIN_SECRET = crypto.createHash('sha256').update(`${ADMIN_USER}:${ADMIN_P
 const DATA_DIR = path.join(__dirname, 'data');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
 const CHAT_LOGS_DIR = path.join(DATA_DIR, 'chats');
+const TEMP_UPLOADS_DIR = path.join(DATA_DIR, 'temp_uploads');
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
 if (!fs.existsSync(CHAT_LOGS_DIR)) fs.mkdirSync(CHAT_LOGS_DIR, { recursive: true });
+if (!fs.existsSync(TEMP_UPLOADS_DIR)) fs.mkdirSync(TEMP_UPLOADS_DIR, { recursive: true });
+
+// Configure Multer for workspace file/folder uploads
+const upload = multer({
+  dest: TEMP_UPLOADS_DIR,
+  limits: { fileSize: 100 * 1024 * 1024 } // 100MB
+});
 
 // Load / Save Sessions
 function loadSessions() {
@@ -149,7 +159,33 @@ app.post('/api/admin/verify', (req, res) => {
   return res.status(401).json({ valid: false });
 });
 
-// Admin List Available Folders
+// Build folder-only directory tree for Admin Session creation
+function buildDirectoryOnlyTree(dirPath, depth = 0, maxDepth = 3) {
+  if (depth > maxDepth) return null;
+  const ignoreList = new Set(['.git', 'node_modules', '.tmp', 'dist', 'build', '.cache', '.npm']);
+  const node = {
+    name: path.basename(dirPath),
+    path: dirPath,
+    children: []
+  };
+
+  try {
+    const items = fs.readdirSync(dirPath, { withFileTypes: true });
+    for (const item of items) {
+      if (item.isDirectory() && !item.name.startsWith('.') && !ignoreList.has(item.name)) {
+        const fullPath = path.join(dirPath, item.name);
+        const sub = buildDirectoryOnlyTree(fullPath, depth + 1, maxDepth);
+        if (sub) {
+          node.children.push(sub);
+        }
+      }
+    }
+  } catch (e) {}
+
+  return node;
+}
+
+// Admin List Available Folders (Flat list)
 app.get('/api/admin/folders', requireAdmin, (req, res) => {
   const candidateDirs = ['/root/wino', '/root/test', '/root/remote'];
   const folders = [];
@@ -173,6 +209,21 @@ app.get('/api/admin/folders', requireAdmin, (req, res) => {
   }
 
   return res.json({ success: true, folders });
+});
+
+// Admin List Available Folders as an Elegant Tree
+app.get('/api/admin/folders/tree', requireAdmin, (req, res) => {
+  const candidateDirs = ['/root/wino', '/root/test', '/root/remote'];
+  const tree = [];
+
+  for (const base of candidateDirs) {
+    if (fs.existsSync(base)) {
+      const node = buildDirectoryOnlyTree(base, 0, 3);
+      if (node) tree.push(node);
+    }
+  }
+
+  return res.json({ success: true, tree });
 });
 
 // Admin List Sessions
@@ -401,6 +452,193 @@ app.get('/api/session/workspace/file', (req, res) => {
     return res.json({ success: true, path: requestedPath, content, size: stat.size });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Workspace File & Folder Upload API
+app.post('/api/session/workspace/upload', upload.array('files', 100), (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.body.sessionId) || { targetDir: req.body.targetDir || '/root/wino/ferme' })
+    : getSessionByToken(token);
+
+  if (!session) {
+    if (req.files) req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch(e){} });
+    return res.status(401).json({ success: false, error: 'غير مصرح' });
+  }
+
+  const targetDir = path.resolve(session.targetDir);
+  if (!fs.existsSync(targetDir)) {
+    if (req.files) req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch(e){} });
+    return res.status(404).json({ success: false, error: 'مجلد المشروع غير موجود' });
+  }
+
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({ success: false, error: 'لم يتم استلام أي ملفات' });
+  }
+
+  let relPaths = req.body.relPaths;
+  if (typeof relPaths === 'string') {
+    try { relPaths = JSON.parse(relPaths); } catch(e) { relPaths = [relPaths]; }
+  } else if (!Array.isArray(relPaths)) {
+    relPaths = [];
+  }
+
+  const uploadedList = [];
+
+  try {
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
+      const relPath = relPaths[i] || file.originalname;
+      const safeRel = relPath.replace(/^(\.\.[\/\\])+/, '');
+      const destPath = path.resolve(targetDir, safeRel);
+
+      if (!destPath.startsWith(targetDir)) {
+        try { fs.unlinkSync(file.path); } catch(e) {}
+        continue;
+      }
+
+      const destDir = path.dirname(destPath);
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+      }
+
+      fs.renameSync(file.path, destPath);
+      uploadedList.push({ name: path.basename(destPath), path: safeRel, size: file.size });
+    }
+
+    return res.json({
+      success: true,
+      message: `تم رفع ${uploadedList.length} ملف بنجاح إلى مجلد المشروع`,
+      uploaded: uploadedList
+    });
+  } catch (err) {
+    if (req.files) req.files.forEach(f => { try { fs.unlinkSync(f.path); } catch(e){} });
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Helper to fetch file from URL (follows redirects up to 5 times)
+function downloadFileFromUrl(urlStr, destPath, maxRedirects = 5) {
+  return new Promise((resolve, reject) => {
+    if (maxRedirects < 0) return reject(new Error('تجاوز الحد الأقصى لإعادة التوجيه (Too many redirects)'));
+
+    let parsedUrl;
+    try {
+      parsedUrl = new URL(urlStr);
+    } catch (e) {
+      return reject(new Error('رابط URL غير صالح'));
+    }
+
+    const client = parsedUrl.protocol === 'https:' ? https : http;
+    const req = client.get(urlStr, { timeout: 30000 }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        const nextUrl = new URL(res.headers.location, urlStr).toString();
+        return resolve(downloadFileFromUrl(nextUrl, destPath, maxRedirects - 1));
+      }
+
+      if (res.statusCode !== 200) {
+        return reject(new Error(`فشل التحميل من الرابط، كود الاستجابة: ${res.statusCode}`));
+      }
+
+      const fileStream = fs.createWriteStream(destPath);
+      let downloadedBytes = 0;
+      const MAX_SIZE = 100 * 1024 * 1024; // 100MB
+
+      res.on('data', (chunk) => {
+        downloadedBytes += chunk.length;
+        if (downloadedBytes > MAX_SIZE) {
+          req.destroy();
+          fileStream.close();
+          try { fs.unlinkSync(destPath); } catch (e) {}
+          return reject(new Error('حجم الملف المحمل تجاوز الحد الأقصى (100MB)'));
+        }
+      });
+
+      res.pipe(fileStream);
+
+      fileStream.on('finish', () => {
+        fileStream.close(() => resolve({ size: downloadedBytes }));
+      });
+
+      fileStream.on('error', (err) => {
+        try { fs.unlinkSync(destPath); } catch (e) {}
+        reject(err);
+      });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      try { fs.unlinkSync(destPath); } catch (e) {}
+      reject(new Error('انتهت مهلة الاتصال بالرابط (Connection timeout)'));
+    });
+
+    req.on('error', (err) => {
+      try { fs.unlinkSync(destPath); } catch (e) {}
+      reject(err);
+    });
+  });
+}
+
+// Workspace Fetch URL API
+app.post('/api/session/workspace/fetch-url', async (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.body.sessionId) || { targetDir: req.body.targetDir || '/root/wino/ferme' })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).json({ success: false, error: 'غير مصرح' });
+
+  const targetDir = path.resolve(session.targetDir);
+  if (!fs.existsSync(targetDir)) {
+    return res.status(404).json({ success: false, error: 'مجلد المشروع غير موجود' });
+  }
+
+  const { url, filename, subDir } = req.body;
+  if (!url || typeof url !== 'string' || !url.trim().startsWith('http')) {
+    return res.status(400).json({ success: false, error: 'يرجى تقديم رابط صالح يبدأ بـ http أو https' });
+  }
+
+  const cleanUrl = url.trim();
+  let targetFilename = (filename || '').trim();
+  if (!targetFilename) {
+    try {
+      const u = new URL(cleanUrl);
+      targetFilename = path.basename(u.pathname) || 'downloaded_' + Date.now();
+    } catch (e) {
+      targetFilename = 'downloaded_' + Date.now();
+    }
+  }
+
+  targetFilename = path.basename(targetFilename).replace(/[^a-zA-Z0-9._\-\u0600-\u06FF]/g, '_');
+
+  let destDir = targetDir;
+  if (subDir && typeof subDir === 'string') {
+    const safeSub = subDir.replace(/^(\.\.[\/\\])+/, '');
+    destDir = path.resolve(targetDir, safeSub);
+    if (!destDir.startsWith(targetDir)) destDir = targetDir;
+  }
+
+  if (!fs.existsSync(destDir)) {
+    fs.mkdirSync(destDir, { recursive: true });
+  }
+
+  const destPath = path.join(destDir, targetFilename);
+
+  try {
+    const result = await downloadFileFromUrl(cleanUrl, destPath);
+    const rel = path.relative(targetDir, destPath).replace(/\\/g, '/');
+    return res.json({
+      success: true,
+      message: `تم جلب وحفظ الملف بنجاح: ${targetFilename}`,
+      file: {
+        name: targetFilename,
+        path: rel,
+        size: result.size
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: 'تعذر جلب الرابط: ' + err.message });
   }
 });
 
