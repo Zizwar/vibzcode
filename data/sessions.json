@@ -1,5 +1,23 @@
 [
   {
+    "id": "sess_mu1l85j7_c34d4b54",
+    "name": "suno load",
+    "assignee": "Hamid",
+    "token": "agyz_d06688364bdd8fe7ca8481d961aedbe1",
+    "targetDir": "/root/wino/sunoload",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "chat",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-14T18:39:58.724Z",
+    "lastActive": "2026-09-14T18:46:16.295Z",
+    "stats": {
+      "messagesCount": 1
+    }
+  },
+  {
     "id": "sess_mu1ha1w3_ee0d4a65",
     "name": "vps",
     "assignee": "عضو الفريق",

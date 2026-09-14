@@ -31,6 +31,9 @@ document.addEventListener('alpine:init', () => {
     previewModalOpen: false,
     previewFileSize: 0,
     previewLoading: false,
+    previewFileType: 'code',
+    previewFileRawUrl: '',
+    selectedTreeItems: [],
 
     // Workspace Upload & URL Fetch State
     uploadingFiles: false,
@@ -276,9 +279,88 @@ document.addEventListener('alpine:init', () => {
         svg: 'fa-solid fa-bezier-curve text-pink-400',
         png: 'fa-solid fa-file-image text-purple-300',
         jpg: 'fa-solid fa-file-image text-purple-300',
-        jpeg: 'fa-solid fa-file-image text-purple-300'
+        jpeg: 'fa-solid fa-file-image text-purple-300',
+        gif: 'fa-solid fa-file-image text-purple-300',
+        webp: 'fa-solid fa-file-image text-purple-300',
+        ico: 'fa-solid fa-file-image text-purple-300',
+        bmp: 'fa-solid fa-file-image text-purple-300',
+        mp4: 'fa-solid fa-file-video text-rose-400',
+        webm: 'fa-solid fa-file-video text-rose-400',
+        mov: 'fa-solid fa-file-video text-rose-400',
+        mkv: 'fa-solid fa-file-video text-rose-400',
+        avi: 'fa-solid fa-file-video text-rose-400',
+        mp3: 'fa-solid fa-file-audio text-amber-400',
+        wav: 'fa-solid fa-file-audio text-amber-400',
+        m4a: 'fa-solid fa-file-audio text-amber-400',
+        aac: 'fa-solid fa-file-audio text-amber-400',
+        flac: 'fa-solid fa-file-audio text-amber-400',
+        ogg: 'fa-solid fa-file-audio text-amber-400',
+        pdf: 'fa-solid fa-file-pdf text-red-500',
+        zip: 'fa-solid fa-file-zipper text-yellow-400',
+        tar: 'fa-solid fa-file-zipper text-yellow-400',
+        gz: 'fa-solid fa-file-zipper text-yellow-400',
+        rar: 'fa-solid fa-file-zipper text-yellow-400',
+        '7z': 'fa-solid fa-file-zipper text-yellow-400'
       };
       return icons[ext] || 'fa-solid fa-file-code text-slate-400';
+    },
+
+    toggleItemSelection(path) {
+      const idx = this.selectedTreeItems.indexOf(path);
+      if (idx > -1) {
+        this.selectedTreeItems.splice(idx, 1);
+      } else {
+        this.selectedTreeItems.push(path);
+      }
+    },
+
+    isItemSelected(path) {
+      return this.selectedTreeItems.includes(path);
+    },
+
+    clearTreeSelection() {
+      this.selectedTreeItems = [];
+    },
+
+    selectAllTreeItems() {
+      this.selectedTreeItems = this.getAllFilePaths(this.fileStructure);
+      this.showToast(`تم تحديد ${this.selectedTreeItems.length} عنصر`, 'info');
+    },
+
+    downloadFile(filePath) {
+      const url = `/api/session/workspace/download?token=${encodeURIComponent(this.token)}&path=${encodeURIComponent(filePath)}`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filePath.split('/').pop() || 'download';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    },
+
+    downloadFolderAsZip(folderPath) {
+      const url = `/api/session/workspace/zip?token=${encodeURIComponent(this.token)}&path=${encodeURIComponent(folderPath)}`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = (folderPath ? folderPath.split('/').pop() : 'project') + '.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    },
+
+    downloadSelectedAsZip() {
+      if (this.selectedTreeItems.length === 0) {
+        // Download entire project if nothing selected
+        this.downloadFolderAsZip('');
+        return;
+      }
+      const pathsParam = this.selectedTreeItems.join(',');
+      const url = `/api/session/workspace/zip?token=${encodeURIComponent(this.token)}&paths=${encodeURIComponent(pathsParam)}`;
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'selected_files.zip';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
     },
 
     renderTree(structure, parentPath = '', depth = 0) {
@@ -295,6 +377,8 @@ document.addEventListener('alpine:init', () => {
 
       for (const [name, item] of entries) {
         const fullPath = parentPath ? parentPath + '/' + name : name;
+        const isSelected = this.selectedTreeItems.includes(fullPath);
+        const escapedPath = fullPath.replace(/'/g, "\\'");
 
         if (item.type === 'directory') {
           const childPaths = this.getAllFilePaths(item.children);
@@ -304,12 +388,22 @@ document.addEventListener('alpine:init', () => {
           const isExpanded = !!this.expandedFolders[fullPath];
           const count = childPaths.length;
 
-          html += `<div style="padding-right:${depth * 12}px" class="select-none">`;
-          html += `<div class="flex items-center gap-1.5 py-1 px-1.5 hover:bg-slate-800/80 rounded-lg cursor-pointer text-xs group transition-colors" onclick="window._agent.toggleFolder('${fullPath.replace(/'/g, "\\'")}')">`;
-          html += `<i class="fa-solid fa-chevron-left text-[9px] w-3 text-center text-slate-500 transition-transform duration-150 ${isExpanded ? '-rotate-90 text-cyan-400' : ''}"></i>`;
+          html += `<div style="padding-right:${depth * 10}px" class="select-none">`;
+          html += `<div class="flex items-center gap-1 py-1 px-1 hover:bg-slate-800/80 rounded-lg cursor-pointer text-xs group transition-colors ${isSelected ? 'bg-cyan-950/40 border border-cyan-500/30' : ''}" onclick="window._agent.toggleFolder('${escapedPath}')">`;
+          
+          // Folder Selection Checkbox
+          html += `<input type="checkbox" class="checkbox checkbox-xs checkbox-primary shrink-0 opacity-40 group-hover:opacity-100 ${isSelected ? 'opacity-100' : ''}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); window._agent.toggleItemSelection('${escapedPath}')">`;
+
+          html += `<i class="fa-solid fa-chevron-left text-[9px] w-2.5 text-center text-slate-500 transition-transform duration-150 ${isExpanded ? '-rotate-90 text-cyan-400' : ''}"></i>`;
           html += `<i class="fa-solid ${isExpanded ? 'fa-folder-open text-amber-400' : 'fa-folder text-amber-500/80'} text-xs"></i>`;
           html += `<span class="flex-1 truncate font-sans text-slate-200">${this._escapeHtml(name)}</span>`;
           html += `<span class="text-[10px] text-slate-500 font-mono">${count}</span>`;
+
+          // Folder Action: Download Folder as ZIP
+          html += `<div class="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">`;
+          html += `<button class="btn btn-ghost btn-xs h-5 min-h-5 px-1 text-amber-400 hover:bg-amber-500/20 tooltip tooltip-bottom" data-tip="تنزيل المجلد كـ ZIP" onclick="event.stopPropagation(); window._agent.downloadFolderAsZip('${escapedPath}')"><i class="fa-solid fa-file-zipper text-[10px]"></i></button>`;
+          html += `</div>`;
+
           html += `</div>`;
 
           if (isExpanded && item.children) {
@@ -321,17 +415,21 @@ document.addEventListener('alpine:init', () => {
             continue;
           }
           const icon = this.getFileIcon(item.path);
-          const escapedPath = item.path.replace(/'/g, "\\'");
 
-          html += `<div style="padding-right:${depth * 12}px" class="select-none">`;
-          html += `<div class="flex items-center gap-1.5 py-1 px-1.5 hover:bg-slate-800/80 rounded-lg text-xs group transition-colors">`;
-          html += `<i class="${icon} text-xs w-3.5 text-center"></i>`;
+          html += `<div style="padding-right:${depth * 10}px" class="select-none">`;
+          html += `<div class="flex items-center gap-1 py-1 px-1 hover:bg-slate-800/80 rounded-lg text-xs group transition-colors ${isSelected ? 'bg-cyan-950/40 border border-cyan-500/30' : ''}">`;
+          
+          // File Selection Checkbox
+          html += `<input type="checkbox" class="checkbox checkbox-xs checkbox-primary shrink-0 opacity-40 group-hover:opacity-100 ${isSelected ? 'opacity-100' : ''}" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); window._agent.toggleItemSelection('${escapedPath}')">`;
+
+          html += `<i class="${icon} text-xs w-3 text-center"></i>`;
           html += `<span class="flex-1 truncate font-mono text-slate-300 cursor-pointer hover:text-cyan-300" onclick="window._agent.openFilePreview('${escapedPath}')" title="${this._escapeHtml(item.path)}">${this._escapeHtml(name)}</span>`;
 
-          // Action buttons: Insert in Chat & View
+          // Action buttons: Insert in Chat, Preview, and Download
           html += `<div class="opacity-0 group-hover:opacity-100 flex items-center gap-0.5 transition-opacity">`;
           html += `<button class="btn btn-ghost btn-xs h-5 min-h-5 px-1 text-cyan-400 hover:bg-cyan-500/20 tooltip tooltip-bottom" data-tip="إدراج في الدردشة" onclick="event.stopPropagation(); window._agent.insertPathIntoChat('${escapedPath}')"><i class="fa-solid fa-plus text-[10px]"></i></button>`;
-          html += `<button class="btn btn-ghost btn-xs h-5 min-h-5 px-1 text-slate-400 hover:text-white hover:bg-slate-700 tooltip tooltip-bottom" data-tip="معاينة الملف" onclick="event.stopPropagation(); window._agent.openFilePreview('${escapedPath}')"><i class="fa-solid fa-eye text-[10px]"></i></button>`;
+          html += `<button class="btn btn-ghost btn-xs h-5 min-h-5 px-1 text-slate-400 hover:text-white hover:bg-slate-700 tooltip tooltip-bottom" data-tip="معاينة" onclick="event.stopPropagation(); window._agent.openFilePreview('${escapedPath}')"><i class="fa-solid fa-eye text-[10px]"></i></button>`;
+          html += `<button class="btn btn-ghost btn-xs h-5 min-h-5 px-1 text-emerald-400 hover:bg-emerald-500/20 tooltip tooltip-bottom" data-tip="تنزيل الملف" onclick="event.stopPropagation(); window._agent.downloadFile('${escapedPath}')"><i class="fa-solid fa-download text-[10px]"></i></button>`;
           html += `</div>`;
 
           html += `</div></div>`;
@@ -352,6 +450,31 @@ document.addEventListener('alpine:init', () => {
       this.previewFileSize = 0;
       this.previewLoading = true;
       this.previewModalOpen = true;
+
+      const ext = (filePath || '').toLowerCase().split('.').pop();
+      const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'bmp'];
+      const videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+      const audioExts = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg'];
+      const pdfExts = ['pdf'];
+
+      if (imageExts.includes(ext)) {
+        this.previewFileType = 'image';
+      } else if (videoExts.includes(ext)) {
+        this.previewFileType = 'video';
+      } else if (audioExts.includes(ext)) {
+        this.previewFileType = 'audio';
+      } else if (pdfExts.includes(ext)) {
+        this.previewFileType = 'pdf';
+      } else {
+        this.previewFileType = 'code';
+      }
+
+      this.previewFileRawUrl = `/api/session/workspace/raw?token=${encodeURIComponent(this.token)}&path=${encodeURIComponent(filePath)}&t=${Date.now()}`;
+
+      if (this.previewFileType !== 'code') {
+        this.previewLoading = false;
+        return;
+      }
 
       try {
         const res = await fetch(`/api/session/workspace/file?path=${encodeURIComponent(filePath)}`, {

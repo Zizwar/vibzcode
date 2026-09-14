@@ -5,6 +5,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 const express = require('express');
 const multer = require('multer');
+const { ZipArchive } = require('archiver');
 const { WebSocketServer } = require('ws');
 const { execFile } = require('child_process');
 const pty = require('node-pty');
@@ -453,6 +454,167 @@ app.get('/api/session/workspace/file', (req, res) => {
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
   }
+});
+
+// MIME Types Map for Media & Files
+const WORKSPACE_MIME_TYPES = {
+  // Images
+  png: 'image/png', jpg: 'image/jpeg', jpeg: 'image/jpeg', gif: 'image/gif',
+  webp: 'image/webp', svg: 'image/svg+xml', ico: 'image/x-icon', bmp: 'image/bmp',
+  // Video
+  mp4: 'video/mp4', webm: 'video/webm', ogg: 'video/ogg', mov: 'video/quicktime',
+  // Audio
+  mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac',
+  // Documents & Data
+  pdf: 'application/pdf', json: 'application/json', txt: 'text/plain',
+  // Code & text
+  html: 'text/html', css: 'text/css', js: 'application/javascript', ts: 'text/plain',
+  py: 'text/plain', sh: 'text/plain', md: 'text/markdown', yml: 'text/yaml', yaml: 'text/yaml'
+};
+
+function getWorkspaceMimeType(filePath) {
+  const ext = (filePath || '').toLowerCase().split('.').pop();
+  return WORKSPACE_MIME_TYPES[ext] || 'application/octet-stream';
+}
+
+// Workspace Raw Media Stream API (Supports images, audio, video seeking, and documents)
+app.get('/api/session/workspace/raw', (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).send('Unauthorized');
+  const targetDir = path.resolve(session.targetDir);
+  const requestedPath = req.query.path;
+  if (!requestedPath) return res.status(400).send('Path is required');
+
+  const fullPath = path.resolve(targetDir, requestedPath);
+  if (!fullPath.startsWith(targetDir) || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
+    return res.status(404).send('File not found');
+  }
+
+  const stat = fs.statSync(fullPath);
+  const fileSize = stat.size;
+  const mimeType = getWorkspaceMimeType(fullPath);
+
+  // Support Range Requests for Video/Audio streaming
+  const range = req.headers.range;
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+    const chunksize = (end - start) + 1;
+    const file = fs.createReadStream(fullPath, { start, end });
+    const head = {
+      'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': chunksize,
+      'Content-Type': mimeType,
+    };
+    res.writeHead(206, head);
+    file.pipe(res);
+  } else {
+    const head = {
+      'Content-Length': fileSize,
+      'Content-Type': mimeType,
+      'Accept-Ranges': 'bytes'
+    };
+    res.writeHead(200, head);
+    fs.createReadStream(fullPath).pipe(res);
+  }
+});
+
+// Workspace File Download API (Triggers browser download with Content-Disposition)
+app.get('/api/session/workspace/download', (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).send('Unauthorized');
+  const targetDir = path.resolve(session.targetDir);
+  const requestedPath = req.query.path;
+  if (!requestedPath) return res.status(400).send('Path is required');
+
+  const fullPath = path.resolve(targetDir, requestedPath);
+  if (!fullPath.startsWith(targetDir) || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
+    return res.status(404).send('File not found');
+  }
+
+  const filename = path.basename(fullPath);
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+  res.setHeader('Content-Type', getWorkspaceMimeType(fullPath));
+  fs.createReadStream(fullPath).pipe(res);
+});
+
+// Workspace ZIP Download API (Supports single folder or multi-select items)
+app.all('/api/session/workspace/zip', (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === (req.query.sessionId || req.body?.sessionId)) || { targetDir: req.query.dir || req.body?.dir || '/root/wino/ferme' })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).send('Unauthorized');
+  const targetDir = path.resolve(session.targetDir);
+  if (!fs.existsSync(targetDir)) return res.status(404).send('Project directory not found');
+
+  // Accept single path (via query param ?path=...) OR multiple paths (via body { paths: [...] } or query ?paths=a,b,c)
+  let itemsToZip = [];
+  if (req.body && Array.isArray(req.body.paths) && req.body.paths.length > 0) {
+    itemsToZip = req.body.paths;
+  } else if (req.query.paths) {
+    itemsToZip = req.query.paths.split(',').map(s => s.trim()).filter(Boolean);
+  } else if (req.query.path) {
+    itemsToZip = [req.query.path.trim()];
+  } else {
+    itemsToZip = [''];
+  }
+
+  let archiveName = 'archive';
+  if (itemsToZip.length === 1 && itemsToZip[0]) {
+    archiveName = path.basename(itemsToZip[0]);
+  } else {
+    archiveName = path.basename(targetDir) + '_archive';
+  }
+
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(archiveName)}.zip"`);
+
+  const archive = new ZipArchive({
+    zlib: { level: 6 }
+  });
+
+  archive.on('error', (err) => {
+    console.error('Archiver error:', err);
+    if (!res.headersSent) res.status(500).send('Archiving error: ' + err.message);
+  });
+
+  archive.pipe(res);
+
+  for (const relItem of itemsToZip) {
+    const safeRel = (relItem || '').replace(/^(\.\.[\/\\])+/, '');
+    const fullPath = path.resolve(targetDir, safeRel);
+
+    if (!fullPath.startsWith(targetDir) || !fs.existsSync(fullPath)) {
+      continue;
+    }
+
+    const stat = fs.statSync(fullPath);
+    if (stat.isDirectory()) {
+      const folderName = safeRel ? path.basename(fullPath) : '';
+      archive.directory(fullPath, folderName || false, (entry) => {
+        if (entry.name.includes('.git') || entry.name.includes('node_modules') || entry.name.includes('.tmp')) {
+          return false;
+        }
+        return entry;
+      });
+    } else if (stat.isFile()) {
+      archive.file(fullPath, { name: safeRel || path.basename(fullPath) });
+    }
+  }
+
+  archive.finalize();
 });
 
 // Workspace File & Folder Upload API
