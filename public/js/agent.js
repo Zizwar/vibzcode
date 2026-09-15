@@ -73,9 +73,13 @@ document.addEventListener('alpine:init', () => {
     // Toasts
     toasts: [],
 
+    // Theme State (Dark / Light)
+    theme: localStorage.getItem('agyz_theme') || 'dark',
+
     init() {
       // Expose to window for filetree click callbacks
       window._agent = this;
+      this.applyTheme();
 
       // Check token in URL parameters (?token=...)
       const urlParams = new URLSearchParams(window.location.search);
@@ -92,6 +96,48 @@ document.addEventListener('alpine:init', () => {
       const savedArabicMode = localStorage.getItem('agyz_arabic_mode');
       if (savedArabicMode !== null) {
         this.arabicModeIndex = parseInt(savedArabicMode, 10);
+      }
+    },
+
+    toggleTheme() {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('agyz_theme', this.theme);
+      this.applyTheme();
+      this.showToast(this.theme === 'dark' ? 'تم تفعيل الوضع الليلي' : 'تم تفعيل الوضع النهاري', 'info');
+    },
+
+    getTerminalTheme() {
+      return this.theme === 'light' ? {
+        background: '#ffffff',
+        foreground: '#0f172a',
+        cursor: '#0284c7',
+        selectionBackground: 'rgba(2, 132, 199, 0.25)',
+        black: '#64748b',
+        red: '#dc2626',
+        green: '#16a34a',
+        yellow: '#d97706',
+        blue: '#2563eb',
+        cyan: '#0891b2',
+        white: '#0f172a'
+      } : {
+        background: '#0f172a',
+        foreground: '#f8fafc',
+        cursor: '#06b6d4',
+        selectionBackground: 'rgba(59, 130, 246, 0.45)',
+        black: '#1e293b',
+        red: '#f87171',
+        green: '#34d399',
+        yellow: '#fbbf24',
+        blue: '#60a5fa',
+        cyan: '#38bdf8',
+        white: '#ffffff'
+      };
+    },
+
+    applyTheme() {
+      document.documentElement.setAttribute('data-theme', this.theme);
+      if (window.agyzTerm) {
+        window.agyzTerm.options.theme = this.getTerminalTheme();
       }
     },
 
@@ -977,19 +1023,7 @@ document.addEventListener('alpine:init', () => {
         cursorStyle: 'block',
         fontSize: this.currentFontSize,
         fontFamily: "'Noto Sans Arabic', 'JetBrains Mono', monospace",
-        theme: {
-          background: '#0f172a',
-          foreground: '#f8fafc',
-          cursor: '#06b6d4',
-          selectionBackground: 'rgba(59, 130, 246, 0.45)',
-          black: '#1e293b',
-          red: '#f87171',
-          green: '#34d399',
-          yellow: '#fbbf24',
-          blue: '#60a5fa',
-          cyan: '#38bdf8',
-          white: '#ffffff'
-        },
+        theme: this.getTerminalTheme(),
         scrollback: 10000,
         convertEol: true
       });

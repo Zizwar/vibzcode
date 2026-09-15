@@ -170,3 +170,193 @@
 .pulse-border {
   animation: pulseBorder 2s infinite;
 }
+
+/* ==================== LIGHT MODE THEME OVERRIDES (DaisyUI & Tailwind) ==================== */
+html[data-theme="light"],
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+[data-theme="light"] body {
+  background-color: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Backgrounds */
+[data-theme="light"] .bg-slate-950 {
+  background-color: #ffffff !important;
+}
+[data-theme="light"] .bg-slate-900 {
+  background-color: #f8fafc !important;
+}
+[data-theme="light"] .bg-slate-900\/95,
+[data-theme="light"] .bg-slate-900\/90,
+[data-theme="light"] .bg-slate-900\/80,
+[data-theme="light"] .bg-slate-900\/60,
+[data-theme="light"] .bg-slate-900\/50,
+[data-theme="light"] .bg-slate-900\/40 {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+}
+[data-theme="light"] .bg-slate-950\/80,
+[data-theme="light"] .bg-slate-950\/60,
+[data-theme="light"] .bg-slate-950\/50,
+[data-theme="light"] .bg-slate-950\/40 {
+  background-color: rgba(248, 250, 252, 0.92) !important;
+}
+[data-theme="light"] .bg-slate-800,
+[data-theme="light"] .bg-slate-800\/60 {
+  background-color: #e2e8f0 !important;
+}
+
+/* Borders */
+[data-theme="light"] .border-slate-800,
+[data-theme="light"] .border-slate-800\/80,
+[data-theme="light"] .border-slate-800\/60,
+[data-theme="light"] .border-slate-700,
+[data-theme="light"] .border-slate-700\/80,
+[data-theme="light"] .border-slate-700\/50 {
+  border-color: #e2e8f0 !important;
+}
+
+/* Text Colors */
+[data-theme="light"] .text-white {
+  color: #0f172a !important;
+}
+[data-theme="light"] .text-slate-100,
+[data-theme="light"] .text-slate-200 {
+  color: #1e293b !important;
+}
+[data-theme="light"] .text-slate-300 {
+  color: #334155 !important;
+}
+[data-theme="light"] .text-slate-400 {
+  color: #64748b !important;
+}
+[data-theme="light"] .text-slate-500 {
+  color: #94a3b8 !important;
+}
+
+/* Cards & Modals */
+[data-theme="light"] .card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.06), 0 1px 2px -1px rgba(0, 0, 0, 0.06) !important;
+}
+[data-theme="light"] .modal-box {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+}
+[data-theme="light"] .modal-backdrop {
+  background-color: rgba(15, 23, 42, 0.4) !important;
+}
+
+/* Inputs & Form Controls */
+[data-theme="light"] .input,
+[data-theme="light"] .select,
+[data-theme="light"] .textarea {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+[data-theme="light"] .input:focus,
+[data-theme="light"] .select:focus,
+[data-theme="light"] .textarea:focus {
+  border-color: #0ea5e9 !important;
+  outline-color: #0ea5e9 !important;
+}
+
+/* Sidebar Drawer */
+[data-theme="light"] .drawer-side aside {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Tables */
+[data-theme="light"] .table th {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+[data-theme="light"] .table tbody tr:hover {
+  background-color: #f8fafc !important;
+}
+
+/* Chat Messages */
+[data-theme="light"] .chat-bubble-neutral {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+[data-theme="light"] .chat-prose {
+  color: #1e293b !important;
+}
+[data-theme="light"] .chat-prose code {
+  background: #f1f5f9 !important;
+  color: #0284c7 !important;
+  border: 1px solid #e2e8f0 !important;
+}
+[data-theme="light"] .chat-prose th {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Buttons */
+[data-theme="light"] .btn-ghost:hover {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Badges */
+[data-theme="light"] .badge-neutral {
+  background-color: #e2e8f0 !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+}
+
+/* User chat bubble & message elements in light mode */
+[data-theme="light"] .from-blue-950\/60 {
+  --tw-gradient-from: #e0f2fe var(--tw-gradient-from-position) !important;
+}
+[data-theme="light"] .border-blue-500\/30 {
+  border-color: #bae6fd !important;
+}
+[data-theme="light"] .border-blue-500\/20 {
+  border-color: #e0f2fe !important;
+}
+[data-theme="light"] .text-cyan-300\/80 {
+  color: #0369a1 !important;
+}
+[data-theme="light"] .chat-prose pre {
+  background: #f1f5f9 !important;
+  border-color: #e2e8f0 !important;
+}
+[data-theme="light"] .chat-prose pre code {
+  color: #0f172a !important;
+}
+[data-theme="light"] .chat-prose blockquote {
+  color: #475569 !important;
+  border-right-color: #0284c7 !important;
+}
+[data-theme="light"] .chat-prose th,
+[data-theme="light"] .chat-prose td {
+  border-color: #e2e8f0 !important;
+}
+
+/* Login screen radial background in light mode */
+[data-theme="light"] .from-slate-900.via-slate-950.to-black {
+  background: radial-gradient(ellipse at top, #e2e8f0, #f8fafc, #ffffff) !important;
+}
+
+/* Tooltips */
+[data-theme="light"] .tooltip:before {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+/* Join containers */
+[data-theme="light"] .join {
+  border-color: #e2e8f0 !important;
+}
+

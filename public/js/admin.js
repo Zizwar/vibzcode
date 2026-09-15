@@ -42,13 +42,28 @@ document.addEventListener('alpine:init', () => {
     // Toasts
     toasts: [],
 
+    // Theme State (Dark / Light)
+    theme: localStorage.getItem('agyz_theme') || 'dark',
+
     init() {
       window._admin = this;
+      this.applyTheme();
       const savedToken = localStorage.getItem('agyz_admin_token');
       if (savedToken) {
         this.adminToken = savedToken;
         this.verifyAdminToken(savedToken);
       }
+    },
+
+    toggleTheme() {
+      this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('agyz_theme', this.theme);
+      this.applyTheme();
+      this.showToast(this.theme === 'dark' ? 'تم تفعيل الوضع الليلي' : 'تم تفعيل الوضع النهاري', 'info');
+    },
+
+    applyTheme() {
+      document.documentElement.setAttribute('data-theme', this.theme);
     },
 
     showToast(message, type = 'info') {
