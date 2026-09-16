@@ -1,9 +1,9 @@
 [
   {
-    "id": "sess_mu4j7gij_6adb2c25",
-    "name": "وكيل OpenCode تجريبي",
-    "assignee": "مختبر التجربة",
-    "token": "agyz_56bc2a20a9afe15963c7ef90398274dc",
+    "id": "sess_mu4jn31t_43bf8c15",
+    "name": "openwino",
+    "assignee": "عضو الفريق",
+    "token": "agyz_ab6e1c319a8ebcebc759b7226542d7e5",
     "targetDir": "/root/test",
     "engine": "opencode",
     "model": "",
@@ -13,50 +13,10 @@
     "allowedModes": "both",
     "enableMcp": true,
     "status": "active",
-    "createdAt": "2026-09-16T20:06:45.595Z",
-    "lastActive": "2026-09-16T20:06:45.595Z",
-    "stats": {
-      "messagesCount": 0
-    }
-  },
-  {
-    "id": "sess_mu4j41xb_2c212150",
-    "name": "وكيل OpenCode تجريبي",
-    "assignee": "مختبر التجربة",
-    "token": "agyz_e1a0d86afc53d409960b838deac1a3fb",
-    "targetDir": "/root/test",
-    "engine": "opencode",
-    "model": "",
-    "sandbox": true,
-    "autoApprove": true,
-    "continueSession": true,
-    "allowedModes": "both",
-    "enableMcp": true,
-    "status": "active",
-    "createdAt": "2026-09-16T20:04:06.720Z",
-    "lastActive": "2026-09-16T20:06:26.015Z",
+    "createdAt": "2026-09-16T20:18:54.641Z",
+    "lastActive": "2026-09-16T20:20:22.526Z",
     "stats": {
       "messagesCount": 1
-    }
-  },
-  {
-    "id": "sess_mu4j3ke0_97e3da55",
-    "name": "وكيل OpenCode تجريبي",
-    "assignee": "مختبر التجربة",
-    "token": "agyz_10fb4c723d26adb4616e3f001812d286",
-    "targetDir": "/root/test",
-    "engine": "opencode",
-    "model": "",
-    "sandbox": true,
-    "autoApprove": true,
-    "continueSession": true,
-    "allowedModes": "both",
-    "enableMcp": true,
-    "status": "active",
-    "createdAt": "2026-09-16T20:03:43.992Z",
-    "lastActive": "2026-09-16T20:03:43.992Z",
-    "stats": {
-      "messagesCount": 0
     }
   },
   {

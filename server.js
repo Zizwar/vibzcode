@@ -264,7 +264,7 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
     assignee: (assignee || 'عضو الفريق').trim(),
     token: 'agyz_' + crypto.randomBytes(16).toString('hex'),
     targetDir: path.resolve(targetDir),
-    engine: req.body.engine === 'opencode' ? 'opencode' : 'agy',
+    engine: ['agy', 'opencode', 'codex', 'vibe'].includes(req.body.engine) ? req.body.engine : 'agy',
     model: (req.body.model || '').trim(),
     sandbox: sandbox !== false,
     autoApprove: autoApprove !== false,
@@ -289,7 +289,9 @@ app.get('/api/admin/engines', requireAdmin, (req, res) => {
     success: true,
     engines: [
       { id: 'agy', name: 'Google Antigravity CLI (agy)', desc: 'المحرك الرسمي لـ Antigravity مع دعم الساندبوكس وعزل المجلدات' },
-      { id: 'opencode', name: 'OpenCode CLI (opencode)', desc: 'محرك OpenCode مفتوح المصدر متعدد النماذج مع دعم Auto-Approve' }
+      { id: 'opencode', name: 'OpenCode CLI (opencode)', desc: 'محرك OpenCode مفتوح المصدر متعدد النماذج مع دعم Auto-Approve' },
+      { id: 'codex', name: 'OpenAI Codex CLI (codex)', desc: 'محرك OpenAI Codex المتطور للبرمجة مع دعم الفحص والتنفيذ' },
+      { id: 'vibe', name: 'Mistral Vibe CLI (vibe)', desc: 'محرك Mistral AI Vibe للوكلاء التوليديين مع دعم كامل للمشاريع' }
     ]
   });
 });
@@ -898,12 +900,37 @@ app.post('/api/session/chat', (req, res) => {
   const userPrompt = prompt.trim();
   const targetDir = session.targetDir;
   const engine = session.engine || 'agy';
-  const binary = engine === 'opencode' ? 'opencode' : 'agy';
+  let binary = 'agy';
   const args = [];
 
-  if (engine === 'opencode') {
-    args.push('run');
-    args.push('--format', 'json');
+  if (engine === 'codex') {
+    binary = 'codex';
+    if (conversationId) {
+      args.push('exec', 'resume', conversationId, '--json');
+    } else {
+      args.push('exec', '--json');
+    }
+    if (session.autoApprove) {
+      args.push('--dangerously-bypass-approvals-and-sandbox');
+    } else if (session.sandbox) {
+      args.push('-s', 'workspace-write');
+    }
+    if (session.model) {
+      args.push('-m', session.model);
+    }
+    args.push('--skip-git-repo-check', '-C', targetDir, userPrompt);
+  } else if (engine === 'vibe') {
+    binary = 'vibe';
+    args.push('-p', userPrompt, '--output', 'json', '--trust', '--workdir', targetDir);
+    if (session.autoApprove) {
+      args.push('--auto-approve');
+    }
+    if (conversationId) {
+      args.push('--resume', conversationId);
+    }
+  } else if (engine === 'opencode') {
+    binary = 'opencode';
+    args.push('run', '--format', 'json');
     if (session.autoApprove) {
       args.push('--auto');
     }
@@ -919,6 +946,7 @@ app.post('/api/session/chat', (req, res) => {
     args.push(userPrompt);
   } else {
     // agy
+    binary = 'agy';
     if (session.sandbox) {
       args.push('--sandbox');
     }
@@ -976,7 +1004,66 @@ app.post('/api/session/chat', (req, res) => {
     let isErr = false;
     let parsed = null;
 
-    if (engine === 'opencode') {
+    if (engine === 'codex') {
+      const textParts = [];
+      let errorMsg = null;
+      let usageInfo = null;
+      const lines = (stdout || '').split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const evt = JSON.parse(line.trim());
+          if (evt.type === 'thread.started' && evt.thread_id) {
+            convId = evt.thread_id;
+          }
+          if (evt.type === 'item.completed' && evt.item?.type === 'agent_message' && evt.item?.text) {
+            textParts.push(evt.item.text);
+          }
+          if (evt.type === 'turn.completed' && evt.usage) {
+            usageInfo = evt.usage;
+          }
+          if (evt.type === 'error' && evt.message) {
+            errorMsg = evt.message;
+          }
+        } catch (e) {}
+      }
+
+      isErr = !!(error && textParts.length === 0);
+      if (textParts.length > 0) {
+        responseText = textParts.join('\n\n');
+      } else if (errorMsg) {
+        responseText = errorMsg;
+      } else {
+        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر Codex') : 'تمت المعالجة.');
+      }
+      parsed = { usage: usageInfo };
+    } else if (engine === 'vibe') {
+      let vibeJson = null;
+      try {
+        vibeJson = JSON.parse(stdout.trim());
+      } catch (e) {}
+
+      if (Array.isArray(vibeJson)) {
+        const assistantMessages = vibeJson.filter(m => m.role === 'assistant');
+        const textParts = [];
+        for (const msg of assistantMessages) {
+          if (msg.sessionId) convId = msg.sessionId;
+          if (Array.isArray(msg.content)) {
+            for (const c of msg.content) {
+              if (c.type === 'text' && c.text) textParts.push(c.text);
+            }
+          }
+        }
+        if (textParts.length > 0) {
+          responseText = textParts.join('\n\n');
+        }
+      }
+
+      isErr = !!(error && !responseText);
+      if (!responseText) {
+        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر Vibe') : 'تمت المعالجة.');
+      }
+    } else if (engine === 'opencode') {
       const textParts = [];
       let errorMsg = null;
       const lines = (stdout || '').split('\n');
@@ -1000,7 +1087,7 @@ app.post('/api/session/chat', (req, res) => {
       } else if (errorMsg) {
         responseText = errorMsg;
       } else {
-        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر') : 'تمت المعالجة.');
+        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر OpenCode') : 'تمت المعالجة.');
       }
     } else {
       try {
@@ -1295,9 +1382,15 @@ wss.on('connection', (ws) => {
   console.log(`[WS] Terminal connected for [${sessionName}] in [${targetDir}] using [${engine}]`);
 
   const shell = 'tmux';
-  const args = engine === 'opencode'
-    ? ['new-session', '-A', '-s', sessionName, '-c', targetDir, 'opencode']
-    : ['new-session', '-A', '-s', sessionName, '-c', targetDir, 'agy', '--sandbox', '--add-dir', targetDir];
+  let execCmd = ['agy', '--sandbox', '--add-dir', targetDir];
+  if (engine === 'codex') {
+    execCmd = ['codex', '-C', targetDir];
+  } else if (engine === 'vibe') {
+    execCmd = ['vibe', '--workdir', targetDir];
+  } else if (engine === 'opencode') {
+    execCmd = ['opencode'];
+  }
+  const args = ['new-session', '-A', '-s', sessionName, '-c', targetDir, ...execCmd];
 
   const ptyProcess = pty.spawn(shell, args, {
     name: 'xterm-256color',
