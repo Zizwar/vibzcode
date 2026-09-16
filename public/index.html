@@ -288,6 +288,13 @@
 
                 <!-- Badges for active flags -->
                 <div class="flex items-center gap-2 flex-wrap pt-1">
+                  <!-- Engine Badge -->
+                  <span class="badge badge-xs py-1.5 px-2 gap-1 font-mono text-[10px] font-semibold"
+                        :class="sess.engine === 'opencode' ? 'bg-amber-950 text-amber-300 border-amber-700/50' : 'bg-cyan-950 text-cyan-300 border-cyan-800/40'">
+                    <i :class="sess.engine === 'opencode' ? 'fa-solid fa-cube text-amber-400' : 'fa-solid fa-robot text-cyan-400'"></i>
+                    <span x-text="sess.engine === 'opencode' ? 'OpenCode' : 'AGY'"></span>
+                  </span>
+                  <span x-show="sess.model" class="badge badge-xs bg-slate-800 text-slate-300 border-slate-700 py-1.5 px-2 gap-1 font-mono text-[10px]" x-text="sess.model"></span>
                   <span x-show="sess.sandbox" class="badge badge-xs bg-cyan-950 text-cyan-300 border-cyan-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
                     <i class="fa-solid fa-shield"></i> Sandbox Active
                   </span>
@@ -379,6 +386,34 @@
           <label class="label pb-1 font-semibold text-slate-300">اسم العضو المخصص له (Member):</label>
           <input type="text" x-model="newSession.assignee" placeholder="مثال: أحمد، سارة، المطور الخارجي..."
                  class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 focus:border-cyan-500">
+        </div>
+
+        <!-- AI Engine Selection (AGY vs OpenCode) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+          <div class="form-control">
+            <label class="label pb-1 font-semibold text-slate-300">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-microchip text-cyan-400"></i>
+                <span>محرك الوكيل (CLI Engine):</span>
+              </span>
+            </label>
+            <select x-model="newSession.engine" class="select select-sm select-bordered bg-slate-900 border-slate-700 text-slate-100">
+              <option value="agy">Google Antigravity (agy)</option>
+              <option value="opencode">OpenCode CLI (opencode)</option>
+            </select>
+          </div>
+
+          <div class="form-control">
+            <label class="label pb-1 font-semibold text-slate-300">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-cube text-purple-400"></i>
+                <span>النموذج (Model - اختياري):</span>
+              </span>
+            </label>
+            <input type="text" x-model="newSession.model"
+                   :placeholder="newSession.engine === 'opencode' ? 'مثال: opencode/big-pickle' : 'تلقائي (Default)'"
+                   class="input input-sm input-bordered bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 font-mono text-xs">
+          </div>
         </div>
 
         <!-- Target Workspace Folder with Elegant Tree Picker -->
@@ -532,6 +567,34 @@
             <label class="label pb-1 font-semibold text-slate-300">مجلد الساندبوكس:</label>
             <input type="text" x-model="editingSession.targetDir" required
                    class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono">
+          </div>
+
+          <!-- AI Engine Selection (AGY vs OpenCode) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-950/70 border border-slate-800 rounded-xl p-3">
+            <div class="form-control">
+              <label class="label pb-1 font-semibold text-slate-300">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-microchip text-cyan-400"></i>
+                  <span>محرك الوكيل (CLI Engine):</span>
+                </span>
+              </label>
+              <select x-model="editingSession.engine" class="select select-sm select-bordered bg-slate-900 border-slate-700 text-slate-100">
+                <option value="agy">Google Antigravity (agy)</option>
+                <option value="opencode">OpenCode CLI (opencode)</option>
+              </select>
+            </div>
+
+            <div class="form-control">
+              <label class="label pb-1 font-semibold text-slate-300">
+                <span class="flex items-center gap-1.5">
+                  <i class="fa-solid fa-cube text-purple-400"></i>
+                  <span>النموذج (Model):</span>
+                </span>
+              </label>
+              <input type="text" x-model="editingSession.model"
+                     :placeholder="editingSession.engine === 'opencode' ? 'مثال: opencode/big-pickle' : 'تلقائي (Default)'"
+                     class="input input-sm input-bordered bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 font-mono text-xs">
+            </div>
           </div>
 
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">

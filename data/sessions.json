@@ -1,10 +1,72 @@
 [
   {
+    "id": "sess_mu4j7gij_6adb2c25",
+    "name": "وكيل OpenCode تجريبي",
+    "assignee": "مختبر التجربة",
+    "token": "agyz_56bc2a20a9afe15963c7ef90398274dc",
+    "targetDir": "/root/test",
+    "engine": "opencode",
+    "model": "",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "both",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-16T20:06:45.595Z",
+    "lastActive": "2026-09-16T20:06:45.595Z",
+    "stats": {
+      "messagesCount": 0
+    }
+  },
+  {
+    "id": "sess_mu4j41xb_2c212150",
+    "name": "وكيل OpenCode تجريبي",
+    "assignee": "مختبر التجربة",
+    "token": "agyz_e1a0d86afc53d409960b838deac1a3fb",
+    "targetDir": "/root/test",
+    "engine": "opencode",
+    "model": "",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "both",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-16T20:04:06.720Z",
+    "lastActive": "2026-09-16T20:06:26.015Z",
+    "stats": {
+      "messagesCount": 1
+    }
+  },
+  {
+    "id": "sess_mu4j3ke0_97e3da55",
+    "name": "وكيل OpenCode تجريبي",
+    "assignee": "مختبر التجربة",
+    "token": "agyz_10fb4c723d26adb4616e3f001812d286",
+    "targetDir": "/root/test",
+    "engine": "opencode",
+    "model": "",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "both",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-16T20:03:43.992Z",
+    "lastActive": "2026-09-16T20:03:43.992Z",
+    "stats": {
+      "messagesCount": 0
+    }
+  },
+  {
     "id": "sess_ferme_01",
     "name": "وكيل مشروع مزرعة حلم الطفولة",
     "assignee": "فريق التطوير",
     "token": "agyz_9c1b4065824cbecdfbffeac01f687692",
     "targetDir": "/root/wino/ferme",
+    "engine": "agy",
+    "model": "",
     "sandbox": true,
     "autoApprove": true,
     "continueSession": true,
@@ -23,6 +85,8 @@
     "assignee": "مختبر البرمجيات",
     "token": "agyz_6e87f3de6ad89d4dcaefaa3c50915d97",
     "targetDir": "/root/test",
+    "engine": "agy",
+    "model": "",
     "sandbox": true,
     "autoApprove": true,
     "continueSession": true,

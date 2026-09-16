@@ -28,6 +28,8 @@ document.addEventListener('alpine:init', () => {
       assignee: '',
       targetDir: '/root/wino/ferme',
       customTargetDir: '',
+      engine: 'agy',
+      model: '',
       sandbox: true,
       autoApprove: true,
       continueSession: true,
@@ -264,6 +266,8 @@ document.addEventListener('alpine:init', () => {
         assignee: '',
         targetDir: '/root/wino/ferme',
         customTargetDir: '',
+        engine: 'agy',
+        model: '',
         sandbox: true,
         autoApprove: true,
         continueSession: true,
@@ -296,10 +300,13 @@ document.addEventListener('alpine:init', () => {
             name: this.newSession.name,
             assignee: this.newSession.assignee,
             targetDir: finalDir,
+            engine: this.newSession.engine || 'agy',
+            model: this.newSession.model || '',
             sandbox: this.newSession.sandbox,
             autoApprove: this.newSession.autoApprove,
             continueSession: this.newSession.continueSession,
-            allowedModes: this.newSession.allowedModes
+            allowedModes: this.newSession.allowedModes,
+            enableMcp: this.newSession.enableMcp
           })
         });
 
@@ -320,6 +327,8 @@ document.addEventListener('alpine:init', () => {
 
     openEditModal(sess) {
       this.editingSession = JSON.parse(JSON.stringify(sess));
+      if (!this.editingSession.engine) this.editingSession.engine = 'agy';
+      if (!this.editingSession.model) this.editingSession.model = '';
       this.showEditModal = true;
     },
 

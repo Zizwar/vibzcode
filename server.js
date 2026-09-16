@@ -38,7 +38,12 @@ const upload = multer({
 function loadSessions() {
   try {
     if (fs.existsSync(SESSIONS_FILE)) {
-      return JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+      const loaded = JSON.parse(fs.readFileSync(SESSIONS_FILE, 'utf8'));
+      return loaded.map(s => ({
+        ...s,
+        engine: s.engine || 'agy',
+        model: s.model || ''
+      }));
     }
   } catch (err) {
     console.error('Error loading sessions:', err);
@@ -51,6 +56,8 @@ function loadSessions() {
       assignee: 'فريق التطوير',
       token: 'agyz_' + crypto.randomBytes(16).toString('hex'),
       targetDir: '/root/wino/ferme',
+      engine: 'agy',
+      model: '',
       sandbox: true,
       autoApprove: true,
       continueSession: true,
@@ -67,6 +74,8 @@ function loadSessions() {
       assignee: 'مختبر البرمجيات',
       token: 'agyz_' + crypto.randomBytes(16).toString('hex'),
       targetDir: '/root/test',
+      engine: 'agy',
+      model: '',
       sandbox: true,
       autoApprove: true,
       continueSession: true,
@@ -255,6 +264,8 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
     assignee: (assignee || 'عضو الفريق').trim(),
     token: 'agyz_' + crypto.randomBytes(16).toString('hex'),
     targetDir: path.resolve(targetDir),
+    engine: req.body.engine === 'opencode' ? 'opencode' : 'agy',
+    model: (req.body.model || '').trim(),
     sandbox: sandbox !== false,
     autoApprove: autoApprove !== false,
     continueSession: continueSession !== false,
@@ -272,6 +283,17 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
   return res.json({ success: true, session: newSession });
 });
 
+// Admin Get Available Engines
+app.get('/api/admin/engines', requireAdmin, (req, res) => {
+  return res.json({
+    success: true,
+    engines: [
+      { id: 'agy', name: 'Google Antigravity CLI (agy)', desc: 'المحرك الرسمي لـ Antigravity مع دعم الساندبوكس وعزل المجلدات' },
+      { id: 'opencode', name: 'OpenCode CLI (opencode)', desc: 'محرك OpenCode مفتوح المصدر متعدد النماذج مع دعم Auto-Approve' }
+    ]
+  });
+});
+
 // Admin Update Session
 app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
   const { id } = req.params;
@@ -280,7 +302,7 @@ app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
     return res.status(404).json({ success: false, error: 'الجلسة غير موجودة' });
   }
 
-  const allowedUpdates = ['name', 'assignee', 'targetDir', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'status'];
+  const allowedUpdates = ['name', 'assignee', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'status'];
   for (const key of allowedUpdates) {
     if (req.body[key] !== undefined) {
       if (key === 'targetDir') {
@@ -334,6 +356,8 @@ app.post('/api/session/verify', (req, res) => {
         name: 'جلسة المدير الرئيسية',
         assignee: 'Administrator',
         targetDir: '/root/wino/ferme',
+        engine: 'agy',
+        model: '',
         sandbox: true,
         autoApprove: true,
         continueSession: true,
@@ -360,6 +384,8 @@ app.post('/api/session/verify', (req, res) => {
       name: session.name,
       assignee: session.assignee,
       targetDir: session.targetDir,
+      engine: session.engine || 'agy',
+      model: session.model || '',
       sandbox: session.sandbox,
       autoApprove: session.autoApprove,
       continueSession: session.continueSession,
@@ -871,29 +897,45 @@ app.post('/api/session/chat', (req, res) => {
 
   const userPrompt = prompt.trim();
   const targetDir = session.targetDir;
+  const engine = session.engine || 'agy';
+  const binary = engine === 'opencode' ? 'opencode' : 'agy';
   const args = [];
 
-  // Sandbox Flag (strictly enforced if configured)
-  if (session.sandbox) {
-    args.push('--sandbox');
+  if (engine === 'opencode') {
+    args.push('run');
+    args.push('--format', 'json');
+    if (session.autoApprove) {
+      args.push('--auto');
+    }
+    if (session.model) {
+      args.push('-m', session.model);
+    }
+    args.push('--dir', targetDir);
+
+    if (conversationId) {
+      args.push('-s', conversationId);
+    }
+
+    args.push(userPrompt);
+  } else {
+    // agy
+    if (session.sandbox) {
+      args.push('--sandbox');
+    }
+    args.push('--add-dir', targetDir);
+    if (session.autoApprove) {
+      args.push('--dangerously-skip-permissions');
+    }
+    if (conversationId) {
+      args.push('--conversation', conversationId);
+    } else if (session.continueSession && continueSession !== false) {
+      args.push('--continue');
+    }
+    if (session.model) {
+      args.push('--model', session.model);
+    }
+    args.push('-p', userPrompt, '--output-format', 'json', '--print-timeout', '10m');
   }
-
-  // Add the assigned workspace folder
-  args.push('--add-dir', targetDir);
-
-  // Auto-Approve Flag
-  if (session.autoApprove) {
-    args.push('--dangerously-skip-permissions');
-  }
-
-  // Conversation Context
-  if (conversationId) {
-    args.push('--conversation', conversationId);
-  } else if (session.continueSession && continueSession !== false) {
-    args.push('--continue');
-  }
-
-  args.push('-p', userPrompt, '--output-format', 'json', '--print-timeout', '10m');
 
   const startTime = Date.now();
   const jobId = 'job_' + Date.now();
@@ -917,8 +959,8 @@ app.post('/api/session/chat', (req, res) => {
   };
   activeChatJobs.set(session.id, jobRecord);
 
-  // Execute agy - child process continues running in background across client disconnects
-  const child = execFile('agy', args, { cwd: targetDir, maxBuffer: 30 * 1024 * 1024, timeout: 600000 }, (error, stdout, stderr) => {
+  // Execute engine CLI - child process continues running in background across client disconnects
+  const child = execFile(binary, args, { cwd: targetDir, maxBuffer: 30 * 1024 * 1024, timeout: 600000 }, (error, stdout, stderr) => {
     activeChatProcesses.delete(session.token);
     const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
 
@@ -929,16 +971,48 @@ app.post('/api/session/chat', (req, res) => {
       saveSessions(sessions);
     }
 
+    let responseText = '';
+    let convId = null;
+    let isErr = false;
     let parsed = null;
-    try {
-      if (stdout && stdout.trim()) {
-        parsed = JSON.parse(stdout.trim());
-      }
-    } catch (e) {}
 
-    const isErr = !!(error && !stdout);
-    const responseText = parsed?.response || stdout || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر') : 'تمت المعالجة.');
-    const convId = parsed?.conversation_id || null;
+    if (engine === 'opencode') {
+      const textParts = [];
+      let errorMsg = null;
+      const lines = (stdout || '').split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const evt = JSON.parse(line.trim());
+          if (evt.sessionID) convId = evt.sessionID;
+          if (evt.type === 'text' && evt.part?.text) {
+            textParts.push(evt.part.text);
+          }
+          if (evt.type === 'error') {
+            errorMsg = evt.error?.data?.message || evt.error?.name || 'خطأ في تنفيذ الأمر عبر OpenCode';
+          }
+        } catch (e) {}
+      }
+
+      isErr = !!(error && textParts.length === 0);
+      if (textParts.length > 0) {
+        responseText = textParts.join('\n\n');
+      } else if (errorMsg) {
+        responseText = errorMsg;
+      } else {
+        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر') : 'تمت المعالجة.');
+      }
+    } else {
+      try {
+        if (stdout && stdout.trim()) {
+          parsed = JSON.parse(stdout.trim());
+        }
+      } catch (e) {}
+
+      isErr = !!(error && !stdout);
+      responseText = parsed?.response || stdout || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر') : 'تمت المعالجة.');
+      convId = parsed?.conversation_id || null;
+    }
     const durationVal = parsed?.duration_seconds || parseFloat(elapsedSeconds);
 
     const assistantMsg = {
@@ -989,6 +1063,10 @@ app.post('/api/session/chat', (req, res) => {
       });
     }
   });
+
+  if (child.stdin) {
+    try { child.stdin.end(); } catch (e) {}
+  }
 
   activeChatProcesses.set(session.token, child);
 });
@@ -1180,10 +1258,12 @@ server.on('upgrade', (request, socket, head) => {
 
     let targetDir = '/root/wino/ferme';
     let sessionName = 'admin';
+    let engine = 'agy';
 
     if (token === ADMIN_SECRET) {
       targetDir = url.searchParams.get('dir') || '/root/wino/ferme';
       sessionName = 'admin_' + crypto.randomBytes(4).toString('hex');
+      engine = url.searchParams.get('engine') || 'agy';
     } else {
       const sess = getSessionByToken(token);
       if (!sess || sess.status === 'paused' || sess.allowedModes === 'chat') {
@@ -1193,11 +1273,13 @@ server.on('upgrade', (request, socket, head) => {
       }
       targetDir = sess.targetDir;
       sessionName = sess.id;
+      engine = sess.engine || 'agy';
     }
 
     wss.handleUpgrade(request, socket, head, (ws) => {
       ws.targetDir = targetDir;
       ws.sessionName = sessionName;
+      ws.engine = engine;
       wss.emit('connection', ws, request);
     });
   } catch (err) {
@@ -1208,11 +1290,14 @@ server.on('upgrade', (request, socket, head) => {
 wss.on('connection', (ws) => {
   const targetDir = ws.targetDir || '/root/wino/ferme';
   const sessionName = ws.sessionName || 'agyz_term';
+  const engine = ws.engine || 'agy';
 
-  console.log(`[WS] Terminal connected for [${sessionName}] in [${targetDir}]`);
+  console.log(`[WS] Terminal connected for [${sessionName}] in [${targetDir}] using [${engine}]`);
 
   const shell = 'tmux';
-  const args = ['new-session', '-A', '-s', sessionName, '-c', targetDir, 'agy', '--sandbox', '--add-dir', targetDir];
+  const args = engine === 'opencode'
+    ? ['new-session', '-A', '-s', sessionName, '-c', targetDir, 'opencode']
+    : ['new-session', '-A', '-s', sessionName, '-c', targetDir, 'agy', '--sandbox', '--add-dir', targetDir];
 
   const ptyProcess = pty.spawn(shell, args, {
     name: 'xterm-256color',
