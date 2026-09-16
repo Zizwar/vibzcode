@@ -264,7 +264,7 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
     assignee: (assignee || 'عضو الفريق').trim(),
     token: 'agyz_' + crypto.randomBytes(16).toString('hex'),
     targetDir: path.resolve(targetDir),
-    engine: ['agy', 'opencode', 'codex', 'vibe'].includes(req.body.engine) ? req.body.engine : 'agy',
+    engine: ['agy', 'opencode', 'codex', 'vibe', 'claude'].includes(req.body.engine) ? req.body.engine : 'agy',
     model: (req.body.model || '').trim(),
     sandbox: sandbox !== false,
     autoApprove: autoApprove !== false,
@@ -291,7 +291,8 @@ app.get('/api/admin/engines', requireAdmin, (req, res) => {
       { id: 'agy', name: 'Google Antigravity CLI (agy)', desc: 'المحرك الرسمي لـ Antigravity مع دعم الساندبوكس وعزل المجلدات' },
       { id: 'opencode', name: 'OpenCode CLI (opencode)', desc: 'محرك OpenCode مفتوح المصدر متعدد النماذج مع دعم Auto-Approve' },
       { id: 'codex', name: 'OpenAI Codex CLI (codex)', desc: 'محرك OpenAI Codex المتطور للبرمجة مع دعم الفحص والتنفيذ' },
-      { id: 'vibe', name: 'Mistral Vibe CLI (vibe)', desc: 'محرك Mistral AI Vibe للوكلاء التوليديين مع دعم كامل للمشاريع' }
+      { id: 'vibe', name: 'Mistral Vibe CLI (vibe)', desc: 'محرك Mistral AI Vibe للوكلاء التوليديين مع دعم كامل للمشاريع' },
+      { id: 'claude', name: 'Anthropic Claude Code (claude)', desc: 'محرك Claude Code الرسمي مع دعم كامل للطرفية ومشاريع الأكواد' }
     ]
   });
 });
@@ -919,6 +920,21 @@ app.post('/api/session/chat', (req, res) => {
       args.push('-m', session.model);
     }
     args.push('--skip-git-repo-check', '-C', targetDir, userPrompt);
+  } else if (engine === 'claude') {
+    binary = 'claude';
+    args.push('-p', '--output-format', 'json');
+    if (session.autoApprove) {
+      args.push('--permission-mode', 'dontAsk');
+    } else {
+      args.push('--permission-mode', 'auto');
+    }
+    if (session.model) {
+      args.push('--model', session.model);
+    }
+    if (conversationId) {
+      args.push('--resume', conversationId);
+    }
+    args.push(userPrompt);
   } else if (engine === 'vibe') {
     binary = 'vibe';
     args.push('-p', userPrompt, '--output', 'json', '--trust', '--workdir', targetDir);
@@ -1036,7 +1052,26 @@ app.post('/api/session/chat', (req, res) => {
       } else {
         responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر Codex') : 'تمت المعالجة.');
       }
-      parsed = { usage: usageInfo };
+    } else if (engine === 'claude') {
+      let claudeJson = null;
+      try {
+        claudeJson = JSON.parse(stdout.trim());
+      } catch (e) {}
+
+      if (claudeJson) {
+        if (claudeJson.session_id) convId = claudeJson.session_id;
+        if (claudeJson.result) responseText = claudeJson.result;
+        isErr = !!claudeJson.is_error;
+        parsed = {
+          usage: claudeJson.usage,
+          duration_seconds: claudeJson.duration_ms ? (claudeJson.duration_ms / 1000) : null
+        };
+      }
+
+      if (!responseText) {
+        isErr = !!(error && !stdout);
+        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر Claude Code') : 'تمت المعالجة.');
+      }
     } else if (engine === 'vibe') {
       let vibeJson = null;
       try {
@@ -1385,6 +1420,8 @@ wss.on('connection', (ws) => {
   let execCmd = ['agy', '--sandbox', '--add-dir', targetDir];
   if (engine === 'codex') {
     execCmd = ['codex', '-C', targetDir];
+  } else if (engine === 'claude') {
+    execCmd = ['claude'];
   } else if (engine === 'vibe') {
     execCmd = ['vibe', '--workdir', targetDir];
   } else if (engine === 'opencode') {

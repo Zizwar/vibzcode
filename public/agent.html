@@ -166,11 +166,12 @@
               <span class="badge text-[10px] py-0.5 px-1.5 font-semibold font-mono"
                     :class="{
                       'bg-emerald-950 text-emerald-300 border-emerald-700/50': session?.engine === 'codex',
+                      'bg-violet-950 text-violet-300 border-violet-700/50': session?.engine === 'claude',
                       'bg-rose-950 text-rose-300 border-rose-700/50': session?.engine === 'vibe',
                       'bg-amber-950 text-amber-300 border-amber-700/50': session?.engine === 'opencode',
                       'bg-cyan-950 text-cyan-300 border-cyan-700/50': !session?.engine || session?.engine === 'agy'
                     }"
-                    x-text="session?.engine === 'codex' ? 'Codex' : (session?.engine === 'vibe' ? 'Mistral Vibe' : (session?.engine === 'opencode' ? 'OpenCode' : 'AGY'))"></span>
+                    x-text="session?.engine === 'codex' ? 'Codex' : (session?.engine === 'claude' ? 'Claude' : (session?.engine === 'vibe' ? 'Mistral Vibe' : (session?.engine === 'opencode' ? 'OpenCode' : 'AGY')))"></span>
               <span x-show="session?.assignee" class="badge badge-neutral text-[10px] py-0.5 px-1.5 font-semibold text-slate-300 hidden sm:inline-flex" x-text="session?.assignee"></span>
             </div>
             <div class="text-[10px] sm:text-[11px] text-slate-400 flex items-center gap-1 font-mono truncate max-w-[160px] sm:max-w-[260px]">

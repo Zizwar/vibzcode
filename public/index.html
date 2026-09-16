@@ -292,17 +292,19 @@
                   <span class="badge badge-xs py-1.5 px-2 gap-1 font-mono text-[10px] font-semibold"
                         :class="{
                           'bg-emerald-950 text-emerald-300 border-emerald-700/50': sess.engine === 'codex',
+                          'bg-violet-950 text-violet-300 border-violet-700/50': sess.engine === 'claude',
                           'bg-rose-950 text-rose-300 border-rose-700/50': sess.engine === 'vibe',
                           'bg-amber-950 text-amber-300 border-amber-700/50': sess.engine === 'opencode',
                           'bg-cyan-950 text-cyan-300 border-cyan-800/40': !sess.engine || sess.engine === 'agy'
                         }">
                     <i :class="{
                       'fa-solid fa-code text-emerald-400': sess.engine === 'codex',
+                      'fa-solid fa-brain text-violet-400': sess.engine === 'claude',
                       'fa-solid fa-bolt-lightning text-rose-400': sess.engine === 'vibe',
                       'fa-solid fa-cube text-amber-400': sess.engine === 'opencode',
                       'fa-solid fa-robot text-cyan-400': !sess.engine || sess.engine === 'agy'
                     }"></i>
-                    <span x-text="sess.engine === 'codex' ? 'Codex' : (sess.engine === 'vibe' ? 'Mistral Vibe' : (sess.engine === 'opencode' ? 'OpenCode' : 'AGY'))"></span>
+                    <span x-text="sess.engine === 'codex' ? 'Codex' : (sess.engine === 'claude' ? 'Claude Code' : (sess.engine === 'vibe' ? 'Mistral Vibe' : (sess.engine === 'opencode' ? 'OpenCode' : 'AGY')))"></span>
                   </span>
                   <span x-show="sess.model" class="badge badge-xs bg-slate-800 text-slate-300 border-slate-700 py-1.5 px-2 gap-1 font-mono text-[10px]" x-text="sess.model"></span>
                   <span x-show="sess.sandbox" class="badge badge-xs bg-cyan-950 text-cyan-300 border-cyan-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
@@ -412,6 +414,7 @@
               <option value="opencode">OpenCode CLI (opencode)</option>
               <option value="codex">OpenAI Codex CLI (codex)</option>
               <option value="vibe">Mistral Vibe CLI (vibe)</option>
+              <option value="claude">Anthropic Claude Code (claude)</option>
             </select>
           </div>
 
@@ -423,7 +426,7 @@
               </span>
             </label>
             <input type="text" x-model="newSession.model"
-                   :placeholder="newSession.engine === 'codex' ? 'مثال: gpt-5.6-luna' : (newSession.engine === 'opencode' ? 'مثال: opencode/big-pickle' : 'تلقائي (Default)')"
+                   :placeholder="newSession.engine === 'codex' ? 'مثال: gpt-5.6-luna' : (newSession.engine === 'claude' ? 'مثال: claude-sonnet-4-6' : (newSession.engine === 'opencode' ? 'مثال: opencode/big-pickle' : 'تلقائي (Default)'))"
                    class="input input-sm input-bordered bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 font-mono text-xs">
           </div>
         </div>
@@ -595,6 +598,7 @@
                 <option value="opencode">OpenCode CLI (opencode)</option>
                 <option value="codex">OpenAI Codex CLI (codex)</option>
                 <option value="vibe">Mistral Vibe CLI (vibe)</option>
+                <option value="claude">Anthropic Claude Code (claude)</option>
               </select>
             </div>
 
@@ -606,7 +610,7 @@
                 </span>
               </label>
               <input type="text" x-model="editingSession.model"
-                     :placeholder="editingSession.engine === 'codex' ? 'مثال: gpt-5.6-luna' : (editingSession.engine === 'opencode' ? 'مثال: opencode/big-pickle' : 'تلقائي (Default)')"
+                     :placeholder="editingSession.engine === 'codex' ? 'مثال: gpt-5.6-luna' : (editingSession.engine === 'claude' ? 'مثال: claude-sonnet-4-6' : (editingSession.engine === 'opencode' ? 'مثال: opencode/big-pickle' : 'تلقائي (Default)'))"
                      class="input input-sm input-bordered bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 font-mono text-xs">
             </div>
           </div>
