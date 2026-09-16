@@ -1,55 +1,38 @@
 [
   {
-    "id": "sess_mu1ruo5b_b6aa4f1b",
-    "name": "agy",
-    "assignee": "me",
-    "token": "agyz_81e06b4883afbb35bc93704d9385b790",
-    "targetDir": "/root/wino/agyz",
-    "sandbox": true,
-    "autoApprove": true,
-    "continueSession": true,
-    "allowedModes": "both",
-    "enableMcp": true,
-    "status": "active",
-    "createdAt": "2026-09-14T21:45:26.977Z",
-    "lastActive": "2026-09-15T19:20:25.045Z",
-    "stats": {
-      "messagesCount": 3
-    }
-  },
-  {
-    "id": "sess_mu1l85j7_c34d4b54",
-    "name": "suno load",
-    "assignee": "Hamid",
-    "token": "agyz_d06688364bdd8fe7ca8481d961aedbe1",
-    "targetDir": "/root/wino/sunoload",
-    "sandbox": true,
-    "autoApprove": true,
-    "continueSession": true,
-    "allowedModes": "chat",
-    "enableMcp": true,
-    "status": "active",
-    "createdAt": "2026-09-14T18:39:58.724Z",
-    "lastActive": "2026-09-15T19:03:29.064Z",
-    "stats": {
-      "messagesCount": 4
-    }
-  },
-  {
     "id": "sess_ferme_01",
     "name": "وكيل مشروع مزرعة حلم الطفولة",
     "assignee": "فريق التطوير",
-    "token": "agyz_f7ca93475aef251cb159ac928082e124",
+    "token": "agyz_9c1b4065824cbecdfbffeac01f687692",
     "targetDir": "/root/wino/ferme",
     "sandbox": true,
     "autoApprove": true,
     "continueSession": true,
     "allowedModes": "both",
+    "enableMcp": true,
     "status": "active",
-    "createdAt": "2026-09-13T16:16:38.870Z",
-    "lastActive": "2026-09-15T17:03:31.517Z",
+    "createdAt": "2026-09-16T19:19:06.251Z",
+    "lastActive": "2026-09-16T19:19:06.251Z",
     "stats": {
-      "messagesCount": 1
+      "messagesCount": 0
+    }
+  },
+  {
+    "id": "sess_test_02",
+    "name": "وكيل بيئة الاختبارات العامة",
+    "assignee": "مختبر البرمجيات",
+    "token": "agyz_6e87f3de6ad89d4dcaefaa3c50915d97",
+    "targetDir": "/root/test",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "both",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-16T19:19:06.251Z",
+    "lastActive": "2026-09-16T19:19:06.251Z",
+    "stats": {
+      "messagesCount": 0
     }
   }
 ]
