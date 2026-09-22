@@ -10,6 +10,9 @@ const { WebSocketServer } = require('ws');
 const { execFile } = require('child_process');
 const pty = require('node-pty');
 const { setupRemoteMcp } = require('./lib/remoteMcp');
+const { executeEngineTask } = require('./lib/engines');
+const { defaultClient: memoryz } = require('./lib/memoryzClient');
+const { defaultJobsManager: jobsManager } = require('./lib/jobsManager');
 
 const PORT = process.env.PORT || 3333;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -42,7 +45,10 @@ function loadSessions() {
       return loaded.map(s => ({
         ...s,
         engine: s.engine || 'agy',
-        model: s.model || ''
+        model: s.model || '',
+        role: s.role || s.assignee || 'عضو الفريق',
+        systemPrompt: s.systemPrompt || '',
+        namespace: s.namespace || 'default'
       }));
     }
   } catch (err) {
@@ -54,7 +60,10 @@ function loadSessions() {
       id: 'sess_ferme_01',
       name: 'وكيل مشروع مزرعة حلم الطفولة',
       assignee: 'فريق التطوير',
-      token: 'agyz_' + crypto.randomBytes(16).toString('hex'),
+      role: 'مطور رئيسي',
+      systemPrompt: '',
+      namespace: 'ferme',
+      token: 'vibz_' + crypto.randomBytes(16).toString('hex'),
       targetDir: '/root/wino/ferme',
       engine: 'agy',
       model: '',
@@ -72,7 +81,10 @@ function loadSessions() {
       id: 'sess_test_02',
       name: 'وكيل بيئة الاختبارات العامة',
       assignee: 'مختبر البرمجيات',
-      token: 'agyz_' + crypto.randomBytes(16).toString('hex'),
+      role: 'فاحص جودة',
+      systemPrompt: '',
+      namespace: 'test',
+      token: 'vibz_' + crypto.randomBytes(16).toString('hex'),
       targetDir: '/root/test',
       engine: 'agy',
       model: '',
@@ -143,10 +155,12 @@ function getSessionByToken(token) {
   return sessions.find(s => s.token === token && s.status !== 'closed');
 }
 
-// Initialize Agyz Remote MCP Server for Claude, ChatGPT, Cursor, and Windsurf
+// Initialize VibzCode Remote MCP Server (Session + Orchestrator control planes)
 setupRemoteMcp(app, {
   getSessionByToken,
-  ADMIN_SECRET
+  ADMIN_SECRET,
+  sessions,
+  saveSessions
 });
 
 // ==================== AUTH & ADMIN APIS ====================
@@ -262,7 +276,10 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
     id: 'sess_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex'),
     name: name.trim(),
     assignee: (assignee || 'عضو الفريق').trim(),
-    token: 'agyz_' + crypto.randomBytes(16).toString('hex'),
+    role: (req.body.role || assignee || 'عضو الفريق').trim(),
+    systemPrompt: (req.body.systemPrompt || '').trim(),
+    namespace: (req.body.namespace || 'default').trim(),
+    token: 'vibz_' + crypto.randomBytes(16).toString('hex'),
     targetDir: path.resolve(targetDir),
     engine: ['agy', 'opencode', 'codex', 'vibe', 'claude'].includes(req.body.engine) ? req.body.engine : 'agy',
     model: (req.body.model || '').trim(),
@@ -305,7 +322,7 @@ app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
     return res.status(404).json({ success: false, error: 'الجلسة غير موجودة' });
   }
 
-  const allowedUpdates = ['name', 'assignee', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'status'];
+  const allowedUpdates = ['name', 'assignee', 'role', 'systemPrompt', 'namespace', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'status'];
   for (const key of allowedUpdates) {
     if (req.body[key] !== undefined) {
       if (key === 'targetDir') {
@@ -849,7 +866,8 @@ function appendSessionChatMessage(sessionId, msg) {
 }
 
 // Member / Agent Chat Execution (Background-Persistent)
-app.post('/api/session/chat', (req, res) => {
+// Member / Agent Chat Execution (Background-Persistent with Multi-Engine & MemoryZ Support)
+app.post('/api/session/chat', async (req, res) => {
   const token = getAuthToken(req);
   let session = null;
   let isAdmin = false;
@@ -861,6 +879,9 @@ app.post('/api/session/chat', (req, res) => {
       id: req.body.sessionId || 'admin_exec',
       token: ADMIN_SECRET,
       targetDir: targetDir,
+      engine: req.body.engine || 'agy',
+      model: req.body.model || '',
+      systemPrompt: req.body.systemPrompt || '',
       sandbox: req.body.sandbox !== false,
       autoApprove: req.body.autoApprove !== false,
       continueSession: req.body.continueSession !== false
@@ -899,92 +920,23 @@ app.post('/api/session/chat', (req, res) => {
   }
 
   const userPrompt = prompt.trim();
-  const targetDir = session.targetDir;
-  const engine = session.engine || 'agy';
-  let binary = 'agy';
-  const args = [];
+  const startTime = Date.now();
 
-  if (engine === 'codex') {
-    binary = 'codex';
-    if (conversationId) {
-      args.push('exec', 'resume', conversationId, '--json');
-    } else {
-      args.push('exec', '--json');
+  // 1. Attach MemoryZ memories if provided
+  let finalPrompt = userPrompt;
+  const memoryRefs = req.body.memoryRefs || req.body.memory_refs || [];
+  if (Array.isArray(memoryRefs) && memoryRefs.length > 0) {
+    try {
+      const memoryXml = await memoryz.resolveMemoryAttachments(memoryRefs);
+      if (memoryXml) {
+        finalPrompt = `${memoryXml}${finalPrompt}`;
+      }
+    } catch (e) {
+      console.warn('Could not attach MemoryZ references:', e.message);
     }
-    if (session.autoApprove) {
-      args.push('--dangerously-bypass-approvals-and-sandbox');
-    } else if (session.sandbox) {
-      args.push('-s', 'workspace-write');
-    }
-    if (session.model) {
-      args.push('-m', session.model);
-    }
-    args.push('--skip-git-repo-check', '-C', targetDir, userPrompt);
-  } else if (engine === 'claude') {
-    binary = 'claude';
-    args.push('-p', '--output-format', 'json');
-    if (session.autoApprove) {
-      args.push('--permission-mode', 'dontAsk');
-    } else {
-      args.push('--permission-mode', 'auto');
-    }
-    if (session.model) {
-      args.push('--model', session.model);
-    }
-    if (conversationId) {
-      args.push('--resume', conversationId);
-    }
-    args.push(userPrompt);
-  } else if (engine === 'vibe') {
-    binary = 'vibe';
-    args.push('-p', userPrompt, '--output', 'json', '--trust', '--workdir', targetDir);
-    if (session.autoApprove) {
-      args.push('--auto-approve');
-    }
-    if (conversationId) {
-      args.push('--resume', conversationId);
-    }
-  } else if (engine === 'opencode') {
-    binary = 'opencode';
-    args.push('run', '--format', 'json');
-    if (session.autoApprove) {
-      args.push('--auto');
-    }
-    if (session.model) {
-      args.push('-m', session.model);
-    }
-    args.push('--dir', targetDir);
-
-    if (conversationId) {
-      args.push('-s', conversationId);
-    }
-
-    args.push(userPrompt);
-  } else {
-    // agy
-    binary = 'agy';
-    if (session.sandbox) {
-      args.push('--sandbox');
-    }
-    args.push('--add-dir', targetDir);
-    if (session.autoApprove) {
-      args.push('--dangerously-skip-permissions');
-    }
-    if (conversationId) {
-      args.push('--conversation', conversationId);
-    } else if (session.continueSession && continueSession !== false) {
-      args.push('--continue');
-    }
-    if (session.model) {
-      args.push('--model', session.model);
-    }
-    args.push('-p', userPrompt, '--output-format', 'json', '--print-timeout', '10m');
   }
 
-  const startTime = Date.now();
-  const jobId = 'job_' + Date.now();
-
-  // 1. Immediately record user prompt in server chat log
+  // 2. Immediately record user prompt in server chat log
   appendSessionChatMessage(session.id, {
     id: Date.now(),
     role: 'user',
@@ -992,9 +944,19 @@ app.post('/api/session/chat', (req, res) => {
     time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
   });
 
-  // 2. Register job state
+  // 3. Register job in persistent jobs manager
+  const job = await jobsManager.createJob({
+    sessionId: session.id,
+    engine: session.engine || 'agy',
+    model: session.model || '',
+    targetDir: session.targetDir,
+    prompt: userPrompt,
+    memoryRefs
+  });
+
+  // 4. Register job state for legacy client polling
   const jobRecord = {
-    jobId,
+    jobId: job.jobId,
     sessionId: session.id,
     prompt: userPrompt,
     startTime,
@@ -1003,10 +965,17 @@ app.post('/api/session/chat', (req, res) => {
   };
   activeChatJobs.set(session.id, jobRecord);
 
-  // Execute engine CLI - child process continues running in background across client disconnects
-  const child = execFile(binary, args, { cwd: targetDir, maxBuffer: 30 * 1024 * 1024, timeout: 600000 }, (error, stdout, stderr) => {
+  // 5. Execute engine asynchronously
+  executeEngineTask(session, finalPrompt, {
+    conversationId,
+    continueSession,
+    systemPrompt: session.systemPrompt,
+    onSpawn: (child) => {
+      activeChatProcesses.set(session.token, child);
+      jobsManager.registerProcess(job.jobId, child);
+    }
+  }).then(async (result) => {
     activeChatProcesses.delete(session.token);
-    const elapsedSeconds = ((Date.now() - startTime) / 1000).toFixed(2);
 
     // Update Session Stats
     if (!isAdmin) {
@@ -1015,182 +984,88 @@ app.post('/api/session/chat', (req, res) => {
       saveSessions(sessions);
     }
 
-    let responseText = '';
-    let convId = null;
-    let isErr = false;
-    let parsed = null;
-
-    if (engine === 'codex') {
-      const textParts = [];
-      let errorMsg = null;
-      let usageInfo = null;
-      const lines = (stdout || '').split('\n');
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const evt = JSON.parse(line.trim());
-          if (evt.type === 'thread.started' && evt.thread_id) {
-            convId = evt.thread_id;
-          }
-          if (evt.type === 'item.completed' && evt.item?.type === 'agent_message' && evt.item?.text) {
-            textParts.push(evt.item.text);
-          }
-          if (evt.type === 'turn.completed' && evt.usage) {
-            usageInfo = evt.usage;
-          }
-          if (evt.type === 'error' && evt.message) {
-            errorMsg = evt.message;
-          }
-        } catch (e) {}
-      }
-
-      isErr = !!(error && textParts.length === 0);
-      if (textParts.length > 0) {
-        responseText = textParts.join('\n\n');
-      } else if (errorMsg) {
-        responseText = errorMsg;
-      } else {
-        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر Codex') : 'تمت المعالجة.');
-      }
-    } else if (engine === 'claude') {
-      let claudeJson = null;
-      try {
-        claudeJson = JSON.parse(stdout.trim());
-      } catch (e) {}
-
-      if (claudeJson) {
-        if (claudeJson.session_id) convId = claudeJson.session_id;
-        if (claudeJson.result) responseText = claudeJson.result;
-        isErr = !!claudeJson.is_error;
-        parsed = {
-          usage: claudeJson.usage,
-          duration_seconds: claudeJson.duration_ms ? (claudeJson.duration_ms / 1000) : null
-        };
-      }
-
-      if (!responseText) {
-        isErr = !!(error && !stdout);
-        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر Claude Code') : 'تمت المعالجة.');
-      }
-    } else if (engine === 'vibe') {
-      let vibeJson = null;
-      try {
-        vibeJson = JSON.parse(stdout.trim());
-      } catch (e) {}
-
-      if (Array.isArray(vibeJson)) {
-        const assistantMessages = vibeJson.filter(m => m.role === 'assistant');
-        const textParts = [];
-        for (const msg of assistantMessages) {
-          if (msg.sessionId) convId = msg.sessionId;
-          if (Array.isArray(msg.content)) {
-            for (const c of msg.content) {
-              if (c.type === 'text' && c.text) textParts.push(c.text);
-            }
-          }
-        }
-        if (textParts.length > 0) {
-          responseText = textParts.join('\n\n');
-        }
-      }
-
-      isErr = !!(error && !responseText);
-      if (!responseText) {
-        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر Vibe') : 'تمت المعالجة.');
-      }
-    } else if (engine === 'opencode') {
-      const textParts = [];
-      let errorMsg = null;
-      const lines = (stdout || '').split('\n');
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const evt = JSON.parse(line.trim());
-          if (evt.sessionID) convId = evt.sessionID;
-          if (evt.type === 'text' && evt.part?.text) {
-            textParts.push(evt.part.text);
-          }
-          if (evt.type === 'error') {
-            errorMsg = evt.error?.data?.message || evt.error?.name || 'خطأ في تنفيذ الأمر عبر OpenCode';
-          }
-        } catch (e) {}
-      }
-
-      isErr = !!(error && textParts.length === 0);
-      if (textParts.length > 0) {
-        responseText = textParts.join('\n\n');
-      } else if (errorMsg) {
-        responseText = errorMsg;
-      } else {
-        responseText = stdout?.trim() || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر عبر OpenCode') : 'تمت المعالجة.');
-      }
-    } else {
-      try {
-        if (stdout && stdout.trim()) {
-          parsed = JSON.parse(stdout.trim());
-        }
-      } catch (e) {}
-
-      isErr = !!(error && !stdout);
-      responseText = parsed?.response || stdout || (isErr ? (error?.message || stderr || 'حدث خطأ أثناء تنفيذ الأمر') : 'تمت المعالجة.');
-      convId = parsed?.conversation_id || null;
-    }
-    const durationVal = parsed?.duration_seconds || parseFloat(elapsedSeconds);
-
     const assistantMsg = {
       id: Date.now(),
       role: 'assistant',
-      content: responseText,
-      conversationId: convId,
-      duration: durationVal,
-      isError: isErr,
+      content: result.responseText,
+      conversationId: result.conversationId,
+      duration: result.duration,
+      isError: result.isError,
       time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
     };
 
-    // 3. Immediately save assistant response in server chat log!
+    // Save assistant message to server chat log
     appendSessionChatMessage(session.id, assistantMsg);
 
-    // 4. Update job record
-    jobRecord.status = isErr ? 'error' : 'done';
-    jobRecord.response = responseText;
-    jobRecord.conversationId = convId;
-    jobRecord.duration = durationVal;
-    jobRecord.isError = isErr;
+    // Complete persistent job
+    await jobsManager.completeJob(job.jobId, {
+      responseText: result.responseText,
+      conversationId: result.conversationId,
+      duration: result.duration,
+      isError: result.isError,
+      usage: result.usage
+    });
+
+    // Update memory job record for legacy polling
+    jobRecord.status = result.isError ? 'error' : 'done';
+    jobRecord.response = result.responseText;
+    jobRecord.conversationId = result.conversationId;
+    jobRecord.duration = result.duration;
+    jobRecord.isError = result.isError;
     jobRecord.completedAt = Date.now();
 
-    // Retain completed job for 3 minutes for reconnecting clients
     setTimeout(() => {
       if (activeChatJobs.get(session.id) === jobRecord) {
         activeChatJobs.delete(session.id);
       }
     }, 180000);
 
-    // 5. Send response if HTTP socket is still open
     if (!res.headersSent) {
-      if (isErr) {
+      if (result.isError) {
         return res.status(500).json({
           success: false,
-          error: responseText,
-          duration: durationVal,
-          conversationId: convId
+          error: result.responseText,
+          duration: result.duration,
+          conversationId: result.conversationId
         });
       }
       return res.json({
         success: true,
-        response: responseText,
-        conversationId: convId,
-        duration: durationVal,
-        status: parsed?.status || 'completed',
-        usage: parsed?.usage
+        response: result.responseText,
+        conversationId: result.conversationId,
+        duration: result.duration,
+        status: 'completed',
+        usage: result.usage
       });
     }
+  }).catch(async (err) => {
+    activeChatProcesses.delete(session.token);
+
+    const errorMsg = err.message || 'خطأ أثناء تنفيذ العملية';
+    const assistantMsg = {
+      id: Date.now(),
+      role: 'assistant',
+      content: errorMsg,
+      isError: true,
+      time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+    };
+    appendSessionChatMessage(session.id, assistantMsg);
+
+    await jobsManager.completeJob(job.jobId, {
+      responseText: '',
+      isError: true,
+      error: errorMsg
+    });
+
+    jobRecord.status = 'error';
+    jobRecord.response = errorMsg;
+    jobRecord.isError = true;
+    jobRecord.completedAt = Date.now();
+
+    if (!res.headersSent) {
+      return res.status(500).json({ success: false, error: errorMsg });
+    }
   });
-
-  if (child.stdin) {
-    try { child.stdin.end(); } catch (e) {}
-  }
-
-  activeChatProcesses.set(session.token, child);
 });
 
 // Check Active Background Chat Job for Session
@@ -1481,7 +1356,9 @@ wss.on('connection', (ws) => {
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);
-  console.log(`🚀 AGYZ Multi-Agent Platform running on port ${PORT}`);
+  console.log(`🚀 VibzCode Sovereign Multi-Engine Platform & Orchestrator`);
+  console.log(`📡 Port: ${PORT}`);
   console.log(`🔑 Admin URL: http://localhost:${PORT}/`);
+  console.log(`🧠 Orchestrator MCP: http://localhost:${PORT}/mcp/orchestrator?token=<ADMIN_SECRET>`);
   console.log(`=======================================================`);
 });

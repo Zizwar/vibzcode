@@ -1,5 +1,145 @@
 [
   {
+    "id": "sess_mud7iycm_48f0ac93",
+    "name": "vibenote",
+    "assignee": "عضو الفريق",
+    "token": "agyz_0bf245833e7bd4c0408db07c0524f920",
+    "targetDir": "/root/wino/vibe-note",
+    "engine": "agy",
+    "model": "",
+    "sandbox": false,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "chat",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-22T21:49:42.120Z",
+    "lastActive": "2026-09-22T22:02:51.960Z",
+    "stats": {
+      "messagesCount": 2
+    }
+  },
+  {
+    "id": "sess_mua5pder_ce5d0c3a",
+    "name": "Suno.homed",
+    "assignee": "wino",
+    "token": "agyz_ed1a2d16aa40fe29cfd730ce714bf382",
+    "targetDir": "/root/wino/sunoma-gateway/deno",
+    "engine": "agy",
+    "model": "",
+    "sandbox": false,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "chat",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-20T18:35:23.811Z",
+    "lastActive": "2026-09-20T19:11:17.166Z",
+    "stats": {
+      "messagesCount": 4
+    }
+  },
+  {
+    "id": "sess_mua3mmxz_38a1d897",
+    "name": "ffmpeg",
+    "assignee": "عضو الفريق",
+    "token": "agyz_80f5cd068805dde1859191140ba4e5df",
+    "targetDir": "/root/test",
+    "engine": "agy",
+    "model": "",
+    "sandbox": false,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "both",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-20T17:37:16.967Z",
+    "lastActive": "2026-09-20T17:43:26.975Z",
+    "stats": {
+      "messagesCount": 1
+    }
+  },
+  {
+    "id": "sess_mu8ozmec_8f49a817",
+    "name": "google maps",
+    "assignee": "yahya",
+    "token": "agyz_2fd085801faba13f581442ad6f17060e",
+    "targetDir": "/root/wino/agentspace",
+    "engine": "agy",
+    "model": "",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "chat",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-19T17:59:42.372Z",
+    "lastActive": "2026-09-19T18:58:32.742Z",
+    "stats": {
+      "messagesCount": 2
+    }
+  },
+  {
+    "id": "sess_mu78z69h_f553dab0",
+    "name": "Darbouazza Beuty",
+    "assignee": "عضو الفريق",
+    "token": "agyz_7247cd5717093baaa48b06f44418cdc8",
+    "targetDir": "/root/wino",
+    "engine": "agy",
+    "model": "",
+    "sandbox": false,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "chat",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-18T17:43:41.429Z",
+    "lastActive": "2026-09-20T17:21:57.364Z",
+    "stats": {
+      "messagesCount": 6
+    }
+  },
+  {
+    "id": "sess_mu69tiwv_c04ab244",
+    "name": "Mistral",
+    "assignee": "عضو الفريق",
+    "token": "agyz_db7a670d7460994c4432bb46e797380c",
+    "targetDir": "/root/test",
+    "engine": "vibe",
+    "model": "",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "both",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-18T01:19:31.327Z",
+    "lastActive": "2026-09-18T01:21:18.988Z",
+    "stats": {
+      "messagesCount": 2
+    }
+  },
+  {
+    "id": "sess_mu4p8mal_f406252a",
+    "name": "claude",
+    "assignee": "عضو الفريق",
+    "token": "agyz_1a2b2f2f11d780b143fa4897cc4112f9",
+    "targetDir": "/root/test",
+    "engine": "claude",
+    "model": "",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "both",
+    "enableMcp": true,
+    "status": "active",
+    "createdAt": "2026-09-16T22:55:37.437Z",
+    "lastActive": "2026-09-16T23:00:18.372Z",
+    "stats": {
+      "messagesCount": 1
+    }
+  },
+  {
     "id": "sess_mu4jn31t_43bf8c15",
     "name": "openwino",
     "assignee": "عضو الفريق",

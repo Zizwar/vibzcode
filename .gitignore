@@ -5,3 +5,4 @@ data_backup*
 .DS_Store
 *.log
 .tmp/
+data/jobs.json

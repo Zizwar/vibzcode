@@ -45,12 +45,12 @@ document.addEventListener('alpine:init', () => {
     toasts: [],
 
     // Theme State (Dark / Light)
-    theme: localStorage.getItem('agyz_theme') || 'dark',
+    theme: localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark',
 
     init() {
       window._admin = this;
       this.applyTheme();
-      const savedToken = localStorage.getItem('agyz_admin_token');
+      const savedToken = localStorage.getItem('vibz_admin_token') || localStorage.getItem('agyz_admin_token');
       if (savedToken) {
         this.adminToken = savedToken;
         this.verifyAdminToken(savedToken);
@@ -59,6 +59,7 @@ document.addEventListener('alpine:init', () => {
 
     toggleTheme() {
       this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('vibz_theme', this.theme);
       localStorage.setItem('agyz_theme', this.theme);
       this.applyTheme();
       this.showToast(this.theme === 'dark' ? 'تم تفعيل الوضع الليلي' : 'تم تفعيل الوضع النهاري', 'info');
@@ -98,6 +99,7 @@ document.addEventListener('alpine:init', () => {
         const data = await res.json();
         if (res.ok && data.success && data.token) {
           this.adminToken = data.token;
+          localStorage.setItem('vibz_admin_token', data.token);
           localStorage.setItem('agyz_admin_token', data.token);
           this.authenticated = true;
           this.showToast('تم تسجيل دخول المدير بنجاح', 'success');
@@ -136,6 +138,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     handleLogout() {
+      localStorage.removeItem('vibz_admin_token');
       localStorage.removeItem('agyz_admin_token');
       this.authenticated = false;
       this.adminToken = '';

@@ -1,7 +1,7 @@
 {
-  "name": "agyz",
-  "version": "1.0.0",
-  "description": "Multi-Agent Workspace Platform for Antigravity (AGY) with Admin Sandbox Control and Secure Team Sessions",
+  "name": "vibzcode",
+  "version": "2.0.0",
+  "description": "VibzCode - Sovereign Multi-Engine AI Agent Orchestrator & Workspace Platform with Shared MemoryZ Substrate",
   "main": "server.js",
   "type": "commonjs",
   "scripts": {

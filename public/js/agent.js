@@ -74,7 +74,7 @@ document.addEventListener('alpine:init', () => {
     toasts: [],
 
     // Theme State (Dark / Light)
-    theme: localStorage.getItem('agyz_theme') || 'dark',
+    theme: localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark',
 
     init() {
       // Expose to window for filetree click callbacks
@@ -84,7 +84,7 @@ document.addEventListener('alpine:init', () => {
       // Check token in URL parameters (?token=...)
       const urlParams = new URLSearchParams(window.location.search);
       const urlToken = urlParams.get('token');
-      const savedToken = localStorage.getItem('agyz_session_token');
+      const savedToken = localStorage.getItem('vibz_session_token') || localStorage.getItem('agyz_session_token');
 
       const tokenToVerify = urlToken || savedToken;
       if (tokenToVerify) {
@@ -93,7 +93,7 @@ document.addEventListener('alpine:init', () => {
       }
 
       // Load arabic mode preference
-      const savedArabicMode = localStorage.getItem('agyz_arabic_mode');
+      const savedArabicMode = localStorage.getItem('vibz_arabic_mode') || localStorage.getItem('agyz_arabic_mode');
       if (savedArabicMode !== null) {
         this.arabicModeIndex = parseInt(savedArabicMode, 10);
       }
@@ -101,6 +101,7 @@ document.addEventListener('alpine:init', () => {
 
     toggleTheme() {
       this.theme = this.theme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('vibz_theme', this.theme);
       localStorage.setItem('agyz_theme', this.theme);
       this.applyTheme();
       this.showToast(this.theme === 'dark' ? 'تم تفعيل الوضع الليلي' : 'تم تفعيل الوضع النهاري', 'info');
@@ -168,6 +169,7 @@ document.addEventListener('alpine:init', () => {
           this.authenticated = true;
           this.session = data.session;
           this.token = token;
+          localStorage.setItem('vibz_session_token', token);
           localStorage.setItem('agyz_session_token', token);
 
           // Configure allowed modes
@@ -214,6 +216,7 @@ document.addEventListener('alpine:init', () => {
     handleLogout() {
       if (this.activePollTimer) clearInterval(this.activePollTimer);
       if (this.chatTimerInterval) clearInterval(this.chatTimerInterval);
+      localStorage.removeItem('vibz_session_token');
       localStorage.removeItem('agyz_session_token');
       this.authenticated = false;
       this.token = '';
