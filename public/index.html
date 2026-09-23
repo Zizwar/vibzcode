@@ -148,17 +148,16 @@
           <i class="fa-solid text-xs" :class="theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
         </button>
 
-        <!-- Orchestrator MCP Button -->
-        <button @click="openOrchestratorModal" class="btn btn-sm bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:to-indigo-500 border-none text-white text-xs px-3 shadow-md shadow-purple-500/20 gap-1.5 font-bold">
-          <i class="fa-solid fa-network-wired text-xs"></i>
-          <span>ربط الأوركسترا (Orchestrator MCP)</span>
+        <!-- Orchestrator MCP Plug Icon Button -->
+        <button @click="openOrchestratorModal" class="btn btn-sm btn-circle bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none text-white shadow-md shadow-purple-500/20 tooltip tooltip-bottom" data-tip="خادم الأوركسترا (Orchestrator MCP)">
+          <i class="fa-solid fa-plug text-xs"></i>
         </button>
 
         <button @click="openCreateModal" class="btn btn-sm btn-circle btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white shadow-md shadow-cyan-500/20 tooltip tooltip-bottom" data-tip="إنشاء جلسة جديدة">
           <i class="fa-solid fa-plus text-sm"></i>
         </button>
 
-        <button @click="loadSessions" class="btn btn-sm btn-ghost border border-slate-800 text-slate-300 hover:text-white" title="تحديث البيانات">
+        <button @click="loadSessions" class="btn btn-sm btn-circle btn-ghost border border-slate-800 text-slate-300 hover:text-white tooltip tooltip-bottom" data-tip="تحديث البيانات">
           <i class="fa-solid fa-arrows-rotate text-xs" :class="loadingSessions ? 'animate-spin' : ''"></i>
         </button>
 
