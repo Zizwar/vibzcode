@@ -442,6 +442,39 @@ document.addEventListener('alpine:init', () => {
           this.showToast('تم نسخ رابط OpenAPI Schema لـ ChatGPT Actions', 'success');
         });
       }
+    },
+
+    // Platform-Level Orchestrator MCP Helpers
+    showOrchestratorModal: false,
+
+    openOrchestratorModal() {
+      this.showOrchestratorModal = true;
+    },
+
+    getOrchestratorMcpUrl() {
+      return `${window.location.origin}/mcp/orchestrator?token=${this.adminToken}`;
+    },
+
+    getOrchestratorOpenApiUrl() {
+      return `${window.location.origin}/openapi.json?token=${this.adminToken}`;
+    },
+
+    copyOrchestratorMcpUrl() {
+      const url = this.getOrchestratorMcpUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          this.showToast('تم نسخ رابط خادم الأوركسترا العام (Orchestrator MCP)', 'success');
+        });
+      }
+    },
+
+    copyOrchestratorOpenApiUrl() {
+      const url = this.getOrchestratorOpenApiUrl();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(() => {
+          this.showToast('تم نسخ رابط OpenAPI للأوركسترا العام', 'success');
+        });
+      }
     }
   }));
 });
