@@ -54,11 +54,11 @@
   <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.js"></script>
 
   <!-- Custom Stylesheet -->
-  <link rel="stylesheet" href="/css/style.css">
+  <link rel="stylesheet" href="/css/style.css?v=2.2">
 
   <!-- Scripts -->
   <script src="/js/arabic-reshaper.js"></script>
-  <script src="/js/agent.js"></script>
+  <script src="/js/agent.js?v=2.2"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 font-arabic antialiased select-none" x-data="agentApp">
@@ -438,15 +438,17 @@
             <div class="relative flex items-end gap-2 bg-slate-950 border border-slate-800 rounded-2xl p-2 focus-within:border-cyan-500/60 shadow-lg">
               <textarea id="agent-input-textarea"
                         x-model="chatInputText"
-                        @keydown.enter="if (!$event.shiftKey) { $event.preventDefault(); sendChatMessage(); }"
-                        placeholder="اكتب طلبك أو مهمتك للوكيل هنا... (Enter للإرسال، Shift+Enter لسطر جديد)"
+                        @keydown.ctrl.enter.prevent="sendChatMessage()"
+                        @keydown.meta.enter.prevent="sendChatMessage()"
+                        placeholder="اكتب طلبك أو مهمتك للوكيل هنا..."
                         rows="2"
                         :disabled="chatLoading"
                         class="textarea textarea-ghost w-full resize-none bg-transparent text-slate-100 placeholder-slate-500 text-sm leading-relaxed focus:outline-none font-arabic p-1.5"></textarea>
               
               <button type="submit"
                       :disabled="chatLoading || !chatInputText.trim()"
-                      class="btn btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white rounded-xl h-10 min-h-10 px-4 shrink-0 gap-1.5 shadow-md shadow-cyan-500/20">
+                      class="btn btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white rounded-xl h-10 min-h-10 px-4 shrink-0 gap-1.5 shadow-md shadow-cyan-500/20"
+                      title="إرسال الطلب للوكيل">
                 <span x-show="chatLoading" class="loading loading-spinner loading-xs"></span>
                 <span x-show="!chatLoading" class="hidden sm:inline font-bold text-xs">إرسال</span>
                 <i x-show="!chatLoading" class="fa-solid fa-paper-plane text-xs"></i>
@@ -454,7 +456,7 @@
             </div>
             <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
               <span>مساحة العمل: <span class="font-mono text-cyan-400" x-text="session?.targetDir"></span></span>
-              <span class="font-mono">Enter: إرسال • Shift+Enter: سطر جديد</span>
+              <span class="font-mono text-slate-400">Enter: سطر جديد • الإرسال عبر زر الإرسال أو Ctrl+Enter</span>
             </div>
           </form>
         </div>
