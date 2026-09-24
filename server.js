@@ -13,6 +13,15 @@ const { setupRemoteMcp } = require('./lib/remoteMcp');
 const { executeEngineTask } = require('./lib/engines');
 const { defaultClient: memoryz } = require('./lib/memoryzClient');
 const { defaultJobsManager: jobsManager } = require('./lib/jobsManager');
+const {
+  CHAT_LOGS_DIR,
+  ensureChatDir,
+  getSessionChatMessages,
+  saveSessionChatMessages,
+  appendSessionChatMessage,
+  hydrateSessionChatFromJobs,
+  hydrateAllSessionsFromJobs
+} = require('./lib/chatLogger');
 
 const PORT = process.env.PORT || 3333;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -24,7 +33,6 @@ const ADMIN_SECRET = crypto.createHash('sha256').update(`${ADMIN_USER}:${ADMIN_P
 // Data storage
 const DATA_DIR = path.join(__dirname, 'data');
 const SESSIONS_FILE = path.join(DATA_DIR, 'sessions.json');
-const CHAT_LOGS_DIR = path.join(DATA_DIR, 'chats');
 const TEMP_UPLOADS_DIR = path.join(DATA_DIR, 'temp_uploads');
 
 if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
@@ -117,6 +125,9 @@ let sessions = loadSessions();
 const activeChatProcesses = new Map();
 const activeChatJobs = new Map();
 
+// Synchronize and hydrate sessions from previous jobs
+hydrateAllSessionsFromJobs(sessions, jobsManager, saveSessions);
+
 // Ensure MemoryZ MCP server is registered in agy
 function ensureMemoryzMcp() {
   execFile('agy', ['mcp', 'list'], (err, stdout) => {
@@ -160,7 +171,10 @@ setupRemoteMcp(app, {
   getSessionByToken,
   ADMIN_SECRET,
   sessions,
-  saveSessions
+  saveSessions,
+  appendSessionChatMessage,
+  activeChatJobs,
+  activeChatProcesses
 });
 
 // ==================== AUTH & ADMIN APIS ====================
@@ -850,22 +864,6 @@ app.post('/api/session/workspace/fetch-url', async (req, res) => {
   }
 });
 
-// Helper to append a single message to session chat log
-function appendSessionChatMessage(sessionId, msg) {
-  try {
-    const file = path.join(CHAT_LOGS_DIR, `${sessionId}.json`);
-    let list = [];
-    if (fs.existsSync(file)) {
-      list = JSON.parse(fs.readFileSync(file, 'utf8'));
-    }
-    list.push(msg);
-    fs.writeFileSync(file, JSON.stringify(list, null, 2), 'utf8');
-  } catch (e) {
-    console.error(`Error saving message to session ${sessionId}:`, e);
-  }
-}
-
-// Member / Agent Chat Execution (Background-Persistent)
 // Member / Agent Chat Execution (Background-Persistent with Multi-Engine & MemoryZ Support)
 app.post('/api/session/chat', async (req, res) => {
   const token = getAuthToken(req);
@@ -1137,20 +1135,15 @@ app.post('/api/session/chat/abort', (req, res) => {
   return res.json({ success: true, message: 'تم إيقاف تنفيذ المهمة' });
 });
 
-// Get / Save Session Chat Messages (Persistent Chat across devices)
+// Get / Save Session Chat Messages (Persistent Chat across devices with auto-hydration)
 app.get('/api/session/messages/:sessionId', (req, res) => {
   const token = getAuthToken(req);
   const session = (token === ADMIN_SECRET) ? sessions.find(s => s.id === req.params.sessionId) : getSessionByToken(token);
   if (!session) return res.status(401).json({ success: false, error: 'غير مصرح' });
 
-  const file = path.join(CHAT_LOGS_DIR, `${session.id}.json`);
-  if (fs.existsSync(file)) {
-    try {
-      const data = JSON.parse(fs.readFileSync(file, 'utf8'));
-      return res.json({ success: true, messages: data });
-    } catch (e) {}
-  }
-  return res.json({ success: true, messages: [] });
+  // Auto-hydrate messages from jobsManager in case external MCP commands arrived
+  const messages = hydrateSessionChatFromJobs(session.id, jobsManager);
+  return res.json({ success: true, messages });
 });
 
 app.post('/api/session/messages/:sessionId', (req, res) => {
@@ -1160,13 +1153,9 @@ app.post('/api/session/messages/:sessionId', (req, res) => {
 
   const { messages } = req.body;
   if (Array.isArray(messages)) {
-    const file = path.join(CHAT_LOGS_DIR, `${session.id}.json`);
-    try {
-      fs.writeFileSync(file, JSON.stringify(messages, null, 2), 'utf8');
-      return res.json({ success: true });
-    } catch (e) {
-      return res.status(500).json({ success: false, error: e.message });
-    }
+    const ok = saveSessionChatMessages(session.id, messages);
+    if (ok) return res.json({ success: true });
+    return res.status(500).json({ success: false, error: 'تعذر حفظ الرسائل على الخادم' });
   }
   return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
 });

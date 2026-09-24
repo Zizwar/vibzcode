@@ -361,7 +361,10 @@
                 </div>
                 <div class="max-w-[88%] sm:max-w-[78%] bg-gradient-to-br from-blue-950/60 to-slate-900/90 border border-blue-500/30 rounded-2xl rounded-tr-none px-4 py-3 shadow-lg">
                   <div class="flex items-center justify-between gap-4 mb-1.5 text-[11px] text-cyan-300/80 border-b border-blue-500/20 pb-1">
-                    <span class="font-bold" x-text="session?.assignee || 'أنت'"></span>
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-bold" x-text="msg.sender || session?.assignee || 'أنت'"></span>
+                      <span x-show="msg.sender" class="badge badge-xs bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 text-[9px] px-1 py-0">MCP</span>
+                    </div>
                     <span x-text="msg.time" class="font-mono text-slate-400"></span>
                   </div>
                   <div class="text-sm text-slate-100 whitespace-pre-wrap leading-relaxed select-text font-arabic" x-text="msg.content"></div>

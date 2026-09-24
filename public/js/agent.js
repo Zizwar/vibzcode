@@ -188,6 +188,9 @@ document.addEventListener('alpine:init', () => {
           // Check if there is an active background task running
           this.checkActiveChatJob();
 
+          // Start background live sync for real-time external MCP messages
+          this.startBackgroundSync();
+
           // If terminal is enabled, init it
           if (this.session.allowedModes !== 'chat') {
             this.$nextTick(() => {
@@ -214,6 +217,7 @@ document.addEventListener('alpine:init', () => {
     },
 
     handleLogout() {
+      if (this.syncChatInterval) clearInterval(this.syncChatInterval);
       if (this.activePollTimer) clearInterval(this.activePollTimer);
       if (this.chatTimerInterval) clearInterval(this.chatTimerInterval);
       localStorage.removeItem('vibz_session_token');
@@ -666,7 +670,13 @@ document.addEventListener('alpine:init', () => {
 
     // ==================== CHAT LOGIC (Background-Persistent) ====================
 
-    async loadChatHistory() {
+    isNearChatBottom() {
+      const el = document.getElementById('agent-chat-container');
+      if (!el) return true;
+      return (el.scrollHeight - el.scrollTop - el.clientHeight) < 150;
+    },
+
+    async loadChatHistory(silent = false) {
       if (!this.session?.id) return;
       try {
         const res = await fetch(`/api/session/messages/${this.session.id}`, {
@@ -674,12 +684,42 @@ document.addEventListener('alpine:init', () => {
         });
         const data = await res.json();
         if (res.ok && data.success && Array.isArray(data.messages)) {
-          this.chatMessages = data.messages;
-          this.$nextTick(() => this.scrollChatToBottom());
+          const prevCount = this.chatMessages.length;
+          const newCount = data.messages.length;
+          const lastPrevId = prevCount > 0 ? this.chatMessages[prevCount - 1].id : null;
+          const lastNewId = newCount > 0 ? data.messages[newCount - 1].id : null;
+
+          if (prevCount !== newCount || lastPrevId !== lastNewId) {
+            this.chatMessages = data.messages;
+            if (!silent || this.isNearChatBottom()) {
+              this.$nextTick(() => this.scrollChatToBottom());
+            }
+          }
+
+          // Recover conversationId from last assistant message if not set
+          if (!this.chatConversationId) {
+            for (let i = data.messages.length - 1; i >= 0; i--) {
+              if (data.messages[i].role === 'assistant' && data.messages[i].conversationId) {
+                this.chatConversationId = data.messages[i].conversationId;
+                break;
+              }
+            }
+          }
         }
       } catch (e) {
-        console.error('Error loading chat history:', e);
+        if (!silent) console.error('Error loading chat history:', e);
       }
+    },
+
+    startBackgroundSync() {
+      if (this.syncChatInterval) clearInterval(this.syncChatInterval);
+      this.syncChatInterval = setInterval(async () => {
+        if (!this.authenticated || !this.session?.id) return;
+        if (!this.chatLoading) {
+          await this.checkActiveChatJob();
+          await this.loadChatHistory(true);
+        }
+      }, 3500);
     },
 
     async saveChatHistory() {
