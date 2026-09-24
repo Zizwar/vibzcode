@@ -1,0 +1,12 @@
+{
+  "tasks": {
+    "dev": "deno run -A --env-file=.env --watch main.ts",
+    "start": "deno run -A main.ts"
+  },
+  "imports": {
+    "hono": "jsr:@hono/hono@^4.12"
+  },
+  "compilerOptions": {
+    "lib": ["deno.window", "dom"]
+  }
+}
