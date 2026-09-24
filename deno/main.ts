@@ -207,9 +207,10 @@ async function handleMcpProxy(c: any): Promise<Response> {
       const jsonText = await backendResp.text();
       const originHost = `${url.protocol}//${url.host}`;
       const rewrittenText = jsonText
-        .replace(/http:\/\/127\.0\.0\.1:3333/g, originHost)
-        .replace(/http:\/\/localhost:3333/g, originHost)
-        .replace(/http:\/\/145\.241\.104\.205:3333/g, originHost);
+        .replace(/https?:\/\/127\.0\.0\.1:3333/g, originHost)
+        .replace(/https?:\/\/localhost:3333/g, originHost)
+        .replace(/https?:\/\/145\.241\.104\.205:3333/g, originHost)
+        .replace(/https?:\/\/145\.241\.104\.205/g, originHost);
 
       return new Response(rewrittenText, {
         status: backendResp.status,
