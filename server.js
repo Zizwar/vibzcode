@@ -22,6 +22,7 @@ const {
   hydrateSessionChatFromJobs,
   hydrateAllSessionsFromJobs
 } = require('./lib/chatLogger');
+const { getSettings, updateSettings } = require('./lib/jevClient');
 
 const PORT = process.env.PORT || 3333;
 const ADMIN_USER = process.env.ADMIN_USER || 'admin';
@@ -195,6 +196,52 @@ app.post('/api/admin/verify', (req, res) => {
     return res.json({ valid: true });
   }
   return res.status(401).json({ valid: false });
+});
+
+// Admin System Settings (Jev AI & Engine Configuration)
+app.get('/api/admin/settings', requireAdmin, (req, res) => {
+  try {
+    const settings = getSettings();
+    const hasKey = !!(process.env.JEV_AI_KEY || settings.jevApiKey);
+    return res.json({
+      success: true,
+      settings: {
+        jevEnabled: settings.jevEnabled === true,
+        jevKeyConfigured: hasKey,
+        updatedAt: settings.updatedAt || null,
+        reason: settings.reason || ''
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post('/api/admin/settings', requireAdmin, (req, res) => {
+  try {
+    const { jevEnabled, jevApiKey } = req.body;
+    const patch = {};
+    if (typeof jevEnabled === 'boolean') {
+      patch.jevEnabled = jevEnabled;
+      patch.reason = jevEnabled ? 'Enabled by administrator' : 'Disabled by administrator to prevent API credit exhaustion';
+    }
+    if (typeof jevApiKey === 'string') {
+      patch.jevApiKey = jevApiKey.trim();
+    }
+    const updated = updateSettings(patch);
+    console.log(`[Admin Settings] ⚙️ Updated settings: Jev AI enabled=${updated.jevEnabled}`);
+    return res.json({
+      success: true,
+      settings: {
+        jevEnabled: updated.jevEnabled === true,
+        jevKeyConfigured: !!(process.env.JEV_AI_KEY || updated.jevApiKey),
+        updatedAt: updated.updatedAt,
+        reason: updated.reason
+      }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Build folder-only directory tree for Admin Session creation

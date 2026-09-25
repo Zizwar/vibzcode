@@ -44,6 +44,11 @@ document.addEventListener('alpine:init', () => {
     // Toasts
     toasts: [],
 
+    // Jev AI & System Settings State
+    jevEnabled: false,
+    jevKeyConfigured: false,
+    loadingJev: false,
+
     // Theme State (Dark / Light)
     theme: localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark',
 
@@ -105,6 +110,7 @@ document.addEventListener('alpine:init', () => {
           this.showToast('تم تسجيل دخول المدير بنجاح', 'success');
           this.loadSessions();
           this.loadFolders();
+          this.loadSettings();
         } else {
           this.authError = data.error || 'فشل تسجيل الدخول';
         }
@@ -129,6 +135,7 @@ document.addEventListener('alpine:init', () => {
           this.authenticated = true;
           this.loadSessions();
           this.loadFolders();
+          this.loadSettings();
         } else {
           this.handleLogout();
         }
@@ -143,6 +150,54 @@ document.addEventListener('alpine:init', () => {
       this.authenticated = false;
       this.adminToken = '';
       this.showToast('تم تسجيل الخروج', 'info');
+    },
+
+    async loadSettings() {
+      try {
+        const res = await fetch('/api/admin/settings', {
+          headers: { 'Authorization': this.adminToken }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && data.settings) {
+            this.jevEnabled = !!data.settings.jevEnabled;
+            this.jevKeyConfigured = !!data.settings.jevKeyConfigured;
+          }
+        }
+      } catch (e) {
+        console.warn('[Admin] Failed to load settings:', e);
+      }
+    },
+
+    async toggleJevAI() {
+      if (this.loadingJev) return;
+      this.loadingJev = true;
+      const targetState = !this.jevEnabled;
+      try {
+        const res = await fetch('/api/admin/settings', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.adminToken
+          },
+          body: JSON.stringify({ jevEnabled: targetState })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.jevEnabled = !!data.settings.jevEnabled;
+          if (this.jevEnabled) {
+            this.showToast('⚡ تم تفعيل Jev AI (System One Decision Engine)', 'success');
+          } else {
+            this.showToast('🛑 تم تعطيل Jev AI وإيقاف استهلاك الرصيد نهائياً', 'info');
+          }
+        } else {
+          this.showToast(data.error || 'تعذر تحديث إعدادات Jev AI', 'error');
+        }
+      } catch (e) {
+        this.showToast('خطأ في الاتصال بالخادم', 'error');
+      } finally {
+        this.loadingJev = false;
+      }
     },
 
     async loadSessions() {

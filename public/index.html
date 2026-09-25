@@ -148,6 +148,20 @@
           <i class="fa-solid text-xs" :class="theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
         </button>
 
+        <!-- Jev AI Control Toggle Button -->
+        <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl border transition-all cursor-pointer"
+             :class="jevEnabled ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' : 'bg-slate-900/90 border-slate-800 text-slate-400'"
+             @click="toggleJevAI()"
+             :title="jevEnabled ? 'محرك Jev AI مفعّل (انقر للتعطيل وإيقاف الاستهلاك)' : 'محرك Jev AI معطّل وحفظ الرصيد نشط (انقر للتفعيل)'">
+          <i class="fa-solid fa-bolt-lightning text-xs" :class="jevEnabled ? 'text-amber-400 animate-pulse' : 'text-slate-500'"></i>
+          <span class="text-xs font-mono font-bold">Jev AI:</span>
+          <span class="badge badge-xs font-mono text-[10px] px-1.5 py-0.5 border-none"
+                :class="jevEnabled ? 'bg-amber-500 text-black font-extrabold' : 'bg-slate-800 text-slate-400'">
+            <span x-show="!loadingJev" x-text="jevEnabled ? 'مفعّل' : 'معطّل'"></span>
+            <i x-show="loadingJev" class="fa-solid fa-spinner animate-spin text-[8px]"></i>
+          </span>
+        </div>
+
         <!-- Orchestrator MCP Plug Icon Button -->
         <button @click="openOrchestratorModal" class="btn btn-sm btn-circle bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none text-white shadow-md shadow-purple-500/20 tooltip tooltip-bottom" data-tip="خادم الأوركسترا (Orchestrator MCP)">
           <i class="fa-solid fa-plug text-xs"></i>
@@ -806,6 +820,36 @@
             <strong>ما الفرق بين هذا الرابط ورابط الجلسات الفردية؟</strong><br>
             • <strong>رابط الأوركسترا (هنا):</strong> يمنح الوكيل (Claude Desktop أو Cursor أو ChatGPT) صلاحية إدارة المنصة بأكملها: إنشاء جلسات، توجيه مهام لأي محرك، تمرير النتائج بين الوكلاء، واسترجاع الذكريات من MemoryZ.<br>
             • <strong>رابط الجلسة الفردية (في بطاقات الجلسات):</strong> مقيد بساندبوكس مشروع واحد فقط لمطور أو وكيل مستقل.
+          </div>
+        </div>
+
+        <!-- Jev AI Subsystem Status & Control Card -->
+        <div class="rounded-xl border p-4 space-y-3 transition-colors"
+             :class="jevEnabled ? 'bg-amber-950/20 border-amber-600/40' : 'bg-slate-950/80 border-slate-800'">
+          <div class="flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm shadow-sm"
+                   :class="jevEnabled ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' : 'bg-slate-800 text-slate-400 border border-slate-700'">
+                <i class="fa-solid fa-bolt-lightning"></i>
+              </div>
+              <div>
+                <h4 class="font-bold text-xs text-white flex items-center gap-2">
+                  <span>محرك اتخاذ القرار والفرز الذكي (TypeSafe Jev AI)</span>
+                  <span class="badge badge-xs font-mono text-[10px]"
+                        :class="jevEnabled ? 'badge-warning text-black font-bold' : 'badge-ghost text-slate-400'">
+                    <span x-text="jevEnabled ? 'مفعّل (يستهلك رصيد)' : 'معطّل (حفظ الرصيد)'"></span>
+                  </span>
+                </h4>
+                <p class="text-[11px] text-slate-400">يستخدم لفرز المهام (smart_route) وتقييم الذاكرة وتلخيص المهارات. عند التعطيل يتم استخدام البديل المحلي فوراً بدون استهلاك أي توكن.</p>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button @click="toggleJevAI()" :disabled="loadingJev" class="btn btn-sm px-3 text-xs shrink-0"
+                    :class="jevEnabled ? 'btn-error btn-outline hover:bg-rose-600' : 'btn-warning'">
+              <span x-show="!loadingJev" x-text="jevEnabled ? 'إلغاء وتوقيف Jev' : 'تفعيل Jev AI'"></span>
+              <i x-show="loadingJev" class="fa-solid fa-spinner animate-spin"></i>
+            </button>
           </div>
         </div>
 

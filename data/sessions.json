@@ -1,5 +1,26 @@
 [
   {
+    "id": "sess_muh284m5_1b3cd014",
+    "name": "livesunoma",
+    "assignee": "عضو الفريق",
+    "token": "vibz_77f10fdf551d64e5a1c26a2ef7d19fcd",
+    "targetDir": "/root/wino/livesunoma",
+    "engine": "agy",
+    "model": "",
+    "systemPrompt": "",
+    "sandbox": true,
+    "autoApprove": true,
+    "continueSession": true,
+    "allowedModes": "both",
+    "enableMcp": true,
+    "status": "closed",
+    "createdAt": "2026-09-25T14:32:23.645Z",
+    "lastActive": "2026-09-25T14:37:26.148Z",
+    "stats": {
+      "messagesCount": 1
+    }
+  },
+  {
     "id": "sess_mufskz0p_8e5ddec6",
     "name": "video-shotcraft",
     "assignee": "fullstack_dev",
