@@ -5,6 +5,7 @@
     "jsr:@denosaurs/tty@0.2.1": "0.2.1",
     "jsr:@denosaurs/tty@~0.2.1": "0.2.1",
     "jsr:@denosaurs/wait@0.2.2": "0.2.2",
+    "jsr:@hono/hono@^4.12.0": "4.13.3",
     "jsr:@std/assert@0.217": "0.217.0",
     "jsr:@std/async@0.217": "0.217.0",
     "jsr:@std/dotenv@0.217": "0.217.0",
@@ -43,6 +44,9 @@
         "jsr:@denosaurs/tty@~0.2.1",
         "jsr:@std/fmt@1"
       ]
+    },
+    "@hono/hono@4.13.3": {
+      "integrity": "2d277e78219ea145202359af5296cfa136eba5e75ffb08fda6fbd54d72032b4f"
     },
     "@std/assert@0.217.0": {
       "integrity": "c98e279362ca6982d5285c3b89517b757c1e3477ee9f14eb2fdf80a45aaa9642"
@@ -88,16 +92,8 @@
     }
   },
   "workspace": {
-    "packageJson": {
-      "dependencies": [
-        "npm:@modelcontextprotocol/sdk@^1.30.0",
-        "npm:archiver@8",
-        "npm:express@^4.19.2",
-        "npm:multer@^2.4.0",
-        "npm:node-pty@^1.1.0",
-        "npm:ws@^8.18.0",
-        "npm:zod@^4.6.4"
-      ]
-    }
+    "dependencies": [
+      "jsr:@hono/hono@^4.12.0"
+    ]
   }
 }
