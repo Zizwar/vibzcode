@@ -1,92 +1,175 @@
-# VibzCode — Sovereign Multi-Engine AI Agent Orchestrator & Workspace Platform
+# VibzCode
 
-منصة أوركسترا سيادية متطورة لإدارة وتنسيق وكلاء الذكاء الاصطناعي متعددي المحركات، مع ربط مباشر بركيزة الذاكرة المشتركة **MemoryZ v3**، وتوفير خوادم **Remote MCP** على مستوى الجلسة وعلى مستوى الأوركسترا الشامل.
+[![npm version](https://img.shields.io/npm/v/vibzcode.svg?color=cb3837&style=flat-square)](https://www.npmjs.com/package/vibzcode)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg?style=flat-square)](https://nodejs.org/)
+[![GitHub Repo](https://img.shields.io/badge/GitHub-Zizwar%2Fvibzcode-black.svg?style=flat-square&logo=github)](https://github.com/Zizwar/vibzcode)
 
----
-
-## 🌟 المحركات المدعومة (Multi-Engine Substrate)
-
-يدعم VibzCode خمسة محركات ذكاء اصطناعي رائدة مع إمكانية التبديل وتحديد النموذج لكل جلسة أو مهمة:
-1. **Google Antigravity CLI (`agy`)**: محرك Google الرسمي مع تحكم دقيق في الساندبوكس وعزل المجلدات.
-2. **Anthropic Claude Code (`claude`)**: محرك Claude Code الرسمي مع دعم كامل للطرفية وأدوات الأكواد.
-3. **OpenAI Codex CLI (`codex`)**: محرك OpenAI للبرمجة مع دعم كامل لخطوات الفحص والتنفيذ.
-4. **Mistral AI Vibe (`vibe`)**: محرك الوكلاء التوليديين مع معالجة مشاريع الأكواد.
-5. **OpenCode CLI (`opencode`)**: محرك مفتوح المصدر متعدد النماذج مع دعم Auto-Approve.
+**VibzCode** is a sovereign, self-hosted Multi-Engine AI Agent Orchestrator and Workspace Platform. It provides a centralized command bridge to configure, isolate, dispatch, and supervise autonomous agent sessions across multiple AI CLI engines, backed by a persistent zero-knowledge memory substrate (**MemoryZ v3**) and dual-layer **Remote Model Context Protocol (MCP)** endpoints.
 
 ---
 
-## 🧠 التكامل التشاركي مع MemoryZ v3 (Shared Sovereign Memory)
+## 🌟 Architecture Overview
 
-يعتمد VibzCode على **MemoryZ v3** (`https://memoryz.wino.deno.net`) كطبقة حالة ومعرفة مركزية:
-- **Exact Hash Lookup (`get_memory`)**: جلب فوري لأي معلومة أو قرار معماري عبر الهش الدقيق وروابطه البيانية.
-- **Memory-as-Attachment (`memory_refs`)**: حقن الذكريات المحددة تلقائياً داخل موجه الأوامر (Prompt) بصيغة `<attached_memories_from_memoryz>`.
-- **Namespaces & Project Isolation**: عزل الذكريات والمهام لكل مشروع (`default`, `vibzcode`, `ferme`, إلخ).
-- **Atomic Task Claiming (`task_claim`)**: حجز ذري للمهام يمنع تضارب الوكلاء عند العمل المتوازي.
-- **Hierarchical Tasks Tree (`task_tree`)**: شجرة مهام هرمية لمتابعة تقدم الوكلاء وحالة كل مرحلة.
+```mermaid
+flowchart TD
+    User["Developer / Web Dashboard"] -->|HTTP / WebSocket| VibzServer["VibzCode Orchestrator (Express & Node.js)"]
+    ExternalMCP["Claude Desktop / Cursor / ChatGPT / Open WebUI"] -->|Remote MCP (HTTP / SSE)| VibzServer
+
+    subgraph CoreEngineControl ["Multi-Engine Execution Substrate"]
+        VibzServer --> AGY["Google Antigravity CLI (agy)"]
+        VibzServer --> Claude["Anthropic Claude Code (claude)"]
+        VibzServer --> Codex["OpenAI Codex CLI (codex)"]
+        VibzServer --> Vibe["Mistral AI Vibe (vibe)"]
+        VibzServer --> OpenCode["OpenCode CLI (opencode)"]
+    end
+
+    subgraph MemoryLayer ["Sovereign Memory Substrate (MemoryZ v3)"]
+        VibzServer <--> MemoryZ["MemoryZ Cloud / Local Vector Engine"]
+        MemoryZ --- ExactLookup["Exact Hash Lookup (get_memory)"]
+        MemoryZ --- VectorRecall["Semantic Vector Recall (768-dim)"]
+        MemoryZ --- TaskTree["Atomic Task Claiming & Trees"]
+        MemoryZ --- ZKVault["Zero-Knowledge Encrypted Vault"]
+    end
+
+    subgraph EvalLayer ["System One Evaluation"]
+        VibzServer <--> JevAI["TypeSafe Jev AI (Smart Routing & Gatekeeper)"]
+    end
+```
 
 ---
 
-## 🚀 خوادم بروتوكول سياق النماذج (Remote MCP Control Plane)
+## 🚀 Key Highlights & Capabilities
 
-يوفر VibzCode خوادم MCP متوافقة مع مواصفات Streamable HTTP و SSE لربطها بـ Claude Desktop، Cursor، ChatGPT Custom GPTs، وتطبيقات الهاتف:
+### 1. Instant One-Command Boot (`npx vibzcode`)
+Zero-friction bootstrapping: run `npx vibzcode` on any machine (Linux, macOS, Windows). VibzCode launches its daemon, probes environment credentials, and immediately opens the visual administration dashboard in your browser.
 
-### 1. خادم الجلسة الفردية (`/mcp?token=<SESSION_TOKEN>`)
-- `ask_agent`: تنفيذ تعليمات برمجية وسؤال الوكيل مع دعم النمط غير المتزامن ومرفقات الذاكرة.
-- `get_session_status`, `list_workspace_files`, `read_workspace_file`, `write_workspace_file`, `run_shell_command`.
-- `get_memory`, `recall_memory`, `store_memory`, `task_claim`.
+### 2. Multi-Engine AI Substrate
+Seamlessly assign different projects or team tasks to specialized AI coding engines with custom permission boundaries:
+- **Google Antigravity CLI (`agy`)**: Official Google agentic coding assistant with sandbox enforcement and directory scoping.
+- **Anthropic Claude Code (`claude`)**: Deep architectural refactoring, bash automation, and terminal-native capabilities.
+- **OpenAI Codex CLI (`codex`)**: Autonomous verification, unit testing, and script generation.
+- **Mistral AI Vibe (`vibe`)**: Generative workspace manipulation and fast lightweight coding routines.
+- **OpenCode CLI (`opencode`)**: Open-source multi-model CLI engine with automated approvals.
 
-### 2. خادم الأوركسترا والتحكم المركزي (`/mcp/orchestrator?token=<ADMIN_SECRET>`)
-- `session_create`: إنشاء جلسة وكيل جديدة ديناميكياً مع تحديد المحرك، النموذج، المسار، والدور.
-- `session_list`, `session_close`: إدارة دورة حياة الجلسات.
-- `agent_dispatch`: إرسال مهمة لأي جلسة أو محرك وتلقي `job_id` فوري في الخلفية.
-- `job_status`, `job_result`, `job_abort`: متابعة تقدم الوظائف واستلام مخرجاتها.
-- `handoff`: تسليم مخرجات وكيل سابق تلقائياً كمدخلات لوكيل آخر (مثل: Coder ➔ QA Tester ➔ Marketing).
-- `notify`: إرسال إشعارات فورية عبر Telegram أو Webhooks.
+### 3. Shared Sovereign Memory Substrate (MemoryZ v3)
+Prevent LLM context amnesia across distinct sessions and developer machines:
+- **Exact Hash Retrieval (`get_memory`)**: Fetch explicit architectural rules, credentials, or documentation by deterministic cryptographic hash.
+- **Memory-as-Attachment (`memory_refs`)**: Transparently inject stored memories directly into session prompts formatted as `<attached_memories_from_memoryz>`.
+- **Hierarchical Tasks & Atomic Claiming**: Coordinate parallel multi-agent swarms with atomic locking (`task_claim`) to prevent duplicate agent labor.
+- **Namespace Isolation**: Segregate state across projects (`default`, `vibzcode`, `enterprise`, etc.).
+
+### 4. Dual-Plane Remote MCP Architecture
+Expose your agents and workspace files to external AI frontends through standard Model Context Protocol (MCP) Streamable HTTP and SSE transports:
+1. **Agent Session Plane (`/mcp?token=<SESSION_TOKEN>`)**: Scoped to a specific project directory. Provides `ask_agent`, `read_workspace_file`, `write_workspace_file`, `list_workspace_files`, `run_shell_command`, and `store_memory`.
+2. **Orchestrator Master Plane (`/mcp/orchestrator?token=<ADMIN_SECRET>`)**: Provides dynamic agent provisioning (`session_create`), asynchronous task dispatching (`agent_dispatch`), multi-agent handoffs (`handoff`), and system notifications (`notify`).
+
+### 5. Automated Setup Wizard & Key Sensing
+On initial launch, VibzCode automatically probes for essential AI keys:
+- If keys are missing, an interactive setup wizard guides you through entering them via a secure web dialog or generating terminal export snippets.
+- Keys are written to `.env` with strict file permissions (`0o600`), and all sessions/databases are excluded from Git and npm packaging.
 
 ---
 
-## 💻 التشغيل السريع وإدارة الخدمة
+## 💻 Quick Start
 
-### 1. التشغيل الفوري بأمر واحد عبر NPX (موصى به)
-يمكنك تشغيل VibzCode مباشرة على أي جهاز دون الحاجة لتحميل المستودع يدوياً:
+### Option A: Run directly via NPX (Recommended)
 ```bash
-# تشغيل فوري وفتح لوحة التحكم تلقائياً
+# Launch server and auto-open browser dashboard
 npx vibzcode
 
-# أو تحديد منفذ مخصص
+# Specify custom port
 npx vibzcode --port 3333
 
-# فحص حالة المفاتيح والتهيئة فقط من الطرفية
+# Run in headless mode (no auto-open)
+npx vibzcode --no-open
+
+# Check system keys status without starting server
 npx vibzcode --status
 ```
 
-### 2. التثبيت الشامل عالمياً (Global Install)
+### Option B: Install Globally
 ```bash
 npm install -g vibzcode
 vibzcode
 ```
 
-### 3. التشغيل من المصدر أو عبر مدير العمليات PM2
+### Option C: Run from Source
 ```bash
-# تشغيل محلي
-npm start
+# Clone the repository
+git clone https://github.com/Zizwar/vibzcode.git
+cd vibzcode
 
-# أو عبر مدير العمليات PM2
-pm2 restart vibzcode
+# Install dependencies
+npm install
+
+# Start development server
+npm start
 ```
 
-- **المنفذ الافتراضي:** `3333` (عبر المتغير `PORT`).
-- **لوحة الإدارة:** `http://localhost:3333/`
-- **مساحة عمل الوكيل:** `http://localhost:3333/agent.html?token=<SESSION_TOKEN>`
-- **واجهة OpenAPI المفتوحة:** `http://localhost:3333/openapi.json`
+### Option D: Production with PM2
+```bash
+pm2 start ecosystem.config.cjs
+pm2 logs vibzcode
+```
 
 ---
 
-## 🔑 تهيئة المفاتيح والأمان (Keys & Configuration)
+## ⚙️ Environment Configuration
 
-عند تشغيل المنصة لأول مرة، تكتشف المنصة تلقائياً حالة المفاتيح وتعرض شاشة إعداد تفاعلية لإدخالها وحفظها بأمان داخل `.env`:
-- **`GEMINI_API_KEY`**: مطلوب للمحرك التوليدي وتحليل الأكواد واستخلاص المهارات (مجاني من [Google AI Studio](https://aistudio.google.com/app/apikey)).
-- **`MEMORYZ_TOKEN`**: مطلوب لركيزة الذاكرة المشتركة وإدارة المهام الذرية (من [MemoryZ](https://memoryz.wino.deno.net)).
-- **`JEV_AI_KEY`**: اختياري لتوجيه وتقييم استهلاك التوكنات ونظام System One.
-- **`ADMIN_PASS`**: كلمة المرور الرئيسية للوحة التحكم (الافتراضية: `@12345666`).
+You can configure VibzCode either through the interactive setup screen on `http://localhost:3333` or by creating a `.env` file:
 
+```bash
+# Copy the template
+cp .env.example .env
+```
+
+### Core Configuration Variables
+
+| Variable | Default Value | Description |
+| :--- | :--- | :--- |
+| `PORT` | `3333` | HTTP and WebSocket listening port |
+| `ADMIN_USER` | `admin` | Master dashboard username |
+| `ADMIN_PASS` | `Vibz@123456` | Master dashboard password *(strongly recommended to change in production)* |
+| `GEMINI_API_KEY` | *(empty)* | Google Gemini API key for skill distillation & fast LLM reasoning |
+| `GEMINI_MODEL` | `gemini-3.8-flash` | Default Gemini model family |
+| `MEMORYZ_URL` | `https://memoryz.wino.deno.net` | MemoryZ substrate endpoint |
+| `MEMORYZ_TOKEN` | *(empty)* | MemoryZ authentication token |
+| `JEV_AI_KEY` | *(empty)* | Optional TypeSafe Jev AI key for System One routing |
+| `DISABLE_JEV` | `false` | Explicitly disable Jev AI to prevent token usage |
+| `ANTHROPIC_API_KEY`| *(empty)* | Optional key when executing Anthropic Claude Code engine |
+| `OPENAI_API_KEY` | *(empty)* | Optional key when executing OpenAI Codex engine |
+
+---
+
+## 🖥️ Web Interfaces & Endpoints
+
+Once running, access the following unified interfaces:
+- **Admin Dashboard:** [http://localhost:3333/](http://localhost:3333/)  
+  *Manage sessions, configure AI engines, view running tasks, and toggle MCP capabilities.*
+- **Agent Workspace:** `http://localhost:3333/agent.html?token=<SESSION_TOKEN>`  
+  *Isolated web console for chatting with the agent or accessing the terminal.*
+- **OpenAPI 3.1 Specification:** `http://localhost:3333/openapi.json`  
+  *Direct endpoint to connect ChatGPT Custom GPTs or Open WebUI actions.*
+- **Keys Setup API:** `GET /api/system/keys-status` & `POST /api/system/save-keys`
+
+---
+
+## 🔒 Security & Privacy Architecture
+
+- **Zero Token Leakage:** All workspace sessions (`data/sessions.json`), job traces, and environment credentials (`.env`) are strictly untracked in Git and excluded from npm releases via `.npmignore` and whitelist filters.
+- **RAM-Only Master Secret:** Admin tokens are cryptographically derived on startup using SHA-256 with high-entropy salt and never stored in cleartext.
+- **Sandbox Directory Boundaries:** Agent processes are executed with strict cwd constraints and optional platform isolation.
+
+---
+
+## 🤝 Contributing
+
+Contributions, issues, and feature requests are welcome!  
+Feel free to check the [issues page](https://github.com/Zizwar/vibzcode/issues).
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE).

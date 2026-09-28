@@ -30,7 +30,7 @@ loadEnv();
 
 let PORT = process.env.PORT || 3333;
 let ADMIN_USER = process.env.ADMIN_USER || 'admin';
-let ADMIN_PASS = process.env.ADMIN_PASS || '@12345666';
+let ADMIN_PASS = process.env.ADMIN_PASS || 'Vibz@123456';
 
 // Master Admin Session Secret
 function computeAdminSecret(user, pass) {
