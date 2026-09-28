@@ -122,7 +122,15 @@
           </button>
         </form>
 
-        <div class="text-center pt-2">
+        <!-- Quick Setup Trigger on Login Screen -->
+        <div class="pt-3 border-t border-slate-800/80 flex flex-col items-center gap-2">
+          <button type="button" @click="keysModalOpen = true" class="btn btn-sm btn-ghost w-full border border-slate-800 text-xs text-slate-300 hover:text-white flex items-center justify-center gap-2">
+            <i class="fa-solid fa-key" :class="keysStatus?.isReady ? 'text-emerald-400' : 'text-amber-400 animate-pulse'"></i>
+            <span>إعداد مفاتيح النظام و .env (Setup Keys)</span>
+            <span class="badge badge-xs font-mono text-[9px]" :class="keysStatus?.isReady ? 'bg-emerald-950 text-emerald-300 border-emerald-800/50' : 'bg-amber-950 text-amber-300 border-amber-800/50'">
+              <span x-text="keysStatus?.isReady ? 'جاهز' : 'مفاتيح ناقصة'"></span>
+            </span>
+          </button>
           <span class="text-[11px] text-slate-500 font-mono">VibzCode Sovereign Orchestrator v2.0</span>
         </div>
       </div>
@@ -143,6 +151,15 @@
 
       <!-- Header Actions -->
       <div class="flex items-center gap-2">
+        <!-- Keys & Setup Modal Trigger Button -->
+        <button @click="keysModalOpen = true" class="btn btn-sm rounded-xl border transition-all flex items-center gap-1.5 px-3"
+                :class="keysStatus?.isReady ? 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700' : 'bg-amber-950/60 border-amber-500/50 text-amber-300 animate-pulse'"
+                title="إعداد مفاتيح النظام و .env">
+          <i class="fa-solid fa-key text-xs" :class="keysStatus?.isReady ? 'text-emerald-400' : 'text-amber-400'"></i>
+          <span class="text-xs font-semibold hidden md:inline">مفاتيح النظام</span>
+          <span class="w-2 h-2 rounded-full" :class="keysStatus?.isReady ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-amber-400 shadow-sm shadow-amber-400/50'"></span>
+        </button>
+
         <!-- Theme Toggle (Light / Dark) -->
         <button @click="toggleTheme" class="btn btn-sm btn-ghost btn-circle border border-slate-800 text-slate-300 hover:text-white tooltip tooltip-bottom" :data-tip="theme === 'dark' ? 'التحويل إلى الوضع النهاري' : 'التحويل إلى الوضع الليلي'">
           <i class="fa-solid text-xs" :class="theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
@@ -942,6 +959,179 @@
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
       <button @click="showOrchestratorModal = false">إغلاق</button>
+    </form>
+  </dialog>
+
+  <!-- ==================== KEYS SETUP & ONBOARDING MODAL ==================== -->
+  <dialog class="modal" :class="{ 'modal-open': keysModalOpen }" x-cloak>
+    <div class="modal-box max-w-2xl bg-slate-900 border border-slate-700/80 p-0 overflow-hidden shadow-2xl rounded-2xl">
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 p-5 border-b border-slate-800 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500/20 to-blue-500/20 border border-cyan-500/40 flex items-center justify-center text-cyan-400">
+            <i class="fa-solid fa-key text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white font-sans">إعداد مفاتيح النظام و .env</h3>
+            <p class="text-xs text-slate-400">ضبط المفاتيح التوليدية والذاكرة السيادية لتشغيل المنصة</p>
+          </div>
+        </div>
+        <button @click="closeKeysModal()" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- Keys Quick Status Cards -->
+      <div class="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          <!-- Gemini Key Status -->
+          <div class="p-3 rounded-xl border flex items-center justify-between"
+               :class="keysStatus?.keys?.gemini?.configured ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300' : 'bg-rose-950/20 border-rose-500/30 text-rose-300'">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-brands fa-google text-lg"></i>
+              <div>
+                <div class="font-bold text-xs">Google Gemini AI</div>
+                <div class="text-[10px] text-slate-400">الذكاء واستخلاص المهارات</div>
+              </div>
+            </div>
+            <span class="badge badge-xs font-mono py-1 px-2 border-none"
+                  :class="keysStatus?.keys?.gemini?.configured ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'"
+                  x-text="keysStatus?.keys?.gemini?.configured ? 'متوفر ✔' : 'غير متوفر ✖'"></span>
+          </div>
+
+          <!-- MemoryZ Key Status -->
+          <div class="p-3 rounded-xl border flex items-center justify-between"
+               :class="keysStatus?.keys?.memoryz?.configured ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300' : 'bg-rose-950/20 border-rose-500/30 text-rose-300'">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-brain text-lg"></i>
+              <div>
+                <div class="font-bold text-xs">MemoryZ Substrate</div>
+                <div class="text-[10px] text-slate-400">الذاكرة السيادية والمهام</div>
+              </div>
+            </div>
+            <span class="badge badge-xs font-mono py-1 px-2 border-none"
+                  :class="keysStatus?.keys?.memoryz?.configured ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'"
+                  x-text="keysStatus?.keys?.memoryz?.configured ? 'متوفر ✔' : 'غير متوفر ✖'"></span>
+          </div>
+
+          <!-- Jev AI Key Status -->
+          <div class="p-3 rounded-xl border flex items-center justify-between"
+               :class="keysStatus?.keys?.jev?.configured ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300' : 'bg-slate-900 border-slate-800 text-slate-400'">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-bolt-lightning text-lg text-amber-400"></i>
+              <div>
+                <div class="font-bold text-xs">TypeSafe Jev AI</div>
+                <div class="text-[10px] text-slate-400">اختياري (System One)</div>
+              </div>
+            </div>
+            <span class="badge badge-xs font-mono py-1 px-2 border-none"
+                  :class="keysStatus?.keys?.jev?.configured ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'"
+                  x-text="keysStatus?.keys?.jev?.configured ? 'متوفر ✔' : 'اختياري'"></span>
+          </div>
+
+          <!-- Admin Password Status -->
+          <div class="p-3 rounded-xl border flex items-center justify-between"
+               :class="keysStatus?.keys?.adminPass?.configured ? 'bg-emerald-950/20 border-emerald-500/30 text-emerald-300' : 'bg-amber-950/20 border-amber-500/30 text-amber-300'">
+            <div class="flex items-center gap-2.5">
+              <i class="fa-solid fa-shield-halved text-lg"></i>
+              <div>
+                <div class="font-bold text-xs">أمان لوحة الإدارة</div>
+                <div class="text-[10px] text-slate-400">كلمة المرور الرئيسية</div>
+              </div>
+            </div>
+            <span class="badge badge-xs font-mono py-1 px-2 border-none"
+                  :class="keysStatus?.keys?.adminPass?.configured ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'"
+                  x-text="keysStatus?.keys?.adminPass?.configured ? 'مخصصة 🔒' : 'افتراضية ⚠️'"></span>
+          </div>
+        </div>
+
+        <!-- Mode Tabs -->
+        <div class="tabs tabs-boxed bg-slate-950 p-1 rounded-xl">
+          <a class="tab text-xs font-bold transition-all" :class="{ 'tab-active bg-cyan-600 text-white': keysTab === 'form' }" @click="keysTab = 'form'">
+            <i class="fa-solid fa-pen-to-square ml-1.5"></i> الإدخال المباشر والحفظ في .env
+          </a>
+          <a class="tab text-xs font-bold transition-all" :class="{ 'tab-active bg-cyan-600 text-white': keysTab === 'manual' }" @click="keysTab = 'manual'">
+            <i class="fa-solid fa-terminal ml-1.5"></i> التثبيت اليدوي (الملف والطرفية)
+          </a>
+        </div>
+
+        <!-- TAB 1: FORM -->
+        <div x-show="keysTab === 'form'" class="space-y-3">
+          <form @submit.prevent="saveKeysFromModal" class="space-y-3">
+            <div class="form-control">
+              <label class="label pb-1 flex justify-between">
+                <span class="label-text text-xs font-bold text-slate-200">Google Gemini API Key (مطلوب)</span>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] text-cyan-400 hover:underline">احصل عليه مجاناً ↗</a>
+              </label>
+              <input type="password" x-model="keysForm.geminiApiKey" placeholder="AIzaSy... أو الصق المفتاح هنا"
+                     class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-cyan-500">
+            </div>
+
+            <div class="form-control">
+              <label class="label pb-1 flex justify-between">
+                <span class="label-text text-xs font-bold text-slate-200">MemoryZ Substrate Token (مطلوب)</span>
+                <a href="https://memoryz.wino.deno.net" target="_blank" class="text-[10px] text-cyan-400 hover:underline">بوابة MemoryZ ↗</a>
+              </label>
+              <input type="password" x-model="keysForm.memoryzToken" placeholder="mz_... أو التوكن الخاص بك"
+                     class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-cyan-500">
+            </div>
+
+            <div class="form-control">
+              <label class="label pb-1 flex justify-between">
+                <span class="label-text text-xs font-bold text-slate-200">TypeSafe Jev AI Key (اختياري)</span>
+                <a href="https://typesafe.ai" target="_blank" class="text-[10px] text-cyan-400 hover:underline">موقع Jev ↗</a>
+              </label>
+              <input type="password" x-model="keysForm.jevApiKey" placeholder="jev_... (اختياري لنظام التقييم)"
+                     class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-cyan-500">
+            </div>
+
+            <div class="form-control">
+              <label class="label pb-1">
+                <span class="label-text text-xs font-bold text-slate-200">تعيين كلمة مرور جديدة للمسؤول (ADMIN_PASS)</span>
+              </label>
+              <input type="password" x-model="keysForm.adminPass" placeholder="اتركه فارغاً للإبقاء على الحالية"
+                     class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-cyan-500">
+            </div>
+
+            <div class="pt-2 flex items-center justify-between">
+              <div class="text-[10px] text-slate-500 font-mono" x-text="keysStatus?.envPath ? 'المسار: ' + keysStatus.envPath : ''"></div>
+              <button type="submit" :disabled="keysSaving" class="btn btn-sm btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 border-none text-white px-5 shadow-lg shadow-cyan-500/20">
+                <span x-show="keysSaving" class="loading loading-spinner loading-xs"></span>
+                <i x-show="!keysSaving" class="fa-solid fa-floppy-disk text-xs"></i>
+                <span>حفظ وتفعيل فوري في .env</span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- TAB 2: MANUAL -->
+        <div x-show="keysTab === 'manual'" class="space-y-3">
+          <p class="text-xs text-slate-300">
+            يمكنك إنشاء أو تعديل ملف <code class="text-cyan-300 font-mono bg-slate-950 px-1 py-0.5 rounded">.env</code> في مسار تشغيل التطبيق يدوياً أو تمرير المتغيرات في الطرفية:
+          </p>
+          <div class="relative bg-slate-950 rounded-xl p-3 border border-slate-800 font-mono text-xs text-slate-300 select-all overflow-x-auto whitespace-pre"># ملف .env في مسار تشغيل المشروع
+PORT=3333
+ADMIN_USER=admin
+ADMIN_PASS=your_strong_password
+
+# المفاتيح التوليدية والذاكرة المشتركة
+GEMINI_API_KEY=your_gemini_api_key
+MEMORYZ_TOKEN=your_memoryz_token
+MEMORYZ_URL=https://memoryz.wino.deno.net
+JEV_AI_KEY=your_jev_key_optional</div>
+          <div class="bg-cyan-950/20 border border-cyan-500/30 rounded-xl p-3 text-[11px] text-cyan-300">
+            <i class="fa-solid fa-circle-info ml-1"></i>
+            عند استخدام <code class="font-mono bg-cyan-950/60 px-1 rounded">npx vibzcode</code>، يبحث التطبيق تلقائياً عن ملف <code class="font-mono bg-cyan-950/60 px-1 rounded">.env</code> في المجلد الحالي أو في <code class="font-mono bg-cyan-950/60 px-1 rounded">~/.vibzcode/.env</code>.
+          </div>
+        </div>
+
+      </div>
+
+      <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-between items-center">
+        <span class="text-[10px] text-slate-500">لن يتم رفع ملف .env إلى Git أو npm أبداً بفضل العزل الأمني</span>
+        <button @click="closeKeysModal()" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/70 backdrop-blur-sm">
+      <button @click="closeKeysModal()">إغلاق</button>
     </form>
   </dialog>
 

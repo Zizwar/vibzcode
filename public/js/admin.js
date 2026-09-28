@@ -49,17 +49,90 @@ document.addEventListener('alpine:init', () => {
     jevKeyConfigured: false,
     loadingJev: false,
 
+    // System Keys & Setup State
+    keysStatus: null,
+    keysModalOpen: false,
+    keysTab: 'form', // 'form' or 'manual'
+    keysSaving: false,
+    keysForm: {
+      geminiApiKey: '',
+      memoryzToken: '',
+      memoryzUrl: 'https://memoryz.wino.deno.net',
+      jevApiKey: '',
+      adminPass: ''
+    },
+
     // Theme State (Dark / Light)
     theme: localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark',
 
     init() {
       window._admin = this;
       this.applyTheme();
+      this.fetchKeysStatus();
       const savedToken = localStorage.getItem('vibz_admin_token') || localStorage.getItem('agyz_admin_token');
       if (savedToken) {
         this.adminToken = savedToken;
         this.verifyAdminToken(savedToken);
       }
+    },
+
+    async fetchKeysStatus() {
+      try {
+        const res = await fetch('/api/system/keys-status');
+        if (res.ok) {
+          const data = await res.json();
+          this.keysStatus = data;
+          // Auto open if system keys are missing and not dismissed in this session
+          if (data && !data.isReady && !sessionStorage.getItem('vibz_setup_dismissed')) {
+            this.keysModalOpen = true;
+          }
+        }
+      } catch (e) {
+        console.warn('Failed to fetch keys status:', e);
+      }
+    },
+
+    async saveKeysFromModal() {
+      this.keysSaving = true;
+      try {
+        const payload = {};
+        if (this.keysForm.geminiApiKey) payload.geminiApiKey = this.keysForm.geminiApiKey.trim();
+        if (this.keysForm.memoryzToken) payload.memoryzToken = this.keysForm.memoryzToken.trim();
+        if (this.keysForm.memoryzUrl) payload.memoryzUrl = this.keysForm.memoryzUrl.trim();
+        if (this.keysForm.jevApiKey) payload.jevApiKey = this.keysForm.jevApiKey.trim();
+        if (this.keysForm.adminPass) payload.adminPass = this.keysForm.adminPass.trim();
+
+        const headers = { 'Content-Type': 'application/json' };
+        if (this.adminToken) headers['Authorization'] = `Bearer ${this.adminToken}`;
+
+        const res = await fetch('/api/system/save-keys', {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.showToast('تم حفظ وتفعيل المفاتيح في .env بنجاح!', 'success');
+          if (data.adminToken) {
+            this.adminToken = data.adminToken;
+            localStorage.setItem('vibz_admin_token', data.adminToken);
+          }
+          await this.fetchKeysStatus();
+          this.keysModalOpen = false;
+        } else {
+          this.showToast(data.error || 'فشل في حفظ المفاتيح', 'error');
+        }
+      } catch (err) {
+        this.showToast('خطأ في الاتصال بالخادم: ' + err.message, 'error');
+      } finally {
+        this.keysSaving = false;
+      }
+    },
+
+    closeKeysModal() {
+      sessionStorage.setItem('vibz_setup_dismissed', 'true');
+      this.keysModalOpen = false;
     },
 
     toggleTheme() {

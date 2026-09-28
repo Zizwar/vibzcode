@@ -45,17 +45,48 @@
 
 ---
 
-## 💻 التشغيل وإدارة الخدمة
+## 💻 التشغيل السريع وإدارة الخدمة
 
+### 1. التشغيل الفوري بأمر واحد عبر NPX (موصى به)
+يمكنك تشغيل VibzCode مباشرة على أي جهاز دون الحاجة لتحميل المستودع يدوياً:
 ```bash
-# تشغيل التطبيق
+# تشغيل فوري وفتح لوحة التحكم تلقائياً
+npx vibzcode
+
+# أو تحديد منفذ مخصص
+npx vibzcode --port 3333
+
+# فحص حالة المفاتيح والتهيئة فقط من الطرفية
+npx vibzcode --status
+```
+
+### 2. التثبيت الشامل عالمياً (Global Install)
+```bash
+npm install -g vibzcode
+vibzcode
+```
+
+### 3. التشغيل من المصدر أو عبر مدير العمليات PM2
+```bash
+# تشغيل محلي
 npm start
 
 # أو عبر مدير العمليات PM2
-pm2 restart agyz
+pm2 restart vibzcode
 ```
 
-- المنفذ الافتراضي: `3333` (عبر متغير البيئة `PORT`).
-- لوحة الإدارة: `http://localhost:3333/`
-- مساحة عمل الوكيل: `http://localhost:3333/agent.html?token=<SESSION_TOKEN>`
-- واجهة OpenAPI المفتوحة: `http://localhost:3333/openapi.json`
+- **المنفذ الافتراضي:** `3333` (عبر المتغير `PORT`).
+- **لوحة الإدارة:** `http://localhost:3333/`
+- **مساحة عمل الوكيل:** `http://localhost:3333/agent.html?token=<SESSION_TOKEN>`
+- **واجهة OpenAPI المفتوحة:** `http://localhost:3333/openapi.json`
+
+---
+
+## 🔑 تهيئة المفاتيح والأمان (Keys & Configuration)
+
+عند تشغيل المنصة لأول مرة، تكتشف المنصة تلقائياً حالة المفاتيح وتعرض شاشة إعداد تفاعلية لإدخالها وحفظها بأمان داخل `.env`:
+- **`GEMINI_API_KEY`**: مطلوب للمحرك التوليدي وتحليل الأكواد واستخلاص المهارات (مجاني من [Google AI Studio](https://aistudio.google.com/app/apikey)).
+- **`MEMORYZ_TOKEN`**: مطلوب لركيزة الذاكرة المشتركة وإدارة المهام الذرية (من [MemoryZ](https://memoryz.wino.deno.net)).
+- **`JEV_AI_KEY`**: اختياري لتوجيه وتقييم استهلاك التوكنات ونظام System One.
+- **`ADMIN_PASS`**: كلمة المرور الرئيسية للوحة التحكم (الافتراضية: `@12345666`).
+

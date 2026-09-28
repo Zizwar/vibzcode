@@ -1,6 +1,6 @@
 module.exports = {
   apps: [{
-    name: 'agyz',
+    name: 'vibzcode',
     script: 'server.js',
     cwd: '/root/wino/agyz',
     instances: 1,

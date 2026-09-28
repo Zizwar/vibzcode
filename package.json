@@ -3,10 +3,41 @@
   "version": "2.0.0",
   "description": "VibzCode - Sovereign Multi-Engine AI Agent Orchestrator & Workspace Platform with Shared MemoryZ Substrate",
   "main": "server.js",
+  "bin": {
+    "vibzcode": "./bin/vibzcode.js"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "public",
+    "server.js",
+    "ecosystem.config.cjs",
+    "README.md",
+    ".env.example"
+  ],
   "type": "commonjs",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "cli": "node bin/vibzcode.js",
+    "status": "node bin/vibzcode.js --status"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Zizwar/vibzcode.git"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "orchestrator",
+    "mcp",
+    "remote-mcp",
+    "antigravity",
+    "claude-code",
+    "memoryz",
+    "vibzcode"
+  ],
+  "author": "Zizwar",
+  "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.30.0",
     "archiver": "^8.0.0",

@@ -1,0 +1,25 @@
+# Credentials and environment
+.env
+.env.*
+!.env.example
+
+# Runtime user databases, sessions and uploads
+data/
+data_backup*
+root/
+.claude/
+.tmp/
+*.log
+
+# Git and CI/CD
+.git/
+.github/
+.gitignore
+
+# Deno edge gateway (separate deployment on Deno Deploy)
+deno/
+iniskill.md
+
+# OS files
+.DS_Store
+Thumbs.db

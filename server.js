@@ -23,13 +23,20 @@ const {
   hydrateAllSessionsFromJobs
 } = require('./lib/chatLogger');
 const { getSettings, updateSettings } = require('./lib/jevClient');
+const { loadEnv, checkKeysStatus, saveKeys } = require('./lib/envHelper');
 
-const PORT = process.env.PORT || 3333;
-const ADMIN_USER = process.env.ADMIN_USER || 'admin';
-const ADMIN_PASS = process.env.ADMIN_PASS || '@12345666';
+// Automatically load .env if available
+loadEnv();
+
+let PORT = process.env.PORT || 3333;
+let ADMIN_USER = process.env.ADMIN_USER || 'admin';
+let ADMIN_PASS = process.env.ADMIN_PASS || '@12345666';
 
 // Master Admin Session Secret
-const ADMIN_SECRET = crypto.createHash('sha256').update(`${ADMIN_USER}:${ADMIN_PASS}:agyz_master_salt_2026`).digest('hex');
+function computeAdminSecret(user, pass) {
+  return crypto.createHash('sha256').update(`${user}:${pass}:agyz_master_salt_2026`).digest('hex');
+}
+let ADMIN_SECRET = computeAdminSecret(ADMIN_USER, ADMIN_PASS);
 
 // Data storage
 const DATA_DIR = path.join(__dirname, 'data');
@@ -66,14 +73,14 @@ function loadSessions() {
   // Default Initial Sessions
   const initial = [
     {
-      id: 'sess_ferme_01',
-      name: 'وكيل مشروع مزرعة حلم الطفولة',
+      id: 'sess_default_01',
+      name: 'وكيل البرمجة والمشاريع (Default Agent)',
       assignee: 'فريق التطوير',
       role: 'مطور رئيسي',
       systemPrompt: '',
-      namespace: 'ferme',
+      namespace: 'default',
       token: 'vibz_' + crypto.randomBytes(16).toString('hex'),
-      targetDir: '/root/wino/ferme',
+      targetDir: process.cwd(),
       engine: 'agy',
       model: '',
       sandbox: true,
@@ -81,27 +88,6 @@ function loadSessions() {
       continueSession: true,
       allowedModes: 'both', // 'chat', 'terminal', 'both'
       enableMcp: true, // MemoryZ MCP support
-      status: 'active', // 'active', 'paused', 'closed'
-      createdAt: new Date().toISOString(),
-      lastActive: new Date().toISOString(),
-      stats: { messagesCount: 0 }
-    },
-    {
-      id: 'sess_test_02',
-      name: 'وكيل بيئة الاختبارات العامة',
-      assignee: 'مختبر البرمجيات',
-      role: 'فاحص جودة',
-      systemPrompt: '',
-      namespace: 'test',
-      token: 'vibz_' + crypto.randomBytes(16).toString('hex'),
-      targetDir: '/root/test',
-      engine: 'agy',
-      model: '',
-      sandbox: true,
-      autoApprove: true,
-      continueSession: true,
-      allowedModes: 'both',
-      enableMcp: true,
       status: 'active',
       createdAt: new Date().toISOString(),
       lastActive: new Date().toISOString(),
@@ -238,6 +224,48 @@ app.post('/api/admin/settings', requireAdmin, (req, res) => {
         updatedAt: updated.updatedAt,
         reason: updated.reason
       }
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// System Keys Status API (detects if keys exist, safe to query on startup)
+app.get('/api/system/keys-status', (req, res) => {
+  const status = checkKeysStatus();
+  return res.json({
+    success: true,
+    ...status
+  });
+});
+
+// Save Keys to .env API (allows entering keys from UI)
+app.post('/api/system/save-keys', (req, res) => {
+  const token = getAuthToken(req);
+  const status = checkKeysStatus();
+  const isAdmin = token === ADMIN_SECRET;
+
+  // Allow saving if admin OR if system is unconfigured
+  if (!isAdmin && status.isReady && status.keys.adminPass.configured) {
+    return res.status(401).json({ success: false, error: 'يتطلب حفظ المفاتيح تسجيل الدخول كمسؤول' });
+  }
+
+  try {
+    const result = saveKeys(req.body);
+    if (req.body.adminPass) {
+      ADMIN_PASS = String(req.body.adminPass).trim();
+      ADMIN_SECRET = computeAdminSecret(ADMIN_USER, ADMIN_PASS);
+    }
+    if (req.body.adminUser) {
+      ADMIN_USER = String(req.body.adminUser).trim();
+      ADMIN_SECRET = computeAdminSecret(ADMIN_USER, ADMIN_PASS);
+    }
+    console.log(`[VibzCode Config] 🔑 Saved keys to ${result.envPath} (count: ${result.updatedCount})`);
+    return res.json({
+      success: true,
+      message: 'تم حفظ وتفعيل المفاتيح بنجاح',
+      adminToken: isAdmin || !status.keys.adminPass.configured ? ADMIN_SECRET : undefined,
+      status: checkKeysStatus()
     });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message });
