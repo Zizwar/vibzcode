@@ -13,8 +13,8 @@
 
 ```mermaid
 flowchart TD
-    User["Developer / Web Dashboard"] -->|HTTP / WebSocket| VibzServer["VibzCode Orchestrator (Express & Node.js)"]
-    ExternalMCP["Claude Desktop / Cursor / ChatGPT / Open WebUI"] -->|Remote MCP (HTTP / SSE)| VibzServer
+    User["Developer / Web Dashboard"] -->|"HTTP / WebSocket"| VibzServer["VibzCode Orchestrator (Express & Node.js)"]
+    ExternalMCP["Claude Desktop / Cursor / ChatGPT / Open WebUI"] -->|"Remote MCP (HTTP / SSE)"| VibzServer
 
     subgraph CoreEngineControl ["Multi-Engine Execution Substrate"]
         VibzServer --> AGY["Google Antigravity CLI (agy)"]
@@ -26,7 +26,7 @@ flowchart TD
 
     subgraph MemoryLayer ["Sovereign Memory Substrate (MemoryZ v3)"]
         VibzServer <--> MemoryZ["MemoryZ Cloud / Local Vector Engine"]
-        MemoryZ --- ExactLookup["Exact Hash Lookup (get_memory)"]
+        MemoryZ --- ExactLookup["Exact Hash Lookup (memory_fetch)"]
         MemoryZ --- VectorRecall["Semantic Vector Recall (768-dim)"]
         MemoryZ --- TaskTree["Atomic Task Claiming & Trees"]
         MemoryZ --- ZKVault["Zero-Knowledge Encrypted Vault"]
