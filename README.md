@@ -115,6 +115,110 @@ pm2 logs vibzcode
 
 ---
 
+## 📦 Programmatic JavaScript / TypeScript SDK
+
+In addition to the CLI and Web Dashboard, VibzCode can be imported directly into any Node.js / TypeScript project:
+
+```bash
+npm install vibzcode
+```
+
+### 1. Basic Agent Execution (`askAgent` / `vibzcode`)
+```javascript
+const { vibzcode, askAgent } = require('vibzcode');
+// or: import { vibzcode, askAgent } from 'vibzcode';
+
+async function main() {
+  // Execute a coding task using Google Antigravity (agy)
+  const result = await askAgent({
+    engine: 'agy',                  // 'agy' | 'claude' | 'codex' | 'vibe' | 'opencode'
+    prompt: 'Implement a rate limiter middleware for Express in TypeScript',
+    targetDir: './src',             // Working directory for code edits
+    sandbox: true,                  // Enforce workspace sandbox
+    autoApprove: true               // Automatically approve non-destructive edits
+  });
+
+  console.log('Agent Response:\n', result.response);
+  console.log(`Executed in ${result.duration}s via ${result.engine}`);
+}
+
+main();
+```
+
+### 2. Multi-Engine Routing & Switching
+```javascript
+const { vibzcode } = require('vibzcode');
+
+// Shorthand syntax: vibzcode(engine, prompt, options)
+// 1. Using Claude Code for architectural review
+const review = await vibzcode('claude', 'Review architecture of database models in models/', {
+  targetDir: process.cwd()
+});
+
+// 2. Using OpenAI Codex for unit testing
+const tests = await vibzcode('codex', 'Generate unit tests for authService.js');
+
+// 3. Using Mistral Vibe for quick script manipulation
+const script = await vibzcode('vibe', 'Create a migration script from CSV to SQLite');
+```
+
+### 3. Shared MemoryZ Integration & Context Injection
+VibzCode integrates natively with **MemoryZ v3**. You can pass credentials explicitly, supply a full URI with embedded token, or attach historical memory hashes:
+
+```javascript
+const { vibzcode } = require('vibzcode');
+
+async function runWithMemory() {
+  const result = await vibzcode({
+    engine: 'agy',
+    prompt: 'Refactor payment gateway to support Cryptomus webhook signatures',
+    targetDir: './payments-service',
+
+    // MemoryZ Configuration:
+    // Option A: Explicit url & token
+    memoryz: {
+      url: 'https://memoryz.wino.deno.net',
+      token: process.env.MEMORYZ_TOKEN || 'mz_...'
+    },
+
+    // Option B: Or pass full URI with embedded token
+    // memoryz: 'https://memoryz.wino.deno.net?token=mz_your_token_here',
+
+    // Attach specific architectural memories from MemoryZ by hash:
+    memoryRefs: [
+      '776cc8925e', // Cryptomus signature skill note
+      'ca1fd49631'  // VibzCode release guidelines
+    ]
+  });
+
+  console.log(result.response);
+}
+```
+
+### 4. Standalone MemoryZ Client
+You can also use the bundled `MemoryzClient` directly for vector recall and task management:
+```javascript
+const { MemoryzClient } = require('vibzcode');
+
+const memoryz = new MemoryzClient({
+  url: 'https://memoryz.wino.deno.net', // or full URI with query token
+  token: 'mz_your_token_here'
+});
+
+// Vector semantic search
+const memories = await memoryz.recallMemory({ query: 'database migration rules', limit: 3 });
+
+// Store knowledge atom with 768-dim embeddings
+await memoryz.storeMemory({
+  title: 'Redis Caching Strategy',
+  content: 'Use TTL 300s for user sessions with Redis cluster.',
+  type: 'skill',
+  namespace: 'my-project'
+});
+```
+
+---
+
 ## ⚙️ Environment Configuration
 
 You can configure VibzCode either through the interactive setup screen on `http://localhost:3333` or by creating a `.env` file:
