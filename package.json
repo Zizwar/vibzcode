@@ -4,7 +4,7 @@
   "description": "VibzCode - Sovereign Multi-Engine AI Agent Orchestrator & Workspace Platform with Shared MemoryZ Substrate",
   "main": "server.js",
   "bin": {
-    "vibzcode": "./bin/vibzcode.js"
+    "vibzcode": "bin/vibzcode.js"
   },
   "files": [
     "bin",
