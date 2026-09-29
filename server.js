@@ -1027,18 +1027,22 @@ app.post('/api/session/chat', async (req, res) => {
     memoryRefs
   });
 
-  // 4. Register job state for legacy client polling
+  // 4. Register job state for active client polling & workflow tracking
   const jobRecord = {
     jobId: job.jobId,
     sessionId: session.id,
     prompt: userPrompt,
     startTime,
     status: 'running',
-    response: null
+    response: null,
+    currentStep: null,
+    partialText: '',
+    intermediateMessages: [],
+    steps: []
   };
   activeChatJobs.set(session.id, jobRecord);
 
-  // 5. Execute engine asynchronously
+  // 5. Execute engine asynchronously with real-time progress callbacks
   executeEngineTask(session, finalPrompt, {
     conversationId,
     continueSession,
@@ -1046,6 +1050,44 @@ app.post('/api/session/chat', async (req, res) => {
     onSpawn: (child) => {
       activeChatProcesses.set(session.token, child);
       jobsManager.registerProcess(job.jobId, child);
+    },
+    onUpdate: (evt) => {
+      if (evt.type === 'tool_start') {
+        const cmd = evt.toolInfo?.parameters?.CommandLine || evt.toolInfo?.parameters?.command || evt.toolInfo?.parameters?.TargetFile || '';
+        jobRecord.currentStep = {
+          name: evt.toolName,
+          detail: cmd,
+          startTime: Date.now(),
+          status: 'running'
+        };
+      } else if (evt.type === 'tool_end') {
+        if (jobRecord.currentStep && jobRecord.currentStep.status === 'running') {
+          jobRecord.currentStep.status = 'done';
+          jobRecord.currentStep.duration = evt.duration;
+        }
+        jobRecord.steps.push({
+          name: evt.toolName,
+          detail: evt.toolInfo?.parameters?.CommandLine || evt.toolInfo?.parameters?.command || '',
+          duration: evt.duration,
+          status: 'done'
+        });
+      } else if (evt.type === 'text_delta') {
+        jobRecord.partialText = (jobRecord.partialText || '') + evt.delta;
+      } else if (evt.type === 'intermediate_message' && evt.intermediateMessage) {
+        const msgText = (evt.intermediateMessage.content || evt.text || '').trim();
+        if (msgText) {
+          const intermediateObj = {
+            id: Date.now(),
+            role: 'assistant',
+            content: msgText,
+            isIntermediate: true,
+            time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+          };
+          jobRecord.intermediateMessages.push(intermediateObj);
+          // Persist intermediate response immediately in the session chat log!
+          appendSessionChatMessage(session.id, intermediateObj);
+        }
+      }
     }
   }).then(async (result) => {
     activeChatProcesses.delete(session.token);
@@ -1057,18 +1099,35 @@ app.post('/api/session/chat', async (req, res) => {
       saveSessions(sessions);
     }
 
-    const assistantMsg = {
-      id: Date.now(),
-      role: 'assistant',
-      content: result.responseText,
-      conversationId: result.conversationId,
-      duration: result.duration,
-      isError: result.isError,
-      time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-    };
+    // Determine final content - if an intermediate message was already posted, avoid repeating it
+    let finalContent = (result.responseText || '').trim();
+    if (jobRecord.intermediateMessages && jobRecord.intermediateMessages.length > 0) {
+      for (const im of jobRecord.intermediateMessages) {
+        const imContent = (im.content || '').trim();
+        if (imContent && finalContent.startsWith(imContent)) {
+          finalContent = finalContent.slice(imContent.length).trim();
+        }
+      }
+    }
 
-    // Save assistant message to server chat log
-    appendSessionChatMessage(session.id, assistantMsg);
+    const hasFinalText = finalContent.length > 0;
+    const contentToPost = hasFinalText ? finalContent : (jobRecord.intermediateMessages.length === 0 ? (result.responseText || 'تمت العملية بنجاح') : null);
+
+    let assistantMsg = null;
+    if (contentToPost) {
+      assistantMsg = {
+        id: Date.now(),
+        role: 'assistant',
+        content: contentToPost,
+        conversationId: result.conversationId,
+        duration: result.duration,
+        isError: result.isError,
+        steps: jobRecord.steps && jobRecord.steps.length > 0 ? jobRecord.steps : undefined,
+        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+      };
+      // Save assistant message to server chat log
+      appendSessionChatMessage(session.id, assistantMsg);
+    }
 
     // Complete persistent job
     await jobsManager.completeJob(job.jobId, {
@@ -1086,6 +1145,7 @@ app.post('/api/session/chat', async (req, res) => {
     jobRecord.duration = result.duration;
     jobRecord.isError = result.isError;
     jobRecord.completedAt = Date.now();
+    jobRecord.currentStep = null;
 
     setTimeout(() => {
       if (activeChatJobs.get(session.id) === jobRecord) {
@@ -1165,7 +1225,11 @@ app.get('/api/session/chat/active/:sessionId', (req, res) => {
         prompt: job.prompt,
         startTime: job.startTime,
         elapsedSeconds,
-        status: 'running'
+        status: 'running',
+        currentStep: job.currentStep || null,
+        partialText: job.partialText || '',
+        intermediateCount: (job.intermediateMessages || []).length,
+        steps: job.steps || []
       }
     });
   }
@@ -1368,13 +1432,21 @@ wss.on('connection', (ws) => {
   }
   const args = ['new-session', '-A', '-s', sessionName, '-c', targetDir, ...execCmd];
 
+  const childEnv = { ...process.env };
+  delete childEnv.ANTIGRAVITY_LS_ADDRESS;
+  delete childEnv.ANTIGRAVITY_CSRF_TOKEN;
+  delete childEnv.ANTIGRAVITY_CONVERSATION_ID;
+  delete childEnv.ANTIGRAVITY_TRAJECTORY_ID;
+  delete childEnv.ANTIGRAVITY_AGENT;
+  delete childEnv.ANTIGRAVITY_SOURCE_METADATA;
+
   const ptyProcess = pty.spawn(shell, args, {
     name: 'xterm-256color',
     cols: 100,
     rows: 30,
     cwd: targetDir,
     env: {
-      ...process.env,
+      ...childEnv,
       TERM: 'xterm-256color',
       LANG: 'en_US.UTF-8',
       LC_ALL: 'en_US.UTF-8'

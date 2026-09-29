@@ -20,6 +20,9 @@ document.addEventListener('alpine:init', () => {
     chatConversationId: null,
     chatContinue: true,
     activePollTimer: null,
+    activeStep: null,
+    activeStepsHistory: [],
+    lastIntermediateCount: 0,
 
     // Workspace File Explorer State (Inspired by Vibzcode)
     fileStructure: null,
@@ -751,6 +754,9 @@ document.addEventListener('alpine:init', () => {
         if (res.ok && data.active && data.job) {
           this.chatLoading = true;
           this.chatElapsedTime = Math.max(1, Math.round(parseFloat(data.job.elapsedSeconds) || 1));
+          this.activeStep = data.job.currentStep || null;
+          this.activeStepsHistory = data.job.steps || [];
+          this.lastIntermediateCount = data.job.intermediateCount || 0;
           this.startActiveJobPolling();
         }
       } catch (e) {}
@@ -760,24 +766,29 @@ document.addEventListener('alpine:init', () => {
       if (this.activePollTimer) clearInterval(this.activePollTimer);
       this.activePollTimer = setInterval(async () => {
         this.chatElapsedTime++;
-        // Poll status every 2 seconds
-        if (this.chatElapsedTime % 2 === 0) {
-          try {
-            const res = await fetch(`/api/session/chat/active/${this.session.id}`, {
-              headers: { 'Authorization': this.token }
-            });
-            const data = await res.json();
-            if (!data.active) {
-              // Task finished! Stop polling and hydrate messages
-              clearInterval(this.activePollTimer);
-              this.activePollTimer = null;
-              this.chatLoading = false;
-              await this.loadChatHistory();
-              this.$nextTick(() => this.scrollChatToBottom());
+        try {
+          const res = await fetch(`/api/session/chat/active/${this.session.id}`, {
+            headers: { 'Authorization': this.token }
+          });
+          const data = await res.json();
+          if (!data.active) {
+            // Task finished! Stop polling and hydrate messages
+            clearInterval(this.activePollTimer);
+            this.activePollTimer = null;
+            this.chatLoading = false;
+            this.activeStep = null;
+            await this.loadChatHistory();
+            this.$nextTick(() => this.scrollChatToBottom());
+          } else if (data.job) {
+            this.activeStep = data.job.currentStep || null;
+            this.activeStepsHistory = data.job.steps || [];
+            if ((data.job.intermediateCount || 0) > this.lastIntermediateCount) {
+              this.lastIntermediateCount = data.job.intermediateCount;
+              await this.loadChatHistory(true);
             }
-          } catch (e) {
-            // Keep polling across temporary hiccups
           }
+        } catch (e) {
+          // Keep polling across temporary hiccups
         }
       }, 1000);
     },
@@ -797,13 +808,13 @@ document.addEventListener('alpine:init', () => {
       });
       this.chatLoading = true;
       this.chatElapsedTime = 0;
+      this.activeStep = null;
+      this.activeStepsHistory = [];
+      this.lastIntermediateCount = 0;
       this.$nextTick(() => this.scrollChatToBottom());
 
-      // Start elapsed timer
-      if (this.chatTimerInterval) clearInterval(this.chatTimerInterval);
-      this.chatTimerInterval = setInterval(() => {
-        this.chatElapsedTime++;
-      }, 1000);
+      // Start elapsed timer and active polling immediately so user sees live steps & intermediate messages
+      this.startActiveJobPolling();
 
       try {
         const res = await fetch('/api/session/chat', {
@@ -822,7 +833,11 @@ document.addEventListener('alpine:init', () => {
         });
 
         const data = await res.json();
-        clearInterval(this.chatTimerInterval);
+
+        if (this.activePollTimer) {
+          clearInterval(this.activePollTimer);
+          this.activePollTimer = null;
+        }
 
         if (res.ok && data.success) {
           if (data.jobAlreadyRunning) {
@@ -838,8 +853,10 @@ document.addEventListener('alpine:init', () => {
           // Reload fresh chat history directly from server to ensure perfect sync
           await this.loadChatHistory();
           this.chatLoading = false;
+          this.activeStep = null;
         } else {
           this.chatLoading = false;
+          this.activeStep = null;
           this.chatMessages.push({
             id: Date.now(),
             role: 'assistant',
@@ -849,7 +866,10 @@ document.addEventListener('alpine:init', () => {
           });
         }
       } catch (err) {
-        clearInterval(this.chatTimerInterval);
+        if (this.activePollTimer) {
+          clearInterval(this.activePollTimer);
+          this.activePollTimer = null;
+        }
         // If connection dropped (e.g. tab closed or wifi flicker), don't immediately fail!
         // Check if the backend is still running the task in the background:
         console.warn('Chat fetch connection interrupted, checking backend job status...', err);
@@ -868,6 +888,7 @@ document.addEventListener('alpine:init', () => {
         // If not active, reload history or display error
         await this.loadChatHistory();
         this.chatLoading = false;
+        this.activeStep = null;
       } finally {
         this.$nextTick(() => {
           this.scrollChatToBottom();
@@ -880,6 +901,7 @@ document.addEventListener('alpine:init', () => {
     async abortChat() {
       if (this.activePollTimer) clearInterval(this.activePollTimer);
       if (this.chatTimerInterval) clearInterval(this.chatTimerInterval);
+      this.activeStep = null;
       try {
         await fetch('/api/session/chat/abort', {
           method: 'POST',

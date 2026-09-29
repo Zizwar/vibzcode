@@ -307,8 +307,8 @@ async function serveStatic(filePath: string): Promise<Response | null> {
     const ext = clean.split(".").pop()?.toLowerCase() || "";
     const mime = MIME_TYPES[ext] || "application/octet-stream";
 
-    const isHtml = ext === "html";
-    const cacheControl = isHtml ? "no-cache, must-revalidate" : "public, max-age=86400, immutable";
+    const isHtml = ext === "html" || ext === "js" || ext === "css";
+    const cacheControl = isHtml ? "no-cache, must-revalidate" : "public, max-age=3600";
 
     return new Response(fileData, {
       status: 200,
