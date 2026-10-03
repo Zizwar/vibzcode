@@ -171,7 +171,7 @@ async function handleMcpProxy(c: any): Promise<Response> {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key, mcp-session-id, Last-Event-ID",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-API-Key, mcp-session-id, Last-Event-ID, x-goog-api-key",
         "Access-Control-Expose-Headers": "mcp-session-id, Content-Type, WWW-Authenticate"
       }
     });
@@ -201,16 +201,32 @@ async function handleMcpProxy(c: any): Promise<Response> {
     respHeaders.set("Access-Control-Allow-Origin", "*");
     respHeaders.set("Access-Control-Expose-Headers", "mcp-session-id, Content-Type, WWW-Authenticate");
 
+    const originHost = `${url.protocol}//${url.host}`;
+
+    // Rewrite WWW-Authenticate header if present to point to edge domain
+    const wwwAuth = respHeaders.get("www-authenticate");
+    if (wwwAuth) {
+      const rewrittenAuth = wwwAuth
+        .replace(/https?:\/\/127\.0\.0\.1:3333/g, originHost)
+        .replace(/https?:\/\/localhost:3333/g, originHost)
+        .replace(/https?:\/\/145\.241\.104\.205:3333/g, originHost)
+        .replace(/https?:\/\/145\.241\.104\.205/g, originHost);
+      respHeaders.set("www-authenticate", rewrittenAuth);
+    }
+
     // Rewrite backend IP/domain in JSON metadata responses to edge domain
     const contentType = respHeaders.get("content-type") || "";
-    if (contentType.includes("application/json") && req.method === "GET") {
+    if (contentType.includes("application/json") || contentType.includes("application/schema+json")) {
       const jsonText = await backendResp.text();
-      const originHost = `${url.protocol}//${url.host}`;
       const rewrittenText = jsonText
         .replace(/https?:\/\/127\.0\.0\.1:3333/g, originHost)
         .replace(/https?:\/\/localhost:3333/g, originHost)
         .replace(/https?:\/\/145\.241\.104\.205:3333/g, originHost)
         .replace(/https?:\/\/145\.241\.104\.205/g, originHost);
+
+      // ALWAYS delete content-length so runtime recalculates exact length, avoiding HTTP/2 PROTOCOL_ERROR!
+      respHeaders.delete("content-length");
+      respHeaders.delete("content-encoding");
 
       return new Response(rewrittenText, {
         status: backendResp.status,
@@ -218,7 +234,7 @@ async function handleMcpProxy(c: any): Promise<Response> {
       });
     }
 
-    // Stream SSE or JSON-RPC responses directly
+    // Stream SSE or other responses directly
     return new Response(backendResp.body, {
       status: backendResp.status,
       statusText: backendResp.statusText,
@@ -235,7 +251,10 @@ async function handleMcpProxy(c: any): Promise<Response> {
 
 app.all("/mcp", handleMcpProxy);
 app.all("/mcp/*", handleMcpProxy);
+app.all("/sse", handleMcpProxy);
 app.all("/.well-known/*", handleMcpProxy);
+app.all("/oauth/*", handleMcpProxy);
+app.all("/openapi.json", handleMcpProxy);
 
 // ==============================================================================
 // 4. API REVERSE PROXY (/api/* -> Backend VPS)
