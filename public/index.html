@@ -165,19 +165,15 @@
           <i class="fa-solid text-xs" :class="theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
         </button>
 
-        <!-- Jev AI Control Toggle Button -->
-        <div class="flex items-center gap-1 px-2.5 py-1 rounded-xl border transition-all cursor-pointer"
-             :class="jevEnabled ? 'bg-amber-500/10 border-amber-500/40 text-amber-300' : 'bg-slate-900/90 border-slate-800 text-slate-400'"
-             @click="toggleJevAI()"
-             :title="jevEnabled ? 'محرك Jev AI مفعّل (انقر للتعطيل وإيقاف الاستهلاك)' : 'محرك Jev AI معطّل وحفظ الرصيد نشط (انقر للتفعيل)'">
+        <!-- Jev AI Control Toggle Button (Decluttered & Compact) -->
+        <button @click="toggleJevAI()"
+                class="btn btn-sm border transition-all px-2.5 gap-1.5 tooltip tooltip-bottom rounded-xl"
+                :class="jevEnabled ? 'border-amber-500/50 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20' : 'border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700'"
+                :data-tip="jevEnabled ? 'Jev AI: مفعّل (انقر للتعطيل وحفظ الرصيد)' : 'Jev AI: معطّل (انقر للتفعيل)'">
           <i class="fa-solid fa-bolt-lightning text-xs" :class="jevEnabled ? 'text-amber-400 animate-pulse' : 'text-slate-500'"></i>
-          <span class="text-xs font-mono font-bold">Jev AI:</span>
-          <span class="badge badge-xs font-mono text-[10px] px-1.5 py-0.5 border-none"
-                :class="jevEnabled ? 'bg-amber-500 text-black font-extrabold' : 'bg-slate-800 text-slate-400'">
-            <span x-show="!loadingJev" x-text="jevEnabled ? 'مفعّل' : 'معطّل'"></span>
-            <i x-show="loadingJev" class="fa-solid fa-spinner animate-spin text-[8px]"></i>
-          </span>
-        </div>
+          <span class="font-mono text-xs font-bold" :class="jevEnabled ? 'text-amber-300' : 'text-slate-400'">Jev</span>
+          <span class="w-1.5 h-1.5 rounded-full" :class="jevEnabled ? 'bg-amber-400 shadow-sm shadow-amber-400/80' : 'bg-slate-600'"></span>
+        </button>
 
         <!-- Orchestrator MCP Plug Icon Button -->
         <button @click="openOrchestratorModal" class="btn btn-sm btn-circle bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none text-white shadow-md shadow-purple-500/20 tooltip tooltip-bottom" data-tip="خادم الأوركسترا (Orchestrator MCP)">
@@ -279,6 +275,10 @@
                 <div class="space-y-1">
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="font-bold text-base text-white" x-text="sess.name"></span>
+                    <span x-show="sess.forkedFrom" class="badge bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold py-1 px-2 gap-1 tooltip tooltip-bottom" :data-tip="'جلسة متفرعة من: ' + (sess.forkedFrom?.sessionName || '')">
+                      <i class="fa-solid fa-code-fork text-[9px] text-purple-400"></i>
+                      <span>فرع</span>
+                    </span>
                     <span class="badge text-[10px] font-semibold py-1 px-2"
                           :class="{
                             'badge-success bg-emerald-950 border-emerald-500/40 text-emerald-400': sess.status === 'active',

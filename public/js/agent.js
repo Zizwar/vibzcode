@@ -24,6 +24,19 @@ document.addEventListener('alpine:init', () => {
     activeStepsHistory: [],
     lastIntermediateCount: 0,
 
+    // Fork & Branching State
+    showForkModal: false,
+    forkTargetMsg: null,
+    forkTargetIdx: -1,
+    forkNameInput: '',
+    forkLoading: false,
+    forkCreatedSession: null,
+    showBranchesModal: false,
+    branchesData: null,
+    branchFamily: [],
+    directForks: [],
+    forkCountByMsgId: {},
+
     // Workspace File Explorer State (Inspired by Vibzcode)
     fileStructure: null,
     fileSearchQuery: '',
@@ -184,6 +197,9 @@ document.addEventListener('alpine:init', () => {
 
           // Hydrate Chat History
           await this.loadChatHistory();
+
+          // Load Branches & Fork Tree
+          this.loadBranches();
 
           // Fetch Workspace File Tree
           this.fetchWorkspaceTree();
@@ -697,6 +713,7 @@ document.addEventListener('alpine:init', () => {
             if (!silent || this.isNearChatBottom()) {
               this.$nextTick(() => this.scrollChatToBottom());
             }
+            if (!silent) this.loadBranches();
           }
 
           // Recover conversationId from last assistant message if not set
@@ -742,6 +759,102 @@ document.addEventListener('alpine:init', () => {
     scrollChatToBottom() {
       const el = document.getElementById('agent-chat-container');
       if (el) el.scrollTop = el.scrollHeight;
+    },
+
+    // ==================== FORK & BRANCHES LOGIC ====================
+
+    async loadBranches() {
+      if (!this.session?.id || !this.token) return;
+      try {
+        const res = await fetch(`/api/session/branches/${this.session.id}`, {
+          headers: { 'Authorization': this.token }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.branchesData = data;
+          this.branchFamily = data.family || [];
+          this.directForks = data.directForks || [];
+
+          // Map fork counts by messageId
+          const map = {};
+          for (const item of (data.family || [])) {
+            if (item.forkedFrom?.sessionId === this.session.id && item.forkedFrom?.messageId) {
+              const mId = item.forkedFrom.messageId;
+              map[mId] = (map[mId] || 0) + 1;
+            }
+          }
+          this.forkCountByMsgId = map;
+        }
+      } catch (e) {
+        console.error('Error loading branches:', e);
+      }
+    },
+
+    openForkModal(msg, idx) {
+      this.forkTargetMsg = msg;
+      this.forkTargetIdx = idx;
+      this.forkCreatedSession = null;
+
+      const rawContent = (msg.content || '').replace(/\s+/g, ' ').trim();
+      const snippet = rawContent.length > 28 ? rawContent.slice(0, 28) + '...' : rawContent;
+      const roleLabel = msg.role === 'user' ? 'طلب' : 'رد';
+      this.forkNameInput = `${this.session.name} (فرع: ${roleLabel} #${idx + 1} - ${snippet})`;
+      this.showForkModal = true;
+    },
+
+    async executeFork() {
+      if (!this.session?.id || this.forkLoading) return;
+      this.forkLoading = true;
+
+      try {
+        const res = await fetch('/api/session/fork', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.token
+          },
+          body: JSON.stringify({
+            sessionId: this.session.id,
+            messageId: this.forkTargetMsg?.id,
+            messageIndex: this.forkTargetIdx,
+            name: this.forkNameInput
+          })
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success && data.session) {
+          this.forkCreatedSession = data;
+          this.showToast('تم تفريع الجلسة بنجاح!', 'success');
+          await this.loadBranches();
+        } else {
+          this.showToast(data.error || 'تعذر تفريع الجلسة', 'error');
+        }
+      } catch (e) {
+        this.showToast('حدث خطأ أثناء التفريع: ' + e.message, 'error');
+      } finally {
+        this.forkLoading = false;
+      }
+    },
+
+    openBranchesModal() {
+      this.loadBranches();
+      this.showBranchesModal = true;
+    },
+
+    copyForkUrl(url) {
+      const targetUrl = url || this.forkCreatedSession?.url;
+      if (!targetUrl) return;
+      const fullUrl = window.location.origin + targetUrl;
+      navigator.clipboard.writeText(fullUrl).then(() => {
+        this.showToast('تم نسخ رابط الجلسة المتفرعة بنجاح', 'success');
+      }).catch(() => {
+        this.showToast('تعذر نسخ الرابط', 'error');
+      });
+    },
+
+    switchToBranch(token) {
+      if (!token) return;
+      window.location.href = `/agent.html?token=${token}`;
     },
 
     async checkActiveChatJob() {

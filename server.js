@@ -501,7 +501,9 @@ app.post('/api/session/verify', (req, res) => {
       continueSession: session.continueSession,
       allowedModes: session.allowedModes,
       enableMcp: session.enableMcp !== false,
-      status: session.status
+      status: session.status,
+      parentId: session.parentId || null,
+      forkedFrom: session.forkedFrom || null
     }
   });
 });
@@ -1010,6 +1012,33 @@ app.post('/api/session/chat', async (req, res) => {
     }
   }
 
+  // 1b. If session is forked and starting its branch, inject clean context up to the fork point
+  if (session.forkedFrom && (!conversationId || req.body.isFirstForkTurn)) {
+    try {
+      const pastMessages = getSessionChatMessages(session.id);
+      if (pastMessages && pastMessages.length > 0) {
+        const contextTurns = pastMessages.map(m => {
+          const roleLabel = m.role === 'user' ? 'المستخدم (User)' : 'المساعد (AI Assistant)';
+          const text = (m.content || '').trim();
+          return `[${roleLabel}]:\n${text}`;
+        }).join('\n\n---\n\n');
+
+        const forkNotice = `[تنبيه سياق التفريع / Forked Branch Context]:
+هذه جلسة متفرعة (Fork) من الجلسة: "${session.forkedFrom.sessionName}".
+المطلوب منك هو إكمال العمل على المسار الجديد بناءً على سياق الحوار السابق حتى نقطة التفريع، واستبعاد أي مهام أو أحداث لم تكن موجودة في هذا السياق:
+
+--- بداية سياق الحوار السابق ---
+${contextTurns}
+--- نهاية سياق الحوار السابق ---
+
+`;
+        finalPrompt = `${forkNotice}${finalPrompt}`;
+      }
+    } catch (e) {
+      console.warn('Could not inject fork context:', e.message);
+    }
+  }
+
   // 2. Immediately record user prompt in server chat log
   appendSessionChatMessage(session.id, {
     id: Date.now(),
@@ -1298,6 +1327,181 @@ app.post('/api/session/messages/:sessionId', (req, res) => {
     return res.status(500).json({ success: false, error: 'تعذر حفظ الرسائل على الخادم' });
   }
   return res.status(400).json({ success: false, error: 'بيانات غير صالحة' });
+});
+
+// ==================== FORK & BRANCHING APIS ====================
+
+// Fork a new session from a specific message / turn
+app.post('/api/session/fork', async (req, res) => {
+  const token = getAuthToken(req);
+  if (!token) return res.status(401).json({ success: false, error: 'غير مصرح' });
+
+  let parentSession = null;
+  if (token === ADMIN_SECRET) {
+    const parentId = req.body.sessionId;
+    parentSession = sessions.find(s => s.id === parentId);
+  } else {
+    parentSession = getSessionByToken(token);
+  }
+
+  if (!parentSession) {
+    return res.status(404).json({ success: false, error: 'الجلسة غير موجودة أو تم إغلاقها' });
+  }
+
+  const { messageId, messageIndex, name } = req.body;
+  const parentMessages = getSessionChatMessages(parentSession.id);
+
+  if (!parentMessages || parentMessages.length === 0) {
+    return res.status(400).json({ success: false, error: 'لا توجد رسائل في هذه الجلسة للتفريع منها' });
+  }
+
+  // Find index of target message
+  let targetIndex = -1;
+  if (messageId !== undefined && messageId !== null) {
+    targetIndex = parentMessages.findIndex(m => String(m.id) === String(messageId));
+  }
+  if (targetIndex === -1 && typeof messageIndex === 'number' && messageIndex >= 0 && messageIndex < parentMessages.length) {
+    targetIndex = messageIndex;
+  }
+  if (targetIndex === -1) {
+    targetIndex = parentMessages.length - 1;
+  }
+
+  const targetMessage = parentMessages[targetIndex];
+  // Slice messages up to and including target message
+  const forkedMessages = parentMessages.slice(0, targetIndex + 1);
+
+  // Generate branch snippet for default naming
+  const rawSnippet = (targetMessage.content || '').replace(/\s+/g, ' ').trim();
+  const snippet = rawSnippet.length > 30 ? rawSnippet.slice(0, 30) + '...' : rawSnippet;
+
+  const forkedSessionId = 'sess_' + Date.now().toString(36) + '_' + crypto.randomBytes(4).toString('hex');
+  const forkedToken = 'vibz_' + crypto.randomBytes(16).toString('hex');
+
+  const forkedSession = {
+    id: forkedSessionId,
+    name: (name && name.trim()) ? name.trim() : `${parentSession.name} (فرع: ${snippet || '#' + (targetIndex + 1)})`,
+    assignee: parentSession.assignee || 'عضو الفريق',
+    role: parentSession.role || parentSession.assignee || 'عضو الفريق',
+    systemPrompt: parentSession.systemPrompt || '',
+    namespace: parentSession.namespace || 'default',
+    token: forkedToken,
+    targetDir: path.resolve(parentSession.targetDir),
+    engine: parentSession.engine || 'agy',
+    model: parentSession.model || '',
+    sandbox: parentSession.sandbox !== false,
+    autoApprove: parentSession.autoApprove !== false,
+    continueSession: parentSession.continueSession !== false,
+    allowedModes: parentSession.allowedModes || 'both',
+    enableMcp: parentSession.enableMcp !== false,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    lastActive: new Date().toISOString(),
+    parentId: parentSession.id,
+    forkedFrom: {
+      sessionId: parentSession.id,
+      sessionName: parentSession.name,
+      messageId: targetMessage.id,
+      messageRole: targetMessage.role,
+      messageSnippet: snippet,
+      atIndex: targetIndex,
+      totalMessages: forkedMessages.length,
+      forkedAt: new Date().toISOString()
+    },
+    stats: {
+      messagesCount: forkedMessages.filter(m => m.role === 'user').length
+    }
+  };
+
+  // Prepend to sessions list and persist
+  sessions.unshift(forkedSession);
+  saveSessions(sessions);
+
+  // Persist sliced messages for this forked session
+  saveSessionChatMessages(forkedSessionId, forkedMessages);
+
+  return res.json({
+    success: true,
+    session: forkedSession,
+    url: `/agent.html?token=${forkedToken}`,
+    message: 'تم تفريع الجلسة بنجاح'
+  });
+});
+
+// Get branches / family tree for a session
+app.get('/api/session/branches/:sessionId?', (req, res) => {
+  const token = getAuthToken(req);
+  if (!token) return res.status(401).json({ success: false, error: 'غير مصرح' });
+
+  let currentSession = null;
+  if (token === ADMIN_SECRET) {
+    const sId = req.params.sessionId || req.query.sessionId;
+    currentSession = sessions.find(s => s.id === sId) || sessions[0];
+  } else {
+    currentSession = getSessionByToken(token);
+  }
+
+  if (!currentSession) {
+    return res.status(404).json({ success: false, error: 'الجلسة غير موجودة' });
+  }
+
+  // Find root session
+  let rootSession = currentSession;
+  const visited = new Set([rootSession.id]);
+  while (rootSession.parentId) {
+    const parent = sessions.find(s => s.id === rootSession.parentId);
+    if (!parent || visited.has(parent.id)) break;
+    visited.add(parent.id);
+    rootSession = parent;
+  }
+
+  // Collect all family sessions in this tree
+  function getDescendants(parentId) {
+    const children = sessions.filter(s => s.parentId === parentId);
+    let result = [...children];
+    for (const child of children) {
+      result = result.concat(getDescendants(child.id));
+    }
+    return result;
+  }
+
+  const allTreeSessions = [rootSession, ...getDescendants(rootSession.id)];
+  // Remove duplicates
+  const uniqueTreeSessions = Array.from(new Map(allTreeSessions.map(s => [s.id, s])).values());
+
+  const family = uniqueTreeSessions.map(s => ({
+    id: s.id,
+    name: s.name,
+    token: s.token,
+    parentId: s.parentId || null,
+    forkedFrom: s.forkedFrom || null,
+    engine: s.engine || 'agy',
+    targetDir: s.targetDir,
+    createdAt: s.createdAt,
+    lastActive: s.lastActive,
+    messagesCount: s.stats?.messagesCount || 0,
+    isCurrent: s.id === currentSession.id
+  }));
+
+  const directForks = sessions.filter(s => s.parentId === currentSession.id).map(s => ({
+    id: s.id,
+    name: s.name,
+    token: s.token,
+    forkedFrom: s.forkedFrom || null,
+    createdAt: s.createdAt,
+    messagesCount: s.stats?.messagesCount || 0
+  }));
+
+  const parent = currentSession.parentId ? sessions.find(s => s.id === currentSession.parentId) : null;
+
+  return res.json({
+    success: true,
+    currentSessionId: currentSession.id,
+    rootSession: { id: rootSession.id, name: rootSession.name, token: rootSession.token },
+    parent: parent ? { id: parent.id, name: parent.name, token: parent.token } : null,
+    directForks,
+    family
+  });
 });
 
 // ==================== MCP (MEMORYZ) APIS ====================
