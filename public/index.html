@@ -170,9 +170,15 @@
     </header>
 
     <!-- ==================== SIDE DRAWER (BIGMAC MENU) ==================== -->
-    <div x-show="showSideDrawer" x-cloak class="fixed inset-0 z-50 overflow-hidden">
-      <!-- Backdrop -->
-      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+    <div x-show="showSideDrawer" 
+         x-cloak 
+         @keydown.escape.window="showSideDrawer = false"
+         class="fixed inset-0 z-50 overflow-hidden" 
+         role="dialog" 
+         aria-modal="true">
+      
+      <!-- Backdrop: clicking on dark overlay closes drawer -->
+      <div class="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"
            @click="showSideDrawer = false"
            x-show="showSideDrawer"
            x-transition:enter="ease-out duration-300"
@@ -182,30 +188,43 @@
            x-transition:leave-start="opacity-100"
            x-transition:leave-end="opacity-0"></div>
 
-      <!-- Drawer Slide-Over Panel -->
-      <div class="fixed inset-y-0 left-0 max-w-full flex pr-10">
-        <div class="w-screen max-w-sm bg-slate-900 border-r border-slate-800 shadow-2xl flex flex-col justify-between"
+      <!-- Slide-Over Panel Container (pointer-events-none ensures outside clicks pass through to backdrop) -->
+      <div class="fixed inset-y-0 right-0 max-w-full flex pointer-events-none z-50"
+           @click.self="showSideDrawer = false">
+        
+        <div class="pointer-events-auto w-[85vw] max-w-xs sm:max-w-sm bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col justify-between h-full"
+             @click.stop
              x-show="showSideDrawer"
              x-transition:enter="transform transition ease-out duration-300"
-             x-transition:enter-start="-translate-x-full"
+             x-transition:enter-start="translate-x-full"
              x-transition:enter-end="translate-x-0"
              x-transition:leave="transform transition ease-in duration-200"
              x-transition:leave-start="translate-x-0"
-             x-transition:leave-end="-translate-x-full">
+             x-transition:leave-end="translate-x-full">
           
-          <!-- Drawer Header -->
-          <div class="p-5 border-b border-slate-800/80 bg-slate-950/80 flex items-center justify-between">
+          <!-- Drawer Header with prominent Close button at Top Right and Title -->
+          <div class="p-4 border-b border-slate-800/80 bg-slate-950/90 flex items-center justify-between gap-3 shrink-0">
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500/20 via-blue-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-md">
-                <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
-              </div>
+              <!-- Close button right at top-right of the drawer -->
+              <button @click="showSideDrawer = false" 
+                      class="btn btn-sm btn-circle bg-slate-800 hover:bg-rose-950/80 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-400 shadow transition-all"
+                      title="إغلاق القائمة">
+                <i class="fa-solid fa-xmark text-base"></i>
+              </button>
               <div>
-                <h3 class="font-extrabold text-base text-white font-sans">VibzCode OS</h3>
-                <p class="text-[11px] text-slate-400">القائمة وإعدادات النظام</p>
+                <h3 class="font-extrabold text-sm text-white font-sans flex items-center gap-2">
+                  <span>لوحة الإعدادات</span>
+                  <span class="badge badge-xs bg-cyan-950 text-cyan-400 border-cyan-800/40">BigMac</span>
+                </h3>
+                <p class="text-[10px] text-slate-400 font-mono">VibzCode Sovereign OS</p>
               </div>
             </div>
-            <button @click="showSideDrawer = false" class="btn btn-ghost btn-sm btn-circle text-slate-400 hover:text-white">
-              <i class="fa-solid fa-xmark text-base"></i>
+
+            <!-- Additional text button to close on the left as well -->
+            <button @click="showSideDrawer = false" 
+                    class="btn btn-xs btn-ghost text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700 px-2 py-0.5 text-[11px] gap-1">
+              <span>إغلاق</span>
+              <i class="fa-solid fa-xmark text-[10px]"></i>
             </button>
           </div>
 
