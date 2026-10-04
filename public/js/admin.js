@@ -20,6 +20,9 @@ document.addEventListener('alpine:init', () => {
     adminFolderSearch: '',
     loadingFolderTree: false,
 
+    // Drawer State
+    showSideDrawer: false,
+
     // Create Modal State
     showCreateModal: false,
     creatingSession: false,

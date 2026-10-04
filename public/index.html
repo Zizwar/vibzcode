@@ -151,13 +151,10 @@
 
       <!-- Header Actions -->
       <div class="flex items-center gap-2">
-        <!-- Keys & Setup Modal Trigger Button -->
-        <button @click="keysModalOpen = true" class="btn btn-sm rounded-xl border transition-all flex items-center gap-1.5 px-3"
-                :class="keysStatus?.isReady ? 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-700' : 'bg-amber-950/60 border-amber-500/50 text-amber-300 animate-pulse'"
-                title="إعداد مفاتيح النظام و .env">
-          <i class="fa-solid fa-key text-xs" :class="keysStatus?.isReady ? 'text-emerald-400' : 'text-amber-400'"></i>
-          <span class="text-xs font-semibold hidden md:inline">مفاتيح النظام</span>
-          <span class="w-2 h-2 rounded-full" :class="keysStatus?.isReady ? 'bg-emerald-400 shadow-sm shadow-emerald-400/50' : 'bg-amber-400 shadow-sm shadow-amber-400/50'"></span>
+        <!-- New Session Primary Button -->
+        <button @click="openCreateModal" class="btn btn-sm btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white shadow-md shadow-cyan-500/20 gap-1.5 px-3" title="إنشاء جلسة جديدة">
+          <i class="fa-solid fa-plus text-xs"></i>
+          <span class="text-xs font-bold hidden sm:inline">جلسة جديدة</span>
         </button>
 
         <!-- Theme Toggle (Light / Dark) -->
@@ -165,35 +162,164 @@
           <i class="fa-solid text-xs" :class="theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
         </button>
 
-        <!-- Jev AI Control Toggle Button (Decluttered & Compact) -->
-        <button @click="toggleJevAI()"
-                class="btn btn-sm border transition-all px-2.5 gap-1.5 tooltip tooltip-bottom rounded-xl"
-                :class="jevEnabled ? 'border-amber-500/50 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20' : 'border-slate-800 bg-slate-900/80 text-slate-400 hover:border-slate-700'"
-                :data-tip="jevEnabled ? 'Jev AI: مفعّل (انقر للتعطيل وحفظ الرصيد)' : 'Jev AI: معطّل (انقر للتفعيل)'">
-          <i class="fa-solid fa-bolt-lightning text-xs" :class="jevEnabled ? 'text-amber-400 animate-pulse' : 'text-slate-500'"></i>
-          <span class="font-mono text-xs font-bold" :class="jevEnabled ? 'text-amber-300' : 'text-slate-400'">Jev</span>
-          <span class="w-1.5 h-1.5 rounded-full" :class="jevEnabled ? 'bg-amber-400 shadow-sm shadow-amber-400/80' : 'bg-slate-600'"></span>
-        </button>
-
-        <!-- Orchestrator MCP Plug Icon Button -->
-        <button @click="openOrchestratorModal" class="btn btn-sm btn-circle bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none text-white shadow-md shadow-purple-500/20 tooltip tooltip-bottom" data-tip="خادم الأوركسترا (Orchestrator MCP)">
-          <i class="fa-solid fa-plug text-xs"></i>
-        </button>
-
-        <button @click="openCreateModal" class="btn btn-sm btn-circle btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white shadow-md shadow-cyan-500/20 tooltip tooltip-bottom" data-tip="إنشاء جلسة جديدة">
-          <i class="fa-solid fa-plus text-sm"></i>
-        </button>
-
-        <button @click="loadSessions" class="btn btn-sm btn-circle btn-ghost border border-slate-800 text-slate-300 hover:text-white tooltip tooltip-bottom" data-tip="تحديث البيانات">
-          <i class="fa-solid fa-arrows-rotate text-xs" :class="loadingSessions ? 'animate-spin' : ''"></i>
-        </button>
-
-        <button @click="handleLogout" class="btn btn-sm btn-ghost bg-rose-950/40 hover:bg-rose-900/60 text-rose-300 border border-rose-800/40 text-xs px-3" title="تسجيل الخروج">
-          <i class="fa-solid fa-right-from-bracket"></i>
-          <span class="hidden sm:inline">خروج</span>
+        <!-- BigMac Hamburger Menu Button -->
+        <button @click="showSideDrawer = true" class="btn btn-sm btn-ghost btn-circle border border-slate-800 text-slate-200 hover:text-cyan-400 hover:border-cyan-500/40 tooltip tooltip-bottom" data-tip="القائمة وإعدادات النظام">
+          <i class="fa-solid fa-bars text-base"></i>
         </button>
       </div>
     </header>
+
+    <!-- ==================== SIDE DRAWER (BIGMAC MENU) ==================== -->
+    <div x-show="showSideDrawer" x-cloak class="fixed inset-0 z-50 overflow-hidden">
+      <!-- Backdrop -->
+      <div class="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity"
+           @click="showSideDrawer = false"
+           x-show="showSideDrawer"
+           x-transition:enter="ease-out duration-300"
+           x-transition:enter-start="opacity-0"
+           x-transition:enter-end="opacity-100"
+           x-transition:leave="ease-in duration-200"
+           x-transition:leave-start="opacity-100"
+           x-transition:leave-end="opacity-0"></div>
+
+      <!-- Drawer Slide-Over Panel -->
+      <div class="fixed inset-y-0 left-0 max-w-full flex pr-10">
+        <div class="w-screen max-w-sm bg-slate-900 border-r border-slate-800 shadow-2xl flex flex-col justify-between"
+             x-show="showSideDrawer"
+             x-transition:enter="transform transition ease-out duration-300"
+             x-transition:enter-start="-translate-x-full"
+             x-transition:enter-end="translate-x-0"
+             x-transition:leave="transform transition ease-in duration-200"
+             x-transition:leave-start="translate-x-0"
+             x-transition:leave-end="-translate-x-full">
+          
+          <!-- Drawer Header -->
+          <div class="p-5 border-b border-slate-800/80 bg-slate-950/80 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500/20 via-blue-500/20 to-purple-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400 shadow-md">
+                <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+              </div>
+              <div>
+                <h3 class="font-extrabold text-base text-white font-sans">VibzCode OS</h3>
+                <p class="text-[11px] text-slate-400">القائمة وإعدادات النظام</p>
+              </div>
+            </div>
+            <button @click="showSideDrawer = false" class="btn btn-ghost btn-sm btn-circle text-slate-400 hover:text-white">
+              <i class="fa-solid fa-xmark text-base"></i>
+            </button>
+          </div>
+
+          <!-- Drawer Menu Body -->
+          <div class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar text-xs">
+            
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2">الأدوات والمحركات</div>
+
+            <!-- Item 1: System Keys & .env -->
+            <button @click="showSideDrawer = false; keysModalOpen = true;"
+                    class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-right group">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shrink-0">
+                  <i class="fa-solid fa-key text-xs"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 group-hover:text-white">مفاتيح النظام والبيئة (.env)</div>
+                  <div class="text-[10px] text-slate-400">ضبط مفاتيح Gemini، MemoryZ، والتشفير</div>
+                </div>
+              </div>
+              <span class="badge badge-xs text-[9px] py-1 px-1.5 shrink-0"
+                    :class="keysStatus?.isReady ? 'bg-emerald-950 text-emerald-300 border-emerald-500/30' : 'bg-amber-950 text-amber-300 border-amber-500/30 animate-pulse'"
+                    x-text="keysStatus?.isReady ? 'جاهز' : 'تنبيه'"></span>
+            </button>
+
+            <!-- Item 2: Jev AI Toggle & Engine -->
+            <div class="p-3 rounded-xl bg-slate-950/70 border border-slate-800 space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center text-xs shrink-0"
+                       :class="jevEnabled ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-800 text-slate-500 border border-slate-700'">
+                    <i class="fa-solid fa-bolt-lightning"></i>
+                  </div>
+                  <div>
+                    <div class="font-bold text-slate-200">محرك Jev AI الذكي</div>
+                    <div class="text-[10px] text-slate-400">فرز المهام والذاكرة وتقييم المهارات</div>
+                  </div>
+                </div>
+                <input type="checkbox" :checked="jevEnabled" @change="toggleJevAI()" class="toggle toggle-warning toggle-sm">
+              </div>
+              <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
+                <span class="text-slate-400">حالة الاستهلاك:</span>
+                <span class="font-mono font-semibold" :class="jevEnabled ? 'text-amber-400' : 'text-slate-400'"
+                      x-text="jevEnabled ? 'مفعّل (يستهلك توكنز)' : 'معطّل (حفظ الرصيد)'"></span>
+              </div>
+            </div>
+
+            <!-- Item 3: Orchestrator MCP Server -->
+            <button @click="showSideDrawer = false; openOrchestratorModal();"
+                    class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-right group">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400 shrink-0">
+                  <i class="fa-solid fa-plug text-xs"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 group-hover:text-white">خادم الأوركسترا (Orchestrator MCP)</div>
+                  <div class="text-[10px] text-slate-400">ربط الوكلاء بالذكاء الخارجي والأدوات</div>
+                </div>
+              </div>
+              <i class="fa-solid fa-chevron-left text-slate-500 text-xs group-hover:text-slate-300"></i>
+            </button>
+
+            <!-- Item 4: Refresh Sessions Data -->
+            <button @click="loadSessions(); showToast('تم تحديث بيانات الجلسات بنجاح', 'success');"
+                    class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-right group">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
+                  <i class="fa-solid fa-arrows-rotate text-xs" :class="loadingSessions ? 'animate-spin' : ''"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 group-hover:text-white">تحديث ومزامنة البيانات</div>
+                  <div class="text-[10px] text-slate-400">إعادة تحميل الجلسات والعمليات النشطة</div>
+                </div>
+              </div>
+              <span class="badge badge-neutral badge-xs font-mono text-[9px]" x-text="sessions.length + ' جلسة'"></span>
+            </button>
+
+            <div class="h-px bg-slate-800/80 my-2"></div>
+
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2">المظهر والتحكم</div>
+
+            <!-- Item 5: Theme Toggle -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-300 shrink-0">
+                  <i class="fa-solid" :class="theme === 'dark' ? 'fa-moon text-indigo-400' : 'fa-sun text-amber-400'"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200">وضع المظهر (Theme)</div>
+                  <div class="text-[10px] text-slate-400" x-text="theme === 'dark' ? 'الوضع الليلي (Dark Mode)' : 'الوضع النهاري (Light Mode)'"></div>
+                </div>
+              </div>
+              <button @click="toggleTheme()" class="btn btn-xs btn-outline btn-neutral gap-1">
+                <span x-text="theme === 'dark' ? 'نهاري' : 'ليلي'"></span>
+              </button>
+            </div>
+
+          </div>
+
+          <!-- Drawer Footer: Logout -->
+          <div class="p-4 border-t border-slate-800 bg-slate-950/90 space-y-2">
+            <button @click="handleLogout()"
+                    class="btn btn-sm w-full bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 text-rose-300 hover:text-white flex items-center justify-center gap-2 text-xs">
+              <i class="fa-solid fa-right-from-bracket"></i>
+              <span>تسجيل الخروج من لوحة التحكم</span>
+            </button>
+            <div class="text-[10px] text-center text-slate-500 font-mono">
+              VibzCode Sovereign Agent OS v2.4
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
 
     <!-- Main Dashboard Body -->
     <main class="flex-1 p-4 sm:p-6 max-w-7xl w-full mx-auto space-y-6">
