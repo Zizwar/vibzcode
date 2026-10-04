@@ -142,13 +142,8 @@
       <!-- Top Navbar -->
       <header class="bg-slate-900/95 border-b border-slate-800/80 px-3 sm:px-4 py-2 flex items-center justify-between gap-3 shrink-0 backdrop-blur-md z-20">
         
-        <!-- Left: Drawer Toggle, Home, Sparkles & Desktop Titles -->
+        <!-- Right (in RTL): Home, Sparkles & Desktop Titles -->
         <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 min-w-0">
-          <!-- Drawer Button (File Explorer Toggle) -->
-          <label for="file-drawer-toggle" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-cyan-400" data-tip="مستكشف ملفات المشروع">
-            <i class="fa-solid fa-folder-tree text-sm"></i>
-          </label>
-
           <!-- Back to Central Dashboard Button -->
           <a href="/" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-cyan-400" data-tip="العودة للوحة الرئيسية">
             <i class="fa-solid fa-house text-xs"></i>
@@ -247,8 +242,9 @@
             <i class="fa-solid text-xs" :class="theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
           </button>
 
-          <button @click="toggleFullscreen" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-white hidden md:inline-flex" data-tip="ملء الشاشة">
-            <i class="fa-solid fa-expand text-xs"></i>
+          <!-- Fullscreen Toggle (Always visible) -->
+          <button @click="toggleFullscreen" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-white" :data-tip="isFullscreen ? 'إنهاء ملء الشاشة' : 'ملء الشاشة'">
+            <i class="fa-solid text-xs" :class="isFullscreen ? 'fa-compress text-cyan-400' : 'fa-expand'"></i>
           </button>
 
           <button @click="handleLogout" class="btn btn-ghost btn-sm btn-circle text-rose-400 hover:text-rose-300 tooltip tooltip-bottom" data-tip="تسجيل الخروج">

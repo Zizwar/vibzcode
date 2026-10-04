@@ -92,10 +92,18 @@ document.addEventListener('alpine:init', () => {
     // Theme State (Dark / Light)
     theme: localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark',
 
+    // Fullscreen state
+    isFullscreen: !!document.fullscreenElement,
+
     init() {
       // Expose to window for filetree click callbacks
       window._agent = this;
       this.applyTheme();
+
+      // Listen for fullscreen change
+      document.addEventListener('fullscreenchange', () => {
+        this.isFullscreen = !!document.fullscreenElement;
+      });
 
       // Check token in URL parameters (?token=...)
       const urlParams = new URLSearchParams(window.location.search);
