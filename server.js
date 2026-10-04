@@ -26,7 +26,7 @@ const { getSettings, updateSettings } = require('./lib/jevClient');
 const { loadEnv, checkKeysStatus, saveKeys } = require('./lib/envHelper');
 
 // Automatically load .env if available
-loadEnv();
+loadEnv(true);
 
 let PORT = process.env.PORT || 3333;
 let ADMIN_USER = process.env.ADMIN_USER || 'admin';
