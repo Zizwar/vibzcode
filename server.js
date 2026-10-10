@@ -378,6 +378,7 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
     continueSession: continueSession !== false,
     allowedModes: allowedModes || 'both',
     enableMcp: req.body.enableMcp !== false,
+    timeout: req.body.timeout !== undefined ? (parseInt(req.body.timeout, 10) || 0) : 0,
     status: 'active',
     createdAt: new Date().toISOString(),
     lastActive: new Date().toISOString(),
@@ -412,11 +413,13 @@ app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
     return res.status(404).json({ success: false, error: 'الجلسة غير موجودة' });
   }
 
-  const allowedUpdates = ['name', 'assignee', 'role', 'systemPrompt', 'namespace', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'status'];
+  const allowedUpdates = ['name', 'assignee', 'role', 'systemPrompt', 'namespace', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'timeout', 'status'];
   for (const key of allowedUpdates) {
     if (req.body[key] !== undefined) {
       if (key === 'targetDir') {
         sessions[index][key] = path.resolve(req.body[key]);
+      } else if (key === 'timeout') {
+        sessions[index][key] = parseInt(req.body[key], 10) || 0;
       } else {
         sessions[index][key] = req.body[key];
       }
@@ -990,6 +993,10 @@ app.post('/api/session/chat', async (req, res) => {
     });
   }
 
+  // Disable socket timeouts for this request so long-running operations (video generation, builds) never get prematurely dropped
+  req.setTimeout(0);
+  res.setTimeout(0);
+
   const { prompt, conversationId, continueSession } = req.body;
   if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
     return res.status(400).json({ success: false, error: 'نص البرومبت فارغ' });
@@ -1073,9 +1080,11 @@ ${contextTurns}
   activeChatJobs.set(session.id, jobRecord);
 
   // 5. Execute engine asynchronously with real-time progress callbacks
+  const configuredTimeout = session.timeoutMs ?? (session.timeout ? session.timeout * 60000 : 0) ?? (process.env.SESSION_TIMEOUT_MS ? parseInt(process.env.SESSION_TIMEOUT_MS, 10) : 0);
   executeEngineTask(session, finalPrompt, {
     conversationId,
     continueSession,
+    timeout: configuredTimeout,
     systemPrompt: session.systemPrompt,
     onSpawn: (child) => {
       activeChatProcesses.set(session.token, child);
@@ -1694,6 +1703,12 @@ wss.on('connection', (ws) => {
     } catch (e) {}
   });
 });
+
+// Configure server socket and request timeouts to 0 (unlimited) so long running jobs are never dropped
+server.timeout = 0;
+server.requestTimeout = 0;
+server.keepAliveTimeout = 120000;
+server.headersTimeout = 125000;
 
 server.listen(PORT, '0.0.0.0', () => {
   console.log(`=======================================================`);

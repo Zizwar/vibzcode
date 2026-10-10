@@ -504,6 +504,12 @@
                   <span x-show="sess.enableMcp !== false" class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="بروتوكول الذاكرة السحابية MCP مفعّل">
                     <i class="fa-solid fa-brain text-purple-400"></i> MemoryZ MCP
                   </span>
+                  <span class="badge badge-xs bg-slate-900 border-slate-700 py-1.5 px-2 gap-1 font-mono text-[10px]"
+                        :class="sess.timeout ? 'text-amber-300 border-amber-800/40' : 'text-emerald-300 border-emerald-800/40'"
+                        :title="sess.timeout ? 'مهلة التنفيذ المحددة: ' + sess.timeout + ' دقيقة' : 'مهلة التنفيذ غير محدودة (مفتوحة)'">
+                    <i class="fa-solid fa-stopwatch" :class="sess.timeout ? 'text-amber-400' : 'text-emerald-400'"></i>
+                    <span x-text="sess.timeout ? sess.timeout + 'د مهلة' : 'مهلة مفتوحة ⚡'"></span>
+                  </span>
                 </div>
               </div>
 
@@ -719,6 +725,23 @@
           </select>
         </div>
 
+        <!-- Execution Timeout Limit -->
+        <div class="form-control">
+          <label class="label pb-1 font-semibold text-slate-300">
+            <span class="flex items-center gap-1.5">
+              <i class="fa-solid fa-stopwatch text-amber-400"></i>
+              <span>المهلة الزمنية لتنفيذ المهام (Timeout):</span>
+            </span>
+          </label>
+          <select x-model.number="newSession.timeout" class="select select-sm select-bordered bg-slate-950 border-slate-700 text-slate-100">
+            <option :value="0">⚡ غير محدودة (مفتوحة بدون مهلة - مستحسن للفيديوهات والعمليات الطويلة)</option>
+            <option :value="15">15 دقيقة</option>
+            <option :value="30">30 دقيقة</option>
+            <option :value="60">ساعة واحدة (60 دقيقة)</option>
+            <option :value="120">ساعتان (120 دقيقة)</option>
+          </select>
+        </div>
+
         <div class="modal-action pt-2">
           <button type="button" @click="showCreateModal = false" class="btn btn-sm btn-ghost text-slate-400">إلغاء</button>
           <button type="submit" :disabled="creatingSession" class="btn btn-sm btn-primary bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1">
@@ -816,6 +839,23 @@
                 <span>ربط بروتوكول الذاكرة السحابية (MemoryZ MCP)</span>
               </span>
             </label>
+          </div>
+
+          <!-- Execution Timeout Limit -->
+          <div class="form-control">
+            <label class="label pb-1 font-semibold text-slate-300">
+              <span class="flex items-center gap-1.5">
+                <i class="fa-solid fa-stopwatch text-amber-400"></i>
+                <span>المهلة الزمنية لتنفيذ المهام (Timeout):</span>
+              </span>
+            </label>
+            <select x-model.number="editingSession.timeout" class="select select-sm select-bordered bg-slate-950 border-slate-700 text-slate-100">
+              <option :value="0">⚡ غير محدودة (مفتوحة بدون مهلة - مستحسن للفيديوهات والعمليات الطويلة)</option>
+              <option :value="15">15 دقيقة</option>
+              <option :value="30">30 دقيقة</option>
+              <option :value="60">ساعة واحدة (60 دقيقة)</option>
+              <option :value="120">ساعتان (120 دقيقة)</option>
+            </select>
           </div>
 
           <div class="form-control">

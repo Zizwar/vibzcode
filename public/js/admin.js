@@ -37,7 +37,8 @@ document.addEventListener('alpine:init', () => {
       autoApprove: true,
       continueSession: true,
       allowedModes: 'both',
-      enableMcp: true
+      enableMcp: true,
+      timeout: 0
     },
 
     // Edit Modal State
@@ -406,7 +407,8 @@ document.addEventListener('alpine:init', () => {
         autoApprove: true,
         continueSession: true,
         allowedModes: 'both',
-        enableMcp: true
+        enableMcp: true,
+        timeout: 0
       };
       this.loadFolderTree();
       this.showCreateModal = true;
@@ -440,7 +442,8 @@ document.addEventListener('alpine:init', () => {
             autoApprove: this.newSession.autoApprove,
             continueSession: this.newSession.continueSession,
             allowedModes: this.newSession.allowedModes,
-            enableMcp: this.newSession.enableMcp
+            enableMcp: this.newSession.enableMcp,
+            timeout: this.newSession.timeout !== undefined ? this.newSession.timeout : 0
           })
         });
 
@@ -463,6 +466,7 @@ document.addEventListener('alpine:init', () => {
       this.editingSession = JSON.parse(JSON.stringify(sess));
       if (!this.editingSession.engine) this.editingSession.engine = 'agy';
       if (!this.editingSession.model) this.editingSession.model = '';
+      if (this.editingSession.timeout === undefined) this.editingSession.timeout = 0;
       this.showEditModal = true;
     },
 
