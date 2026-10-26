@@ -287,6 +287,21 @@
               <i class="fa-solid fa-chevron-left text-slate-500 text-xs group-hover:text-slate-300"></i>
             </button>
 
+            <!-- Item: Telegram & Communication Channels -->
+            <button @click="showSideDrawer = false; openTelegramModal();"
+                    class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-right group">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
+                  <i class="fa-brands fa-telegram text-sm"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200 group-hover:text-white">قنوات التواصل (Telegram & Bots)</div>
+                  <div class="text-[10px] text-slate-400">إدارة البوتات وتفعيل استقبال الرسائل والملفات</div>
+                </div>
+              </div>
+              <span class="badge badge-xs bg-sky-950 text-sky-300 border-sky-700/50 text-[9px] py-1 px-1.5" x-text="telegramConfigs.length + ' بوت'"></span>
+            </button>
+
             <!-- Item 4: Refresh Sessions Data -->
             <button @click="loadSessions(); showToast('تم تحديث بيانات الجلسات بنجاح', 'success');"
                     class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-right group">
@@ -698,6 +713,9 @@
                   <span x-show="sess.enableMcp !== false" class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="بروتوكول الذاكرة السحابية MCP مفعّل">
                     <i class="fa-solid fa-brain text-purple-400"></i> MemoryZ MCP
                   </span>
+                  <span x-show="sess.telegram && sess.telegram.enabled" class="badge badge-xs bg-sky-950 text-sky-300 border-sky-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="بوت تيليغرام مفعّل لهذه الجلسة">
+                    <i class="fa-brands fa-telegram text-sky-400"></i> Telegram
+                  </span>
                   <span class="badge badge-xs bg-slate-900 border-slate-700 py-1.5 px-2 gap-1 font-mono text-[10px]"
                         :class="sess.timeout ? 'text-amber-300 border-amber-800/40' : 'text-emerald-300 border-emerald-800/40'"
                         :title="sess.timeout ? 'مهلة التنفيذ المحددة: ' + sess.timeout + ' دقيقة' : 'مهلة التنفيذ غير محدودة (مفتوحة)'">
@@ -917,6 +935,9 @@
                     </span>
                     <span x-show="root.enableMcp !== false" class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
                       <i class="fa-solid fa-brain text-purple-400"></i> MemoryZ MCP
+                    </span>
+                    <span x-show="root.telegram && root.telegram.enabled" class="badge badge-xs bg-sky-950 text-sky-300 border-sky-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="بوت تيليغرام مفعّل">
+                      <i class="fa-brands fa-telegram text-sky-400"></i> Telegram
                     </span>
                   </div>
                 </div>
@@ -1279,6 +1300,64 @@
           </label>
         </div>
 
+        <!-- Telegram Integration Section -->
+        <div class="bg-slate-950/70 border border-sky-900/40 rounded-xl p-3 space-y-3">
+          <label class="label cursor-pointer p-0 justify-between">
+            <div class="flex items-center gap-2">
+              <i class="fa-brands fa-telegram text-sky-400 text-base"></i>
+              <div>
+                <div class="text-xs font-bold text-sky-200">ربط بوت تيليغرام (Telegram Bot)</div>
+                <div class="text-[10px] text-slate-400">تواصل عبر التلغرام مع الوكيل واستقبال الملفات والردود</div>
+              </div>
+            </div>
+            <input type="checkbox" x-model="newSession.telegram.enabled" class="checkbox checkbox-sm checkbox-info">
+          </label>
+
+          <div x-show="newSession.telegram.enabled" class="pt-2 border-t border-slate-800/80 space-y-3" x-cloak>
+            <div class="flex items-center gap-4 text-xs">
+              <label class="cursor-pointer flex items-center gap-1.5 text-slate-300">
+                <input type="radio" :value="false" x-model="newSession.telegram.custom" class="radio radio-xs radio-info">
+                <span>اختيار من البوتات المحفوظة</span>
+              </label>
+              <label class="cursor-pointer flex items-center gap-1.5 text-slate-300">
+                <input type="radio" :value="true" x-model="newSession.telegram.custom" class="radio radio-xs radio-info">
+                <span>إدخال بوت مخصص للجلسة</span>
+              </label>
+            </div>
+
+            <!-- Saved Bots Dropdown -->
+            <div x-show="!newSession.telegram.custom">
+              <label class="label pb-1 text-[11px] text-slate-400">اختر حساب التيليغرام:</label>
+              <template x-if="telegramConfigs.length > 0">
+                <select x-model="newSession.telegram.savedConfigId" class="select select-sm select-bordered w-full bg-slate-900 border-slate-700 text-slate-200 text-xs">
+                  <template x-for="cfg in telegramConfigs" :key="cfg.id">
+                    <option :value="cfg.id" x-text="cfg.name + (cfg.chatId ? ' (Chat: ' + cfg.chatId + ')' : '')"></option>
+                  </template>
+                </select>
+              </template>
+              <div x-show="telegramConfigs.length === 0" class="text-[11px] text-amber-400 bg-amber-950/30 p-2 rounded border border-amber-900/40">
+                لا توجد بوتات محفوظة، يرجى اختيار "إدخال بوت مخصص".
+              </div>
+            </div>
+
+            <!-- Custom Bot Inputs -->
+            <div x-show="newSession.telegram.custom" class="space-y-2">
+              <div>
+                <label class="label pb-1 text-[11px] text-slate-400">Bot Token:</label>
+                <input type="text" x-model="newSession.telegram.botToken" placeholder="مثال: 123456:ABC-DEF..." class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+              </div>
+              <div>
+                <label class="label pb-1 text-[11px] text-slate-400">Chat ID / Channel ID (المستلم):</label>
+                <input type="text" x-model="newSession.telegram.chatId" placeholder="مثال: 8478894397" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+              </div>
+              <label class="label cursor-pointer p-0 justify-start gap-2 pt-1">
+                <input type="checkbox" x-model="newSession.telegram.saveNewToConfigs" class="checkbox checkbox-xs checkbox-primary">
+                <span class="text-[11px] text-slate-300">حفظ هذا البوت تلقائياً في قائمة البوتات المحفوظة لاستخدامه في جلسات أخرى</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
         <!-- Allowed Modes -->
         <div class="form-control">
           <label class="label pb-1 font-semibold text-slate-300">الواجهات المتاحة للعضو:</label>
@@ -1420,6 +1499,60 @@
               <option :value="60">ساعة واحدة (60 دقيقة)</option>
               <option :value="120">ساعتان (120 دقيقة)</option>
             </select>
+          </div>
+
+          <!-- Telegram Integration Section for Edit -->
+          <div class="bg-slate-950/70 border border-sky-900/40 rounded-xl p-3 space-y-3">
+            <label class="label cursor-pointer p-0 justify-between">
+              <div class="flex items-center gap-2">
+                <i class="fa-brands fa-telegram text-sky-400 text-base"></i>
+                <div>
+                  <div class="text-xs font-bold text-sky-200">ربط بوت تيليغرام (Telegram Bot)</div>
+                  <div class="text-[10px] text-slate-400">تواصل عبر التلغرام واستقبال الملفات والردود</div>
+                </div>
+              </div>
+              <input type="checkbox" x-model="editingSession.telegram.enabled" class="checkbox checkbox-sm checkbox-info">
+            </label>
+
+            <div x-show="editingSession.telegram.enabled" class="pt-2 border-t border-slate-800/80 space-y-3" x-cloak>
+              <div class="flex items-center gap-4 text-xs">
+                <label class="cursor-pointer flex items-center gap-1.5 text-slate-300">
+                  <input type="radio" :value="false" x-model="editingSession.telegram.custom" class="radio radio-xs radio-info">
+                  <span>اختيار من البوتات المحفوظة</span>
+                </label>
+                <label class="cursor-pointer flex items-center gap-1.5 text-slate-300">
+                  <input type="radio" :value="true" x-model="editingSession.telegram.custom" class="radio radio-xs radio-info">
+                  <span>إدخال بوت مخصص للجلسة</span>
+                </label>
+              </div>
+
+              <!-- Saved Bots Dropdown -->
+              <div x-show="!editingSession.telegram.custom">
+                <label class="label pb-1 text-[11px] text-slate-400">اختر حساب التيليغرام:</label>
+                <template x-if="telegramConfigs.length > 0">
+                  <select x-model="editingSession.telegram.savedConfigId" class="select select-sm select-bordered w-full bg-slate-900 border-slate-700 text-slate-200 text-xs">
+                    <template x-for="cfg in telegramConfigs" :key="cfg.id">
+                      <option :value="cfg.id" x-text="cfg.name + (cfg.chatId ? ' (Chat: ' + cfg.chatId + ')' : '')"></option>
+                    </template>
+                  </select>
+                </template>
+                <div x-show="telegramConfigs.length === 0" class="text-[11px] text-amber-400 bg-amber-950/30 p-2 rounded border border-amber-900/40">
+                  لا توجد بوتات محفوظة، يرجى اختيار "إدخال بوت مخصص".
+                </div>
+              </div>
+
+              <!-- Custom Bot Inputs -->
+              <div x-show="editingSession.telegram.custom" class="space-y-2">
+                <div>
+                  <label class="label pb-1 text-[11px] text-slate-400">Bot Token:</label>
+                  <input type="text" x-model="editingSession.telegram.botToken" placeholder="مثال: 123456:ABC-DEF..." class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                </div>
+                <div>
+                  <label class="label pb-1 text-[11px] text-slate-400">Chat ID / Channel ID (المستلم):</label>
+                  <input type="text" x-model="editingSession.telegram.chatId" placeholder="مثال: 8478894397" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                </div>
+              </div>
+            </div>
           </div>
 
           <div class="form-control">
@@ -1708,6 +1841,166 @@
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
       <button @click="showOrchestratorModal = false">إغلاق</button>
+    </form>
+  </dialog>
+
+  <!-- ==================== TELEGRAM BOTS & CHANNELS MANAGEMENT MODAL ==================== -->
+  <dialog class="modal modal-bottom sm:modal-middle" :class="showTelegramModal ? 'modal-open' : ''" x-cloak>
+    <div class="modal-box bg-slate-900 border border-sky-500/30 text-slate-100 max-w-2xl space-y-4 shadow-2xl backdrop-blur-xl p-0 overflow-hidden">
+      
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-sky-950/80 via-slate-900 to-slate-900 p-5 border-b border-sky-500/20 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-sky-500/20 border border-sky-500/40 flex items-center justify-center text-sky-400 shadow-lg shadow-sky-500/10">
+            <i class="fa-brands fa-telegram text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-black text-white font-sans flex items-center gap-2">
+              <span>قنوات التواصل وبوتات التلغرام</span>
+              <span class="badge badge-xs bg-sky-950 text-sky-300 border-sky-500/40">Telegram Bot API</span>
+            </h3>
+            <p class="text-xs text-slate-400">إدارة البوتات المحفوظة وربطها مع الوكلاء للمحادثة وتبادل الملفات</p>
+          </div>
+        </div>
+        <button @click="showTelegramModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <div class="p-5 space-y-5 max-h-[75vh] overflow-y-auto">
+        
+        <!-- Saved Bots List -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-300 flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-sky-400"></i>
+              <span>البوتات والحسابات المحفوظة</span>
+            </span>
+            <span class="badge badge-neutral badge-xs font-mono" x-text="telegramConfigs.length + ' حسابات'"></span>
+          </div>
+
+          <div class="space-y-2">
+            <template x-for="cfg in telegramConfigs" :key="cfg.id">
+              <div class="p-3 rounded-xl bg-slate-950/80 border border-slate-800 hover:border-sky-500/30 flex items-center justify-between gap-3 transition-all">
+                <div class="space-y-1 min-w-0">
+                  <div class="flex items-center gap-2">
+                    <span class="font-bold text-xs text-slate-200" x-text="cfg.name"></span>
+                    <span class="badge badge-xs" :class="cfg.enabled ? 'bg-emerald-950 text-emerald-300 border-emerald-800/40' : 'bg-slate-800 text-slate-400'">
+                      <span x-text="cfg.enabled ? 'مفعّل' : 'معطّل'"></span>
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-3 text-[10px] text-slate-400 font-mono">
+                    <span>Chat ID: <span class="text-sky-300" x-text="cfg.chatId || 'غير محدد'"></span></span>
+                    <span>Token: <span class="text-slate-500" x-text="cfg.botToken ? '...' + cfg.botToken.slice(-8) : 'فارغ'"></span></span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <button @click="testTelegramToken(cfg.botToken)" :disabled="testingTelegramToken" class="btn btn-xs bg-sky-950 hover:bg-sky-900 border border-sky-500/40 text-sky-300 gap-1 text-[11px]" title="فحص الاتصال">
+                    <i class="fa-solid fa-signal text-[10px]"></i>
+                    <span>فحص</span>
+                  </button>
+                  <button @click="editTelegramConfig(cfg)" class="btn btn-xs btn-ghost text-slate-300 hover:text-white" title="تعديل">
+                    <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                  </button>
+                  <button @click="deleteTelegramConfig(cfg.id)" class="btn btn-xs btn-ghost text-rose-400 hover:bg-rose-950/40" title="حذف">
+                    <i class="fa-solid fa-trash-can text-[11px]"></i>
+                  </button>
+                </div>
+              </div>
+            </template>
+
+            <div x-show="telegramConfigs.length === 0" class="p-4 rounded-xl bg-slate-950/50 border border-dashed border-slate-800 text-center text-xs text-slate-500">
+              لا توجد بوتات محفوظة حتى الآن. أضف بوتك الأول أدناه.
+            </div>
+          </div>
+        </div>
+
+        <!-- Add / Edit Bot Form -->
+        <div class="bg-slate-950/90 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2">
+            <span class="text-xs font-bold text-sky-300 flex items-center gap-2">
+              <i class="fa-solid fa-robot"></i>
+              <span x-text="newTgConfig.id ? 'تعديل حساب بوت تلغرام' : 'إضافة حساب بوت تلغرام جديد'"></span>
+            </span>
+            <button x-show="newTgConfig.id" @click="resetTelegramForm()" class="btn btn-xs btn-ghost text-slate-400 text-[10px]">
+              إلغاء التعديل
+            </button>
+          </div>
+
+          <form @submit.prevent="saveTelegramConfig" class="space-y-3 text-xs">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label class="label pb-1 text-slate-300">اسم الحساب / التسمية:</label>
+                <input type="text" x-model="newTgConfig.name" required placeholder="مثال: بوت المطور الأساسي، قناة الفريق..." class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 text-xs">
+              </div>
+              <div>
+                <label class="label pb-1 text-slate-300">Chat ID / معرف المحادثة أو القناة:</label>
+                <input type="text" x-model="newTgConfig.chatId" placeholder="مثال: 8478894397 أو -100xxx" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+              </div>
+            </div>
+
+            <div>
+              <label class="label pb-1 text-slate-300">Bot Token (من BotFather):</label>
+              <div class="flex items-center gap-2">
+                <input type="text" x-model="newTgConfig.botToken" required placeholder="مثال: 7123456789:AAFAN2cHvjrvJ1Tu..." class="input input-sm input-bordered flex-1 bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                <button type="button" @click="testTelegramToken()" :disabled="testingTelegramToken || !newTgConfig.botToken.trim()" class="btn btn-sm bg-sky-900/60 hover:bg-sky-800 border border-sky-500/40 text-sky-200 gap-1.5 shrink-0 text-xs">
+                  <span x-show="testingTelegramToken" class="loading loading-spinner loading-xs"></span>
+                  <i x-show="!testingTelegramToken" class="fa-solid fa-bolt-lightning text-xs"></i>
+                  <span>اختبار الاتصال</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Test Result Banner -->
+            <div x-show="telegramTestResult" class="p-3 rounded-lg text-xs" :class="telegramTestResult?.success ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-300' : 'bg-rose-950/40 border border-rose-500/40 text-rose-300'" x-cloak>
+              <div class="flex items-center gap-2 font-bold">
+                <i :class="telegramTestResult?.success ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-circle-xmark text-rose-400'"></i>
+                <span x-text="telegramTestResult?.success ? 'الاتصال ناجح! معلومات البوت:' : 'فشل الاتصال:'"></span>
+              </div>
+              <div x-show="telegramTestResult?.success" class="mt-1 font-mono text-[11px] space-y-0.5">
+                <div>الاسم: <span class="text-white" x-text="telegramTestResult?.bot?.first_name"></span></div>
+                <div>اليوزر: <span class="text-cyan-300" x-text="'@' + telegramTestResult?.bot?.username"></span></div>
+              </div>
+              <div x-show="!telegramTestResult?.success" class="mt-1 text-[11px]" x-text="telegramTestResult?.error"></div>
+            </div>
+
+            <div class="flex items-center justify-between pt-1">
+              <label class="label cursor-pointer p-0 gap-2">
+                <input type="checkbox" x-model="newTgConfig.enabled" class="checkbox checkbox-xs checkbox-info">
+                <span class="text-xs text-slate-300">تفعيل الاستماع للبوت فورياً</span>
+              </label>
+
+              <button type="submit" class="btn btn-sm btn-primary bg-sky-600 hover:bg-sky-500 border-none text-white gap-1.5">
+                <i class="fa-solid fa-save text-xs"></i>
+                <span x-text="newTgConfig.id ? 'تحديث الحساب' : 'حفظ البوت'"></span>
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <!-- Telegram Capabilities & Instructions Card -->
+        <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2.5 text-xs">
+          <div class="font-bold text-slate-200 flex items-center gap-2">
+            <i class="fa-solid fa-lightbulb text-amber-400"></i>
+            <span>كيف يعمل البوت مع الوكلاء؟</span>
+          </div>
+          <ul class="space-y-1.5 text-slate-400 text-[11px] list-disc list-inside">
+            <li><strong class="text-slate-300">أمر /sessions:</strong> يعرض الجلسات المرتبطة مع أزرار مضمنة لاختيار الجلسة النشطة بنقرة واحدة.</li>
+            <li><strong class="text-slate-300">الرد المباشر (Reply):</strong> إذا قمت بالرد (Reply) على أي رسالة من الوكيل، يتعرف البوت على الجلسة ويوجه الرد إليها تلقائياً!</li>
+            <li><strong class="text-slate-300">رفع الملفات:</strong> أرسل أي ملف أو صورة إلى البوت، وسيتم حفظها فوراً في مجلد الجلسة وإبلاغ الوكيل بمسارها.</li>
+            <li><strong class="text-slate-300">تنزيل الملفات:</strong> اطلب ملفاً بأمر <code class="text-sky-300 font-mono">/getfile &lt;filename&gt;</code> أو استعرض محتويات المسار بأمر <code class="text-sky-300 font-mono">/files</code>.</li>
+            <li><strong class="text-slate-300">معرف الجلسة في الردود:</strong> كل رد قادم من الوكيل يوضح في رأسه معرف الجلسة واسمها بدقة لتجنب أي التباس.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-end">
+        <button @click="showTelegramModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+      </div>
+
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+      <button @click="showTelegramModal = false">إغلاق</button>
     </form>
   </dialog>
 

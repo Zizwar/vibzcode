@@ -24,6 +24,7 @@ const {
 } = require('./lib/chatLogger');
 const { getSettings, updateSettings } = require('./lib/jevClient');
 const { loadEnv, checkKeysStatus, saveKeys } = require('./lib/envHelper');
+const ChannelManager = require('./lib/channels');
 
 // Automatically load .env if available
 loadEnv(true);
@@ -163,6 +164,17 @@ setupRemoteMcp(app, {
   appendSessionChatMessage,
   activeChatJobs,
   activeChatProcesses
+});
+
+// Initialize VibzCode Channel Manager (Telegram & Bot Connectors)
+const channelManager = new ChannelManager({
+  dataDir: DATA_DIR,
+  getSessions: () => sessions,
+  saveSessions: saveSessions,
+  dispatchChat: async (opts) => {
+    return await dispatchSessionChatTask(opts);
+  },
+  logger: console
 });
 
 // ==================== AUTH & ADMIN APIS ====================
@@ -379,14 +391,31 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
     allowedModes: allowedModes || 'both',
     enableMcp: req.body.enableMcp !== false,
     timeout: req.body.timeout !== undefined ? (parseInt(req.body.timeout, 10) || 0) : 0,
+    telegram: req.body.telegram ? {
+      enabled: req.body.telegram.enabled === true,
+      botToken: (req.body.telegram.botToken || '').trim(),
+      chatId: (req.body.telegram.chatId || '').trim(),
+      savedConfigId: (req.body.telegram.savedConfigId || '').trim()
+    } : { enabled: false },
     status: 'active',
     createdAt: new Date().toISOString(),
     lastActive: new Date().toISOString(),
     stats: { messagesCount: 0 }
   };
 
+  // If new telegram config should be saved globally
+  if (req.body.telegram && req.body.telegram.saveNewToConfigs && req.body.telegram.botToken) {
+    channelManager.telegram.addOrUpdateConfig({
+      name: `${name} Bot`,
+      botToken: req.body.telegram.botToken,
+      chatId: req.body.telegram.chatId,
+      enabled: true
+    });
+  }
+
   sessions.unshift(newSession);
   saveSessions(sessions);
+  channelManager.telegram.restartAllListeners();
 
   return res.json({ success: true, session: newSession });
 });
@@ -413,13 +442,20 @@ app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
     return res.status(404).json({ success: false, error: 'الجلسة غير موجودة' });
   }
 
-  const allowedUpdates = ['name', 'assignee', 'role', 'systemPrompt', 'namespace', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'timeout', 'status', 'isPinned', 'isFavorite'];
+  const allowedUpdates = ['name', 'assignee', 'role', 'systemPrompt', 'namespace', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'timeout', 'status', 'isPinned', 'isFavorite', 'telegram'];
   for (const key of allowedUpdates) {
     if (req.body[key] !== undefined) {
       if (key === 'targetDir') {
         sessions[index][key] = path.resolve(req.body[key]);
       } else if (key === 'timeout') {
         sessions[index][key] = parseInt(req.body[key], 10) || 0;
+      } else if (key === 'telegram') {
+        sessions[index][key] = req.body[key] ? {
+          enabled: req.body[key].enabled === true,
+          botToken: (req.body[key].botToken || '').trim(),
+          chatId: (req.body[key].chatId || '').trim(),
+          savedConfigId: (req.body[key].savedConfigId || '').trim()
+        } : { enabled: false };
       } else {
         sessions[index][key] = req.body[key];
       }
@@ -427,6 +463,7 @@ app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
   }
 
   saveSessions(sessions);
+  channelManager.telegram.restartAllListeners();
   return res.json({ success: true, session: sessions[index] });
 });
 
@@ -468,6 +505,40 @@ app.delete('/api/admin/sessions/:id', requireAdmin, (req, res) => {
   }
 
   return res.json({ success: true, message: 'تم حذف الجلسة بنجاح' });
+});
+
+// ==================== TELEGRAM INTEGRATION APIS ====================
+
+// Get Saved Telegram Configs
+app.get('/api/admin/telegram/configs', requireAdmin, (req, res) => {
+  return res.json({ success: true, configs: channelManager.telegram.getConfigs() });
+});
+
+// Save or Update Telegram Config
+app.post('/api/admin/telegram/configs', requireAdmin, (req, res) => {
+  const { id, name, botToken, chatId, enabled } = req.body;
+  if (!botToken || !botToken.trim()) {
+    return res.status(400).json({ success: false, error: 'يرجى إدخال Bot Token' });
+  }
+  const saved = channelManager.telegram.addOrUpdateConfig({ id, name, botToken, chatId, enabled });
+  return res.json({ success: true, config: saved });
+});
+
+// Delete Telegram Config
+app.delete('/api/admin/telegram/configs/:id', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  channelManager.telegram.deleteConfig(id);
+  return res.json({ success: true });
+});
+
+// Test Telegram Bot Token
+app.post('/api/admin/telegram/test', requireAdmin, async (req, res) => {
+  const { botToken } = req.body;
+  if (!botToken || !botToken.trim()) {
+    return res.status(400).json({ success: false, error: 'يرجى إدخال Bot Token' });
+  }
+  const testRes = await channelManager.telegram.testToken(botToken);
+  return res.json(testRes);
 });
 
 // ==================== MEMBER / SESSION APIS ====================
@@ -1008,6 +1079,269 @@ app.post('/api/session/workspace/fetch-url', async (req, res) => {
   }
 });
 
+// Central Session Chat Dispatcher (Shared by Web API, Telegram Bot, and external channels)
+async function dispatchSessionChatTask({
+  session,
+  prompt,
+  memoryRefs = [],
+  conversationId = null,
+  continueSession = true,
+  isFirstForkTurn = false,
+  isAdmin = false,
+  source = 'web',
+  telegramMeta = null
+}) {
+  const userPrompt = (prompt || '').trim();
+  if (!userPrompt) {
+    throw new Error('نص البرومبت فارغ');
+  }
+
+  // 1. Attach MemoryZ memories if provided
+  let finalPrompt = userPrompt;
+  if (Array.isArray(memoryRefs) && memoryRefs.length > 0) {
+    try {
+      const memoryXml = await memoryz.resolveMemoryAttachments(memoryRefs);
+      if (memoryXml) {
+        finalPrompt = `${memoryXml}${finalPrompt}`;
+      }
+    } catch (e) {
+      console.warn('Could not attach MemoryZ references:', e.message);
+    }
+  }
+
+  // 1b. If session is forked and starting its branch, inject clean context up to the fork point
+  if (session.forkedFrom && (!conversationId || isFirstForkTurn)) {
+    try {
+      const pastMessages = getSessionChatMessages(session.id);
+      if (pastMessages && pastMessages.length > 0) {
+        const contextTurns = pastMessages.map(m => {
+          const roleLabel = m.role === 'user' ? 'المستخدم (User)' : 'المساعد (AI Assistant)';
+          const text = (m.content || '').trim();
+          return `[${roleLabel}]:\n${text}`;
+        }).join('\n\n---\n\n');
+
+        const forkNotice = `[تنبيه سياق التفريع / Forked Branch Context]:
+هذه جلسة متفرعة (Fork) من الجلسة: "${session.forkedFrom.sessionName}".
+المطلوب منك هو إكمال العمل على المسار الجديد بناءً على سياق الحوار السابق حتى نقطة التفريع، واستبعاد أي مهام أو أحداث لم تكن موجودة في هذا السياق:
+
+--- بداية سياق الحوار السابق ---
+${contextTurns}
+--- نهاية سياق الحوار السابق ---
+
+`;
+        finalPrompt = `${forkNotice}${finalPrompt}`;
+      }
+    } catch (e) {
+      console.warn('Could not inject fork context:', e.message);
+    }
+  }
+
+  // 2. Immediately record user prompt in server chat log
+  appendSessionChatMessage(session.id, {
+    id: Date.now(),
+    role: 'user',
+    content: userPrompt,
+    source: source || 'web',
+    time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+  });
+
+  const startTime = Date.now();
+
+  // 3. Register job in persistent jobs manager
+  const job = await jobsManager.createJob({
+    sessionId: session.id,
+    engine: session.engine || 'agy',
+    model: session.model || '',
+    targetDir: session.targetDir,
+    prompt: userPrompt,
+    memoryRefs
+  });
+
+  // 4. Register job state for active client polling & workflow tracking
+  const jobRecord = {
+    jobId: job.jobId,
+    sessionId: session.id,
+    prompt: userPrompt,
+    startTime,
+    status: 'running',
+    response: null,
+    currentStep: null,
+    partialText: '',
+    intermediateMessages: [],
+    steps: []
+  };
+  activeChatJobs.set(session.id, jobRecord);
+
+  // 5. Execute engine asynchronously with real-time progress callbacks
+  const configuredTimeout = session.timeoutMs ?? (session.timeout ? session.timeout * 60000 : 0) ?? (process.env.SESSION_TIMEOUT_MS ? parseInt(process.env.SESSION_TIMEOUT_MS, 10) : 0);
+
+  return new Promise((resolve, reject) => {
+    executeEngineTask(session, finalPrompt, {
+      conversationId,
+      continueSession,
+      timeout: configuredTimeout,
+      systemPrompt: session.systemPrompt,
+      onSpawn: (child) => {
+        activeChatProcesses.set(session.token, child);
+        jobsManager.registerProcess(job.jobId, child);
+      },
+      onUpdate: (evt) => {
+        if (evt.type === 'tool_start') {
+          const cmd = evt.toolInfo?.parameters?.CommandLine || evt.toolInfo?.parameters?.command || evt.toolInfo?.parameters?.TargetFile || '';
+          jobRecord.currentStep = {
+            name: evt.toolName,
+            detail: cmd,
+            startTime: Date.now(),
+            status: 'running'
+          };
+        } else if (evt.type === 'tool_end') {
+          if (jobRecord.currentStep && jobRecord.currentStep.status === 'running') {
+            jobRecord.currentStep.status = 'done';
+            jobRecord.currentStep.duration = evt.duration;
+          }
+          jobRecord.steps.push({
+            name: evt.toolName,
+            detail: evt.toolInfo?.parameters?.CommandLine || evt.toolInfo?.parameters?.command || '',
+            duration: evt.duration,
+            status: 'done'
+          });
+        } else if (evt.type === 'text_delta') {
+          jobRecord.partialText = (jobRecord.partialText || '') + evt.delta;
+        } else if (evt.type === 'intermediate_message' && evt.intermediateMessage) {
+          const msgText = (evt.intermediateMessage.content || evt.text || '').trim();
+          if (msgText) {
+            const intermediateObj = {
+              id: Date.now(),
+              role: 'assistant',
+              content: msgText,
+              isIntermediate: true,
+              time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+            };
+            jobRecord.intermediateMessages.push(intermediateObj);
+            appendSessionChatMessage(session.id, intermediateObj);
+          }
+        }
+      }
+    }).then(async (result) => {
+      activeChatProcesses.delete(session.token);
+
+      // Update Session Stats
+      if (!isAdmin) {
+        session.lastActive = new Date().toISOString();
+        session.stats.messagesCount = (session.stats.messagesCount || 0) + 1;
+        saveSessions(sessions);
+      }
+
+      // Determine final content - if an intermediate message was already posted, avoid repeating it
+      let finalContent = (result.responseText || '').trim();
+      if (jobRecord.intermediateMessages && jobRecord.intermediateMessages.length > 0) {
+        for (const im of jobRecord.intermediateMessages) {
+          const imContent = (im.content || '').trim();
+          if (imContent && finalContent.startsWith(imContent)) {
+            finalContent = finalContent.slice(imContent.length).trim();
+          }
+        }
+      }
+
+      const hasFinalText = finalContent.length > 0;
+      const contentToPost = hasFinalText ? finalContent : (jobRecord.intermediateMessages.length === 0 ? (result.responseText || 'تمت العملية بنجاح') : null);
+
+      let assistantMsg = null;
+      if (contentToPost) {
+        assistantMsg = {
+          id: Date.now(),
+          role: 'assistant',
+          content: contentToPost,
+          conversationId: result.conversationId,
+          duration: result.duration,
+          isError: result.isError,
+          steps: jobRecord.steps && jobRecord.steps.length > 0 ? jobRecord.steps : undefined,
+          time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+        };
+        appendSessionChatMessage(session.id, assistantMsg);
+      }
+
+      // Complete persistent job
+      await jobsManager.completeJob(job.jobId, {
+        responseText: result.responseText,
+        conversationId: result.conversationId,
+        duration: result.duration,
+        isError: result.isError,
+        usage: result.usage
+      });
+
+      // Update memory job record for legacy polling
+      jobRecord.status = result.isError ? 'error' : 'done';
+      jobRecord.response = result.responseText;
+      jobRecord.conversationId = result.conversationId;
+      jobRecord.duration = result.duration;
+      jobRecord.isError = result.isError;
+      jobRecord.completedAt = Date.now();
+      jobRecord.currentStep = null;
+
+      setTimeout(() => {
+        if (activeChatJobs.get(session.id) === jobRecord) {
+          activeChatJobs.delete(session.id);
+        }
+      }, 180000);
+
+      // Broadcast Agent Response to active channels (e.g. Telegram)
+      if (channelManager) {
+        channelManager.broadcastAgentResponse(session, contentToPost || result.responseText, {
+          duration: result.duration,
+          isError: result.isError,
+          source
+        });
+      }
+
+      resolve({
+        success: !result.isError,
+        response: result.responseText,
+        responseText: result.responseText,
+        conversationId: result.conversationId,
+        duration: result.duration,
+        status: 'completed',
+        usage: result.usage,
+        isError: result.isError,
+        steps: jobRecord.steps
+      });
+    }).catch(async (err) => {
+      activeChatProcesses.delete(session.token);
+
+      const errorMsg = err.message || 'خطأ أثناء تنفيذ العملية';
+      const assistantMsg = {
+        id: Date.now(),
+        role: 'assistant',
+        content: errorMsg,
+        isError: true,
+        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
+      };
+      appendSessionChatMessage(session.id, assistantMsg);
+
+      await jobsManager.completeJob(job.jobId, {
+        responseText: '',
+        isError: true,
+        error: errorMsg
+      });
+
+      jobRecord.status = 'error';
+      jobRecord.response = errorMsg;
+      jobRecord.isError = true;
+      jobRecord.completedAt = Date.now();
+
+      if (channelManager) {
+        channelManager.broadcastAgentResponse(session, `❌ خطأ أثناء تنفيذ العملية: ${errorMsg}`, {
+          duration: '0s',
+          isError: true,
+          source
+        });
+      }
+
+      reject(err);
+    });
+  });
+}
+
 // Member / Agent Chat Execution (Background-Persistent with Multi-Engine & MemoryZ Support)
 app.post('/api/session/chat', async (req, res) => {
   const token = getAuthToken(req);
@@ -1056,251 +1390,47 @@ app.post('/api/session/chat', async (req, res) => {
     });
   }
 
-  // Disable socket timeouts for this request so long-running operations (video generation, builds) never get prematurely dropped
+  // Disable socket timeouts for this request so long-running operations never get prematurely dropped
   req.setTimeout(0);
   res.setTimeout(0);
 
-  const { prompt, conversationId, continueSession } = req.body;
+  const { prompt, conversationId, continueSession, isFirstForkTurn } = req.body;
   if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
     return res.status(400).json({ success: false, error: 'نص البرومبت فارغ' });
   }
 
-  const userPrompt = prompt.trim();
-  const startTime = Date.now();
-
-  // 1. Attach MemoryZ memories if provided
-  let finalPrompt = userPrompt;
-  const memoryRefs = req.body.memoryRefs || req.body.memory_refs || [];
-  if (Array.isArray(memoryRefs) && memoryRefs.length > 0) {
-    try {
-      const memoryXml = await memoryz.resolveMemoryAttachments(memoryRefs);
-      if (memoryXml) {
-        finalPrompt = `${memoryXml}${finalPrompt}`;
-      }
-    } catch (e) {
-      console.warn('Could not attach MemoryZ references:', e.message);
-    }
-  }
-
-  // 1b. If session is forked and starting its branch, inject clean context up to the fork point
-  if (session.forkedFrom && (!conversationId || req.body.isFirstForkTurn)) {
-    try {
-      const pastMessages = getSessionChatMessages(session.id);
-      if (pastMessages && pastMessages.length > 0) {
-        const contextTurns = pastMessages.map(m => {
-          const roleLabel = m.role === 'user' ? 'المستخدم (User)' : 'المساعد (AI Assistant)';
-          const text = (m.content || '').trim();
-          return `[${roleLabel}]:\n${text}`;
-        }).join('\n\n---\n\n');
-
-        const forkNotice = `[تنبيه سياق التفريع / Forked Branch Context]:
-هذه جلسة متفرعة (Fork) من الجلسة: "${session.forkedFrom.sessionName}".
-المطلوب منك هو إكمال العمل على المسار الجديد بناءً على سياق الحوار السابق حتى نقطة التفريع، واستبعاد أي مهام أو أحداث لم تكن موجودة في هذا السياق:
-
---- بداية سياق الحوار السابق ---
-${contextTurns}
---- نهاية سياق الحوار السابق ---
-
-`;
-        finalPrompt = `${forkNotice}${finalPrompt}`;
-      }
-    } catch (e) {
-      console.warn('Could not inject fork context:', e.message);
-    }
-  }
-
-  // 2. Immediately record user prompt in server chat log
-  appendSessionChatMessage(session.id, {
-    id: Date.now(),
-    role: 'user',
-    content: userPrompt,
-    time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-  });
-
-  // 3. Register job in persistent jobs manager
-  const job = await jobsManager.createJob({
-    sessionId: session.id,
-    engine: session.engine || 'agy',
-    model: session.model || '',
-    targetDir: session.targetDir,
-    prompt: userPrompt,
-    memoryRefs
-  });
-
-  // 4. Register job state for active client polling & workflow tracking
-  const jobRecord = {
-    jobId: job.jobId,
-    sessionId: session.id,
-    prompt: userPrompt,
-    startTime,
-    status: 'running',
-    response: null,
-    currentStep: null,
-    partialText: '',
-    intermediateMessages: [],
-    steps: []
-  };
-  activeChatJobs.set(session.id, jobRecord);
-
-  // 5. Execute engine asynchronously with real-time progress callbacks
-  const configuredTimeout = session.timeoutMs ?? (session.timeout ? session.timeout * 60000 : 0) ?? (process.env.SESSION_TIMEOUT_MS ? parseInt(process.env.SESSION_TIMEOUT_MS, 10) : 0);
-  executeEngineTask(session, finalPrompt, {
-    conversationId,
-    continueSession,
-    timeout: configuredTimeout,
-    systemPrompt: session.systemPrompt,
-    onSpawn: (child) => {
-      activeChatProcesses.set(session.token, child);
-      jobsManager.registerProcess(job.jobId, child);
-    },
-    onUpdate: (evt) => {
-      if (evt.type === 'tool_start') {
-        const cmd = evt.toolInfo?.parameters?.CommandLine || evt.toolInfo?.parameters?.command || evt.toolInfo?.parameters?.TargetFile || '';
-        jobRecord.currentStep = {
-          name: evt.toolName,
-          detail: cmd,
-          startTime: Date.now(),
-          status: 'running'
-        };
-      } else if (evt.type === 'tool_end') {
-        if (jobRecord.currentStep && jobRecord.currentStep.status === 'running') {
-          jobRecord.currentStep.status = 'done';
-          jobRecord.currentStep.duration = evt.duration;
-        }
-        jobRecord.steps.push({
-          name: evt.toolName,
-          detail: evt.toolInfo?.parameters?.CommandLine || evt.toolInfo?.parameters?.command || '',
-          duration: evt.duration,
-          status: 'done'
-        });
-      } else if (evt.type === 'text_delta') {
-        jobRecord.partialText = (jobRecord.partialText || '') + evt.delta;
-      } else if (evt.type === 'intermediate_message' && evt.intermediateMessage) {
-        const msgText = (evt.intermediateMessage.content || evt.text || '').trim();
-        if (msgText) {
-          const intermediateObj = {
-            id: Date.now(),
-            role: 'assistant',
-            content: msgText,
-            isIntermediate: true,
-            time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-          };
-          jobRecord.intermediateMessages.push(intermediateObj);
-          // Persist intermediate response immediately in the session chat log!
-          appendSessionChatMessage(session.id, intermediateObj);
-        }
-      }
-    }
-  }).then(async (result) => {
-    activeChatProcesses.delete(session.token);
-
-    // Update Session Stats
-    if (!isAdmin) {
-      session.lastActive = new Date().toISOString();
-      session.stats.messagesCount = (session.stats.messagesCount || 0) + 1;
-      saveSessions(sessions);
-    }
-
-    // Determine final content - if an intermediate message was already posted, avoid repeating it
-    let finalContent = (result.responseText || '').trim();
-    if (jobRecord.intermediateMessages && jobRecord.intermediateMessages.length > 0) {
-      for (const im of jobRecord.intermediateMessages) {
-        const imContent = (im.content || '').trim();
-        if (imContent && finalContent.startsWith(imContent)) {
-          finalContent = finalContent.slice(imContent.length).trim();
-        }
-      }
-    }
-
-    const hasFinalText = finalContent.length > 0;
-    const contentToPost = hasFinalText ? finalContent : (jobRecord.intermediateMessages.length === 0 ? (result.responseText || 'تمت العملية بنجاح') : null);
-
-    let assistantMsg = null;
-    if (contentToPost) {
-      assistantMsg = {
-        id: Date.now(),
-        role: 'assistant',
-        content: contentToPost,
-        conversationId: result.conversationId,
-        duration: result.duration,
-        isError: result.isError,
-        steps: jobRecord.steps && jobRecord.steps.length > 0 ? jobRecord.steps : undefined,
-        time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-      };
-      // Save assistant message to server chat log
-      appendSessionChatMessage(session.id, assistantMsg);
-    }
-
-    // Complete persistent job
-    await jobsManager.completeJob(job.jobId, {
-      responseText: result.responseText,
-      conversationId: result.conversationId,
-      duration: result.duration,
-      isError: result.isError,
-      usage: result.usage
+  try {
+    const outcome = await dispatchSessionChatTask({
+      session,
+      prompt,
+      memoryRefs: req.body.memoryRefs || req.body.memory_refs || [],
+      conversationId,
+      continueSession,
+      isFirstForkTurn,
+      isAdmin,
+      source: 'web'
     });
 
-    // Update memory job record for legacy polling
-    jobRecord.status = result.isError ? 'error' : 'done';
-    jobRecord.response = result.responseText;
-    jobRecord.conversationId = result.conversationId;
-    jobRecord.duration = result.duration;
-    jobRecord.isError = result.isError;
-    jobRecord.completedAt = Date.now();
-    jobRecord.currentStep = null;
-
-    setTimeout(() => {
-      if (activeChatJobs.get(session.id) === jobRecord) {
-        activeChatJobs.delete(session.id);
-      }
-    }, 180000);
-
-    if (!res.headersSent) {
-      if (result.isError) {
-        return res.status(500).json({
-          success: false,
-          error: result.responseText,
-          duration: result.duration,
-          conversationId: result.conversationId
-        });
-      }
-      return res.json({
-        success: true,
-        response: result.responseText,
-        conversationId: result.conversationId,
-        duration: result.duration,
-        status: 'completed',
-        usage: result.usage
+    if (outcome.isError) {
+      return res.status(500).json({
+        success: false,
+        error: outcome.responseText,
+        duration: outcome.duration,
+        conversationId: outcome.conversationId
       });
     }
-  }).catch(async (err) => {
-    activeChatProcesses.delete(session.token);
 
-    const errorMsg = err.message || 'خطأ أثناء تنفيذ العملية';
-    const assistantMsg = {
-      id: Date.now(),
-      role: 'assistant',
-      content: errorMsg,
-      isError: true,
-      time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
-    };
-    appendSessionChatMessage(session.id, assistantMsg);
-
-    await jobsManager.completeJob(job.jobId, {
-      responseText: '',
-      isError: true,
-      error: errorMsg
+    return res.json({
+      success: true,
+      response: outcome.responseText,
+      conversationId: outcome.conversationId,
+      duration: outcome.duration,
+      status: 'completed',
+      usage: outcome.usage
     });
-
-    jobRecord.status = 'error';
-    jobRecord.response = errorMsg;
-    jobRecord.isError = true;
-    jobRecord.completedAt = Date.now();
-
-    if (!res.headersSent) {
-      return res.status(500).json({ success: false, error: errorMsg });
-    }
-  });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message || 'خطأ أثناء تنفيذ العملية' });
+  }
 });
 
 // Check Active Background Chat Job for Session
@@ -1781,4 +1911,7 @@ server.listen(PORT, '0.0.0.0', () => {
   console.log(`🔑 Admin URL: http://localhost:${PORT}/`);
   console.log(`🧠 Orchestrator MCP: http://localhost:${PORT}/mcp/orchestrator?token=<ADMIN_SECRET>`);
   console.log(`=======================================================`);
+
+  // Initialize channels (Telegram bot & listeners)
+  channelManager.init();
 });

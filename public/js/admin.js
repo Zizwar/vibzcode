@@ -46,7 +46,29 @@ document.addEventListener('alpine:init', () => {
       continueSession: true,
       allowedModes: 'both',
       enableMcp: true,
-      timeout: 0
+      timeout: 0,
+      telegram: {
+        enabled: false,
+        savedConfigId: '',
+        custom: false,
+        botToken: '',
+        chatId: '',
+        saveNewToConfigs: false
+      }
+    },
+
+    // Telegram Bot & Communication Channels State
+    telegramConfigs: [],
+    loadingTelegram: false,
+    showTelegramModal: false,
+    telegramTestResult: null,
+    testingTelegramToken: false,
+    newTgConfig: {
+      id: '',
+      name: '',
+      botToken: '',
+      chatId: '',
+      enabled: true
     },
 
     // Edit Modal State
@@ -196,6 +218,7 @@ document.addEventListener('alpine:init', () => {
           this.loadSessions();
           this.loadFolders();
           this.loadSettings();
+          this.loadTelegramConfigs();
         } else {
           this.authError = data.error || 'فشل تسجيل الدخول';
         }
@@ -221,6 +244,7 @@ document.addEventListener('alpine:init', () => {
           this.loadSessions();
           this.loadFolders();
           this.loadSettings();
+          this.loadTelegramConfigs();
         } else {
           this.handleLogout();
         }
@@ -598,7 +622,15 @@ document.addEventListener('alpine:init', () => {
         continueSession: true,
         allowedModes: 'both',
         enableMcp: true,
-        timeout: 0
+        timeout: 0,
+        telegram: {
+          enabled: false,
+          savedConfigId: this.telegramConfigs.length > 0 ? this.telegramConfigs[0].id : '',
+          custom: false,
+          botToken: '',
+          chatId: '',
+          saveNewToConfigs: false
+        }
       };
       this.loadFolderTree();
       this.showCreateModal = true;
@@ -616,25 +648,28 @@ document.addEventListener('alpine:init', () => {
 
       this.creatingSession = true;
       try {
+        const payload = {
+          name: this.newSession.name,
+          assignee: this.newSession.assignee,
+          targetDir: finalDir,
+          engine: this.newSession.engine || 'agy',
+          model: this.newSession.model || '',
+          sandbox: this.newSession.sandbox,
+          autoApprove: this.newSession.autoApprove,
+          continueSession: this.newSession.continueSession,
+          allowedModes: this.newSession.allowedModes,
+          enableMcp: this.newSession.enableMcp,
+          timeout: this.newSession.timeout !== undefined ? this.newSession.timeout : 0,
+          telegram: this.newSession.telegram
+        };
+
         const res = await fetch('/api/admin/sessions', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': this.adminToken
           },
-          body: JSON.stringify({
-            name: this.newSession.name,
-            assignee: this.newSession.assignee,
-            targetDir: finalDir,
-            engine: this.newSession.engine || 'agy',
-            model: this.newSession.model || '',
-            sandbox: this.newSession.sandbox,
-            autoApprove: this.newSession.autoApprove,
-            continueSession: this.newSession.continueSession,
-            allowedModes: this.newSession.allowedModes,
-            enableMcp: this.newSession.enableMcp,
-            timeout: this.newSession.timeout !== undefined ? this.newSession.timeout : 0
-          })
+          body: JSON.stringify(payload)
         });
 
         const data = await res.json();
@@ -642,6 +677,7 @@ document.addEventListener('alpine:init', () => {
           this.showToast(`تم إنشاء الجلسة بنجاح`, 'success');
           this.showCreateModal = false;
           this.loadSessions();
+          this.loadTelegramConfigs();
         } else {
           alert(data.error || 'فشل إنشاء الجلسة');
         }
@@ -657,6 +693,16 @@ document.addEventListener('alpine:init', () => {
       if (!this.editingSession.engine) this.editingSession.engine = 'agy';
       if (!this.editingSession.model) this.editingSession.model = '';
       if (this.editingSession.timeout === undefined) this.editingSession.timeout = 0;
+      if (!this.editingSession.telegram) {
+        this.editingSession.telegram = {
+          enabled: false,
+          savedConfigId: this.telegramConfigs.length > 0 ? this.telegramConfigs[0].id : '',
+          custom: false,
+          botToken: '',
+          chatId: '',
+          saveNewToConfigs: false
+        };
+      }
       this.showEditModal = true;
     },
 
@@ -799,6 +845,128 @@ document.addEventListener('alpine:init', () => {
         navigator.clipboard.writeText(url).then(() => {
           this.showToast('تم نسخ رابط OpenAPI للأوركسترا العام', 'success');
         });
+      }
+    },
+
+    // ==========================================
+    // TELEGRAM INTEGRATION MANAGEMENT
+    // ==========================================
+
+    openTelegramModal() {
+      this.resetTelegramForm();
+      this.loadTelegramConfigs();
+      this.showTelegramModal = true;
+    },
+
+    resetTelegramForm() {
+      this.newTgConfig = {
+        id: '',
+        name: '',
+        botToken: '',
+        chatId: '',
+        enabled: true
+      };
+      this.telegramTestResult = null;
+    },
+
+    editTelegramConfig(cfg) {
+      this.newTgConfig = JSON.parse(JSON.stringify(cfg));
+      this.telegramTestResult = null;
+    },
+
+    async loadTelegramConfigs() {
+      if (!this.adminToken) return;
+      this.loadingTelegram = true;
+      try {
+        const res = await fetch('/api/admin/telegram/configs', {
+          headers: { 'Authorization': this.adminToken }
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.telegramConfigs = data.configs || [];
+        }
+      } catch (e) {
+        console.warn('Failed to load telegram configs:', e.message);
+      } finally {
+        this.loadingTelegram = false;
+      }
+    },
+
+    async saveTelegramConfig() {
+      if (!this.newTgConfig.botToken || !this.newTgConfig.botToken.trim()) {
+        alert('يرجى إدخال Bot Token للبوت');
+        return;
+      }
+
+      try {
+        const res = await fetch('/api/admin/telegram/configs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.adminToken
+          },
+          body: JSON.stringify(this.newTgConfig)
+        });
+
+        const data = await res.json();
+        if (res.ok && data.success) {
+          this.showToast('تم حفظ إعدادات التيليغرام بنجاح', 'success');
+          this.resetTelegramForm();
+          this.loadTelegramConfigs();
+        } else {
+          alert(data.error || 'فشل حفظ الإعدادات');
+        }
+      } catch (e) {
+        alert('تعذر الاتصال بالخادم لحفظ الإعدادات');
+      }
+    },
+
+    async deleteTelegramConfig(id) {
+      if (!confirm('هل أنت متأكد من رغبتك في حذف هذا الحساب؟')) return;
+      try {
+        const res = await fetch(`/api/admin/telegram/configs/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': this.adminToken }
+        });
+        if (res.ok) {
+          this.showToast('تم حذف الحساب بنجاح', 'info');
+          this.loadTelegramConfigs();
+        }
+      } catch (e) {
+        alert('فشل الحذف');
+      }
+    },
+
+    async testTelegramToken(botToken = null) {
+      const tokenToTest = (botToken || this.newTgConfig.botToken || '').trim();
+      if (!tokenToTest) {
+        alert('يرجى إدخال التوكن لاختباره أولاً');
+        return;
+      }
+
+      this.testingTelegramToken = true;
+      this.telegramTestResult = null;
+
+      try {
+        const res = await fetch('/api/admin/telegram/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.adminToken
+          },
+          body: JSON.stringify({ botToken: tokenToTest })
+        });
+        const data = await res.json();
+        this.telegramTestResult = data;
+        if (data.success) {
+          this.showToast(`✔ البوت متصل بنجاح: @${data.bot?.username}`, 'success');
+        } else {
+          this.showToast(`❌ تعذر الاتصال: ${data.error}`, 'error');
+        }
+      } catch (e) {
+        this.telegramTestResult = { success: false, error: 'تعذر الاتصال بالخادم' };
+      } finally {
+        this.testingTelegramToken = false;
       }
     }
   }));
