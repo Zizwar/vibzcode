@@ -87,10 +87,13 @@ On initial launch, VibzCode automatically probes for essential AI keys:
 
 ## 💻 Quick Start
 
-### Option A: Run directly via NPX (Recommended)
+### Option A: Run directly via NPX or PNPM (Recommended)
 ```bash
 # Launch server and auto-open browser dashboard
 npx vibzcode
+
+# Or via pnpm dlx
+pnpm dlx vibzcode
 
 # Specify custom port
 npx vibzcode --port 3333
@@ -102,9 +105,14 @@ npx vibzcode --no-open
 npx vibzcode --status
 ```
 
-### Option B: Install Globally
+### Option B: Install Globally (NPM or PNPM)
 ```bash
+# Via npm
 npm install -g vibzcode
+vibzcode
+
+# Or via pnpm
+pnpm add -g vibzcode
 vibzcode
 ```
 

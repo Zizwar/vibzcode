@@ -138,9 +138,13 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
       
       <!-- Top Pill -->
-      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-6 shadow-inner">
+      <div class="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-6 shadow-inner">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>الجيل الجديد من بيئات الأتمتة البرمجية متعددة الوكلاء</span>
+        <span>حزمة رسمية معتمدة على npm & npx & pnpm</span>
+        <span class="text-slate-600">|</span>
+        <a href="https://www.npmjs.com/package/vibzcode" target="_blank" rel="noopener noreferrer" class="hover:text-white underline font-mono">
+          npm: vibzcode v2.0.1
+        </a>
       </div>
 
       <!-- Main Headline -->
@@ -151,12 +155,36 @@
       </h1>
 
       <!-- Subtitle -->
-      <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-10 font-normal">
+      <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-8 font-normal">
         منصة <strong>VibzCode</strong> توفر نظام إدارة مركزي متكامل للجلسات البرمجية المستقلة، تدعم محركات 
         <span class="text-cyan-400 font-semibold font-mono">Google Antigravity (AGY)</span> و 
         <span class="text-purple-400 font-semibold font-mono">Claude Code</span>، مع خادم 
         <span class="text-emerald-400 font-semibold font-mono">Remote MCP</span> موحد للربط المباشر مع Cursor و Claude و ChatGPT.
       </p>
+
+      <!-- Instant One-Liner Install Box -->
+      <div class="max-w-xl mx-auto mb-10">
+        <div class="bg-slate-950/90 rounded-2xl border border-cyan-500/30 p-2 sm:p-3 shadow-xl shadow-cyan-950/30">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[11px] text-slate-400 px-2 font-mono" dir="ltr">
+            <div class="flex items-center gap-2">
+              <button onclick="setInstallCmd('npx')" id="btn-inst-npx" class="px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition-all">npx</button>
+              <button onclick="setInstallCmd('npm')" id="btn-inst-npm" class="px-2.5 py-1 rounded-md hover:bg-slate-800 text-slate-400 transition-all">npm -g</button>
+              <button onclick="setInstallCmd('pnpm')" id="btn-inst-pnpm" class="px-2.5 py-1 rounded-md hover:bg-slate-800 text-slate-400 transition-all">pnpm</button>
+            </div>
+            <span class="text-slate-500 text-[10px]">بنقرة واحدة للتشغيل</span>
+          </div>
+          <div class="flex items-center justify-between gap-3 px-3 py-2 bg-slate-900 rounded-xl border border-slate-800" dir="ltr">
+            <div class="flex items-center gap-2.5 font-mono text-xs sm:text-sm text-cyan-300 overflow-x-auto">
+              <span class="text-slate-500 select-none">$</span>
+              <code id="install-cmd-text">npx vibzcode</code>
+            </div>
+            <button onclick="copyInstallCmd()" id="btn-copy-install" class="btn btn-xs btn-ghost text-slate-400 hover:text-cyan-400 gap-1.5 transition-all">
+              <i class="fa-regular fa-copy text-xs"></i>
+              <span class="text-[10px]" id="copy-label">نسخ</span>
+            </button>
+          </div>
+        </div>
+      </div>
 
       <!-- CTA Buttons -->
       <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
@@ -537,53 +565,126 @@
   <!-- Quick Start & Deployment Guide -->
   <section id="quickstart" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="text-center max-w-3xl mx-auto mb-16">
-      <span class="text-emerald-400 font-bold tracking-wider uppercase text-xs">تنصيب وتشغيل في دقائق</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 mb-4">
-        دليل البدء السريع (Quick Start)
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-3">
+        <i class="fa-brands fa-npm text-lg"></i>
+        <span>معتمد رسمياً في سجل حزم npm</span>
+      </div>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-4">
+        خيارات التنصيب والتشغيل السريع
       </h2>
       <p class="text-slate-400 text-base">
-        خطوات بسيطة لتشغيل المنصة على خادم Linux أو محلياً باستخدام Node.js.
+        سواء أردت تجربة فورية بدون تثبيت، أو تنصيب الأداة عالمياً عبر npm/pnpm، أو استنساخ الكود للمطورين.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
 
-      <!-- Step 1 -->
-      <div class="glass-card p-6 rounded-2xl">
-        <div class="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 font-bold flex items-center justify-center mb-4">1</div>
-        <h3 class="text-base font-bold text-white mb-2">استنساخ المستودع وتثبيت الحزم</h3>
-        <p class="text-xs text-slate-400 mb-4">قم بسحب الكود المصدري وتثبيت مكتبات Node الأصلية:</p>
-        <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr"><code>git clone https://github.com/Zizwar/vibzcode.git
-cd vibzcode
-npm install</code></pre>
+      <!-- Method 1: NPX (Recommended) -->
+      <div class="glass-card p-6 rounded-2xl border-cyan-500/30 relative flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-lg font-mono">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <span class="badge badge-sm badge-info font-mono">الأسرع (Instant)</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">1. تشغيل فوري عبر NPX</h3>
+          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+            تشغيل مباشر دون تنزيل دائم؛ يقوم بفحص البيئة، وتشغيل المنصة، وفتح لوحة التحكم تلقائياً:
+          </p>
+          <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr"><code># تشغيل مباشر وفوري
+npx vibzcode
+
+# أو تحديد منفذ مخصص
+npx vibzcode --port 3334</code></pre>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500">
+          يعمل على Linux و macOS و Windows
+        </div>
       </div>
 
-      <!-- Step 2 -->
-      <div class="glass-card p-6 rounded-2xl">
-        <div class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center mb-4">2</div>
-        <h3 class="text-base font-bold text-white mb-2">إعداد متغيرات البيئة</h3>
-        <p class="text-xs text-slate-400 mb-4">انسخ قالب البيئة وعيّن كلمات مرور الجلسات:</p>
-        <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-purple-300 overflow-x-auto text-left" dir="ltr"><code>cp .env.example .env
-# عدّل PORT و ADMIN_PASS في .env
-nano .env</code></pre>
+      <!-- Method 2: Global Install (npm / pnpm) -->
+      <div class="glass-card p-6 rounded-2xl border-purple-500/30 relative flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-lg font-mono">
+              <i class="fa-brands fa-npm"></i>
+            </div>
+            <span class="badge badge-sm badge-secondary font-mono">Global CLI</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">2. تثبيت عام (NPM / PNPM)</h3>
+          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+            تثبيت الأداة كأمر نظام دائم في جهازك أو خادمك، لتشغيله في أي وقت بكلمة واحدة:
+          </p>
+          <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-purple-300 overflow-x-auto text-left" dir="ltr"><code># عبر npm:
+npm install -g vibzcode
+
+# أو عبر pnpm:
+pnpm add -g vibzcode
+
+# ثم التشغيل في أي وقت:
+vibzcode</code></pre>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500">
+          حزمة npm معتمدة وخفيفة الوزن
+        </div>
       </div>
 
-      <!-- Step 3 -->
-      <div class="glass-card p-6 rounded-2xl">
-        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center mb-4">3</div>
-        <h3 class="text-base font-bold text-white mb-2">التشغيل عبر PM2 أو Node</h3>
-        <p class="text-xs text-slate-400 mb-4">شغّل السيرفر فوراً وادخل لوحة التحكم بالمتصفح:</p>
-        <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto text-left" dir="ltr"><code># تشغيل مباشر
-node server.js
+      <!-- Method 3: GitHub Self-Hosted & PM2 -->
+      <div class="glass-card p-6 rounded-2xl border-emerald-500/30 relative flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg font-mono">
+              <i class="fa-brands fa-github"></i>
+            </div>
+            <span class="badge badge-sm badge-success font-mono">Self-Hosted</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">3. استنساخ المطورين (Git & PM2)</h3>
+          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
+            للسيرفرات الإنتاجية والتطوير المتقدم، مع إدارة العمليات المستمرة عبر PM2:
+          </p>
+          <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto text-left" dir="ltr"><code>git clone https://github.com/Zizwar/vibzcode.git
+cd vibzcode && npm install
+cp .env.example .env
 
-# أو كخدمة مستمرة عبر PM2:
+# تشغيل كخدمة مستمرة:
 pm2 start ecosystem.config.cjs</code></pre>
+        </div>
+        <div class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500">
+          تحكم كامل بملفات الكود والخدمات
+        </div>
       </div>
 
     </div>
 
+    <!-- CLI Flags & Commands Reference Card -->
+    <div class="glass-card rounded-2xl p-6 border border-slate-800">
+      <div class="flex items-center gap-3 mb-4">
+        <i class="fa-solid fa-terminal text-cyan-400 text-lg"></i>
+        <h3 class="text-base font-bold text-white">خيارات سطر الأوامر (CLI Flags)</h3>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono" dir="ltr">
+        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+          <div class="text-cyan-400 font-bold mb-1">-p, --port &lt;num&gt;</div>
+          <div class="text-slate-400 text-[11px]" dir="rtl">تحديد منفذ الخادم (الافتراضي: 3333 أو متغير $PORT)</div>
+        </div>
+        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+          <div class="text-purple-400 font-bold mb-1">--status</div>
+          <div class="text-slate-400 text-[11px]" dir="rtl">فحص جاهزية وتكوين مفاتيح الذكاء الاصطناعي دون تشغيل السيرفر</div>
+        </div>
+        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+          <div class="text-emerald-400 font-bold mb-1">--no-open</div>
+          <div class="text-slate-400 text-[11px]" dir="rtl">تعطيل الفتح التلقائي للمتصفح (مفيد للسيرفرات البعيدة)</div>
+        </div>
+        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
+          <div class="text-amber-400 font-bold mb-1">--host &lt;ip&gt;</div>
+          <div class="text-slate-400 text-[11px]" dir="rtl">تحديد الـ Host للربط الشبكي (الافتراضي: 0.0.0.0)</div>
+        </div>
+      </div>
+    </div>
+
     <div class="mt-8 p-4 bg-slate-950/70 border border-slate-800 rounded-2xl text-center text-xs text-slate-400 max-w-2xl mx-auto">
-      💡 <strong>ملاحظة:</strong> لوحة التحكم تفتح تلقائياً على الرابط <code class="text-cyan-400 font-mono">http://localhost:3333</code> أو <code class="text-cyan-400 font-mono">http://localhost:3334</code> بحسب رقم المنفذ في ملف <code class="text-cyan-400 font-mono">.env</code>.
+      💡 <strong>ملاحظة:</strong> لوحة التحكم تفتح تلقائياً على الرابط <code class="text-cyan-400 font-mono">http://localhost:3333</code> أو <code class="text-cyan-400 font-mono">http://localhost:3334</code> بحسب المنفذ المحدد.
     </div>
   </section>
 
@@ -614,8 +715,45 @@ pm2 start ecosystem.config.cjs</code></pre>
     </div>
   </footer>
 
-  <!-- Simple Tab Switcher Script -->
+  <!-- Simple Tab & Install Switcher Script -->
   <script>
+    const INSTALL_COMMANDS = {
+      npx: 'npx vibzcode',
+      npm: 'npm install -g vibzcode',
+      pnpm: 'pnpm dlx vibzcode'
+    };
+
+    let currentInstallTool = 'npx';
+
+    function setInstallCmd(tool) {
+      currentInstallTool = tool;
+      const cmdText = document.getElementById('install-cmd-text');
+      if (cmdText) cmdText.textContent = INSTALL_COMMANDS[tool] || 'npx vibzcode';
+
+      // Reset button styles
+      ['npx', 'npm', 'pnpm'].forEach(t => {
+        const btn = document.getElementById('btn-inst-' + t);
+        if (btn) {
+          if (t === tool) {
+            btn.className = 'px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition-all';
+          } else {
+            btn.className = 'px-2.5 py-1 rounded-md hover:bg-slate-800 text-slate-400 transition-all';
+          }
+        }
+      });
+    }
+
+    function copyInstallCmd() {
+      const text = INSTALL_COMMANDS[currentInstallTool] || 'npx vibzcode';
+      navigator.clipboard.writeText(text).then(() => {
+        const copyLabel = document.getElementById('copy-label');
+        if (copyLabel) {
+          copyLabel.textContent = 'تم النسخ!';
+          setTimeout(() => { copyLabel.textContent = 'نسخ'; }, 2000);
+        }
+      });
+    }
+
     function switchTab(tabId) {
       // Hide all tabs
       document.querySelectorAll('.tab-view-content').forEach(el => {
