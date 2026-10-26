@@ -14,6 +14,14 @@ document.addEventListener('alpine:init', () => {
     searchQuery: '',
     availableFolders: [],
 
+    // Session Filters, Sorting & Hierarchy State
+    sortBy: localStorage.getItem('vibz_sort_by') || 'createdAt_desc',
+    typeFilter: localStorage.getItem('vibz_type_filter') || 'all', // 'all', 'favorites', 'pinned', 'roots', 'forks'
+    statusFilter: 'all', // 'all', 'active', 'paused'
+    engineFilter: 'all', // 'all', 'agy', 'claude', 'codex', 'vibe', 'opencode'
+    viewMode: localStorage.getItem('vibz_view_mode') || 'grid', // 'grid', 'tree'
+    collapsedBranches: {},
+
     // Admin Folder Tree State
     folderTree: [],
     expandedAdminFolders: {},
@@ -285,7 +293,24 @@ document.addEventListener('alpine:init', () => {
         });
         const data = await res.json();
         if (res.ok && data.success) {
-          this.sessions = data.sessions || [];
+          const list = data.sessions || [];
+          let localPinned = [];
+          let localFavorites = [];
+          try {
+            localPinned = JSON.parse(localStorage.getItem('vibz_pinned_sessions') || '[]');
+            localFavorites = JSON.parse(localStorage.getItem('vibz_favorite_sessions') || '[]');
+          } catch (e) {}
+
+          for (const s of list) {
+            if (s.isPinned === undefined) {
+              s.isPinned = localPinned.includes(s.id);
+            }
+            if (s.isFavorite === undefined) {
+              s.isFavorite = localFavorites.includes(s.id);
+            }
+          }
+          this.sessions = list;
+          this.saveLocalFlags();
         }
       } catch (e) {
         this.showToast('فشل تحميل قائمة الجلسات', 'error');
@@ -294,29 +319,194 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
-    async loadFolders() {
+    saveLocalFlags() {
       try {
-        const res = await fetch('/api/admin/folders', {
-          headers: { 'Authorization': this.adminToken }
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          this.availableFolders = data.folders || [];
-          if (this.availableFolders.length > 0 && !this.newSession.targetDir) {
-            this.newSession.targetDir = this.availableFolders[0].path;
-          }
-        }
+        const pinnedIds = this.sessions.filter(s => s.isPinned).map(s => s.id);
+        const favoriteIds = this.sessions.filter(s => s.isFavorite).map(s => s.id);
+        localStorage.setItem('vibz_pinned_sessions', JSON.stringify(pinnedIds));
+        localStorage.setItem('vibz_favorite_sessions', JSON.stringify(favoriteIds));
       } catch (e) {}
     },
 
+    setSort(val) {
+      this.sortBy = val;
+      localStorage.setItem('vibz_sort_by', val);
+    },
+
+    setTypeFilter(val) {
+      this.typeFilter = val;
+      localStorage.setItem('vibz_type_filter', val);
+    },
+
+    setViewMode(val) {
+      this.viewMode = val;
+      localStorage.setItem('vibz_view_mode', val);
+    },
+
+    toggleBranchCollapse(sessionId) {
+      this.collapsedBranches[sessionId] = !this.collapsedBranches[sessionId];
+    },
+
+    isBranchCollapsed(sessionId) {
+      return !!this.collapsedBranches[sessionId];
+    },
+
+    getForksCount(sessionId) {
+      let count = 0;
+      const traverse = (id) => {
+        for (const s of this.sessions) {
+          if (s.parentId === id) {
+            count++;
+            traverse(s.id);
+          }
+        }
+      };
+      traverse(sessionId);
+      return count;
+    },
+
+    async togglePin(sess) {
+      sess.isPinned = !sess.isPinned;
+      this.saveLocalFlags();
+      this.showToast(sess.isPinned ? `📌 تم تثبيت "${sess.name}" في المقدمة` : `تم إلغاء تثبيت "${sess.name}"`, 'info');
+      try {
+        await fetch(`/api/admin/sessions/${sess.id}/toggle-flag`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.adminToken
+          },
+          body: JSON.stringify({ flag: 'isPinned' })
+        });
+      } catch (e) {
+        console.warn('Pin sync error:', e);
+      }
+    },
+
+    async toggleFavorite(sess) {
+      sess.isFavorite = !sess.isFavorite;
+      this.saveLocalFlags();
+      this.showToast(sess.isFavorite ? `⭐ تمت إضافة "${sess.name}" إلى المفضلة` : `تمت إزالة "${sess.name}" من المفضلة`, 'info');
+      try {
+        await fetch(`/api/admin/sessions/${sess.id}/toggle-flag`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.adminToken
+          },
+          body: JSON.stringify({ flag: 'isFavorite' })
+        });
+      } catch (e) {
+        console.warn('Favorite sync error:', e);
+      }
+    },
+
+    get favoritesCount() {
+      return this.sessions.filter(s => !!s.isFavorite).length;
+    },
+
+    get pinnedCount() {
+      return this.sessions.filter(s => !!s.isPinned).length;
+    },
+
+    get rootsCount() {
+      return this.sessions.filter(s => !s.parentId && !s.forkedFrom).length;
+    },
+
+    get forksCount() {
+      return this.sessions.filter(s => !!s.parentId || !!s.forkedFrom).length;
+    },
+
     get filteredSessions() {
-      if (!this.searchQuery.trim()) return this.sessions;
-      const q = this.searchQuery.toLowerCase();
-      return this.sessions.filter(s =>
-        (s.name && s.name.toLowerCase().includes(q)) ||
-        (s.assignee && s.assignee.toLowerCase().includes(q)) ||
-        (s.targetDir && s.targetDir.toLowerCase().includes(q))
-      );
+      let list = [...this.sessions];
+
+      // 1. Text Search
+      if (this.searchQuery.trim()) {
+        const q = this.searchQuery.toLowerCase().trim();
+        list = list.filter(s =>
+          (s.name && s.name.toLowerCase().includes(q)) ||
+          (s.assignee && s.assignee.toLowerCase().includes(q)) ||
+          (s.role && s.role.toLowerCase().includes(q)) ||
+          (s.targetDir && s.targetDir.toLowerCase().includes(q)) ||
+          (s.engine && s.engine.toLowerCase().includes(q)) ||
+          (s.model && s.model.toLowerCase().includes(q)) ||
+          (s.forkedFrom && s.forkedFrom.sessionName && s.forkedFrom.sessionName.toLowerCase().includes(q))
+        );
+      }
+
+      // 2. Type Filter (all, favorites, pinned, roots, forks)
+      if (this.typeFilter === 'favorites') {
+        list = list.filter(s => !!s.isFavorite);
+      } else if (this.typeFilter === 'pinned') {
+        list = list.filter(s => !!s.isPinned);
+      } else if (this.typeFilter === 'roots') {
+        list = list.filter(s => !s.parentId && !s.forkedFrom);
+      } else if (this.typeFilter === 'forks') {
+        list = list.filter(s => !!s.parentId || !!s.forkedFrom);
+      }
+
+      // 3. Status Filter (all, active, paused)
+      if (this.statusFilter !== 'all') {
+        list = list.filter(s => s.status === this.statusFilter);
+      }
+
+      // 4. Engine Filter (all, agy, claude, codex, vibe, opencode)
+      if (this.engineFilter !== 'all') {
+        list = list.filter(s => (s.engine || 'agy') === this.engineFilter);
+      }
+
+      // 5. Sorting
+      list.sort((a, b) => {
+        // Keep pinned items at the top unless user explicitly filtering pinned
+        if (this.typeFilter !== 'pinned') {
+          const aPin = a.isPinned ? 1 : 0;
+          const bPin = b.isPinned ? 1 : 0;
+          if (aPin !== bPin) return bPin - aPin;
+        }
+
+        switch (this.sortBy) {
+          case 'createdAt_asc':
+            return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
+          case 'lastActive_desc':
+            return new Date(b.lastActive || b.createdAt || 0) - new Date(a.lastActive || a.createdAt || 0);
+          case 'lastActive_asc':
+            return new Date(a.lastActive || a.createdAt || 0) - new Date(b.lastActive || b.createdAt || 0);
+          case 'messages_desc':
+            return (b.stats?.messagesCount || 0) - (a.stats?.messagesCount || 0);
+          case 'name_asc':
+            return (a.name || '').localeCompare(b.name || '', 'ar');
+          case 'createdAt_desc':
+          default:
+            return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
+        }
+      });
+
+      return list;
+    },
+
+    getChildren(parentId, filteredIdSet) {
+      return this.sessions
+        .filter(s => s.parentId === parentId && filteredIdSet.has(s.id))
+        .map(s => ({
+          ...s,
+          children: this.getChildren(s.id, filteredIdSet)
+        }));
+    },
+
+    get sessionTree() {
+      const filtered = this.filteredSessions;
+      const filteredIdSet = new Set(filtered.map(s => s.id));
+
+      const roots = [];
+      for (const s of filtered) {
+        if (!s.parentId || !filteredIdSet.has(s.parentId)) {
+          roots.push({
+            ...s,
+            children: this.getChildren(s.id, filteredIdSet)
+          });
+        }
+      }
+      return roots;
     },
 
     async loadFolderTree() {

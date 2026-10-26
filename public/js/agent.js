@@ -99,6 +99,8 @@ document.addEventListener('alpine:init', () => {
       // Expose to window for filetree click callbacks
       window._agent = this;
       this.applyTheme();
+      this.initMarkedParser();
+      this.setupLocalFileInteractions();
 
       // Listen for fullscreen change
       document.addEventListener('fullscreenchange', () => {
@@ -408,13 +410,17 @@ document.addEventListener('alpine:init', () => {
     },
 
     downloadFile(filePath) {
-      const url = `/api/session/workspace/download?token=${encodeURIComponent(this.token)}&path=${encodeURIComponent(filePath)}`;
+      const cleanPath = this.cleanWorkspacePath(filePath);
+      if (!cleanPath) return;
+      const filename = cleanPath.split('/').pop().split('\\').pop() || 'download';
+      const url = `/api/session/workspace/download?token=${encodeURIComponent(this.token)}&path=${encodeURIComponent(cleanPath)}`;
       const a = document.createElement('a');
       a.href = url;
-      a.download = filePath.split('/').pop() || 'download';
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+      this.showToast(`جاري تنزيل الملف: ${filename}`, 'info');
     },
 
     downloadFolderAsZip(folderPath) {
@@ -519,21 +525,75 @@ document.addEventListener('alpine:init', () => {
     },
 
     _escapeHtml(s) {
-      const d = document.createElement('div');
-      d.textContent = s;
-      return d.innerHTML;
+      if (!s) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    },
+
+    _escapeAttr(s) {
+      if (!s) return '';
+      return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    },
+
+    cleanWorkspacePath(filePath) {
+      if (!filePath || typeof filePath !== 'string') return '';
+      let p = filePath.trim();
+      p = p.replace(/^file:\/\//i, '');
+      p = p.split('#')[0].split('?')[0];
+      try { p = decodeURIComponent(p); } catch (e) {}
+      return p;
+    },
+
+    isLocalPath(urlOrPath) {
+      if (!urlOrPath || typeof urlOrPath !== 'string') return false;
+      const s = urlOrPath.trim();
+      if (!s) return false;
+      if (s.startsWith('file://')) return true;
+      if (s.startsWith('http://') || s.startsWith('https://')) {
+        try {
+          const u = new URL(s, window.location.origin);
+          return u.origin === window.location.origin && u.pathname.startsWith('/api/session/workspace');
+        } catch (e) {
+          return false;
+        }
+      }
+      if (s.startsWith('mailto:') || s.startsWith('tel:') || s.startsWith('#') || s.startsWith('javascript:')) {
+        return false;
+      }
+      if (s.startsWith('/root/') || s.startsWith('/home/') || s.startsWith('/tmp/') || s.startsWith('/var/')) {
+        return true;
+      }
+      if (s.startsWith('./') || s.startsWith('../') || s.startsWith('/')) {
+        return true;
+      }
+      const clean = s.split('#')[0].split('?')[0];
+      if (clean.includes(' ') || clean.includes('\n')) return false;
+      const match = clean.match(/\.([a-zA-Z0-9_-]{1,10})$/);
+      return !!match;
     },
 
     async openFilePreview(filePath) {
-      this.previewFilePath = filePath;
+      const cleanPath = this.cleanWorkspacePath(filePath);
+      if (!cleanPath) return;
+
+      this.previewFilePath = cleanPath;
       this.previewFileContent = '';
       this.previewFileSize = 0;
       this.previewLoading = true;
       this.previewModalOpen = true;
 
-      const ext = (filePath || '').toLowerCase().split('.').pop();
+      const ext = (cleanPath.split('.').pop() || '').toLowerCase();
       const imageExts = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg', 'ico', 'bmp'];
-      const videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+      const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'mkv', 'avi'];
       const audioExts = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg'];
       const pdfExts = ['pdf'];
 
@@ -549,7 +609,7 @@ document.addEventListener('alpine:init', () => {
         this.previewFileType = 'code';
       }
 
-      this.previewFileRawUrl = `/api/session/workspace/raw?token=${encodeURIComponent(this.token)}&path=${encodeURIComponent(filePath)}&t=${Date.now()}`;
+      this.previewFileRawUrl = `/api/session/workspace/raw?token=${encodeURIComponent(this.token)}&path=${encodeURIComponent(cleanPath)}&t=${Date.now()}`;
 
       if (this.previewFileType !== 'code') {
         this.previewLoading = false;
@@ -557,7 +617,7 @@ document.addEventListener('alpine:init', () => {
       }
 
       try {
-        const res = await fetch(`/api/session/workspace/file?path=${encodeURIComponent(filePath)}`, {
+        const res = await fetch(`/api/session/workspace/file?path=${encodeURIComponent(cleanPath)}`, {
           headers: { 'Authorization': this.token }
         });
         const data = await res.json();
@@ -1047,12 +1107,314 @@ document.addEventListener('alpine:init', () => {
       }
     },
 
+    renderLocalFileChip(href, text, title = '') {
+      const clean = this.cleanWorkspacePath(href);
+      const filename = clean.split('/').pop().split('\\').pop() || clean;
+      let displayLabel = text && text.trim() && text !== href && !text.startsWith('file://') ? text.trim() : filename;
+      displayLabel = this._escapeHtml(displayLabel);
+
+      const icon = this.getFileIcon(clean);
+      const escapedClean = this._escapeAttr(clean);
+      const escapedHref = this._escapeAttr(href);
+      const tip = `${escapedClean}&#10;(نقر: معاينة | نقر مطول: تنزيل)`;
+
+      return `<span class="local-file-chip inline-flex items-center gap-1.5 px-2.5 py-1 my-1 rounded-lg bg-slate-800/90 hover:bg-slate-700/90 border border-slate-700 hover:border-cyan-500/50 text-slate-200 text-xs font-mono select-none cursor-pointer group transition-all shadow-sm"
+                    data-file-path="${escapedClean}"
+                    data-raw-href="${escapedHref}"
+                    title="${tip}">
+        <i class="${icon} text-xs shrink-0"></i>
+        <span class="truncate max-w-[220px] font-sans font-medium text-slate-100 group-hover:text-cyan-300 dir-ltr text-left">${displayLabel}</span>
+        <span class="inline-flex items-center gap-1 shrink-0 mr-1 opacity-70 group-hover:opacity-100 transition-opacity">
+          <button type="button" class="btn-action btn-preview-file p-0.5 px-1 hover:text-cyan-300 text-slate-400 rounded hover:bg-slate-600/50" title="معاينة الملف">
+            <i class="fa-solid fa-eye text-[10px]"></i>
+          </button>
+          <button type="button" class="btn-action btn-download-file p-0.5 px-1 hover:text-emerald-400 text-slate-400 rounded hover:bg-slate-600/50" title="تنزيل الملف (أو نقر مطول)">
+            <i class="fa-solid fa-download text-[10px]"></i>
+          </button>
+        </span>
+      </span>`;
+    },
+
+    renderLocalMedia(href, alt = '', title = '') {
+      const clean = this.cleanWorkspacePath(href);
+      const filename = clean.split('/').pop().split('\\').pop() || clean;
+      const ext = (clean.split('.').pop() || '').toLowerCase();
+      const rawUrl = `/api/session/workspace/raw?token=${encodeURIComponent(this.token)}&path=${encodeURIComponent(clean)}&t=${Date.now()}`;
+      const escapedClean = this._escapeAttr(clean);
+      const escapedAlt = this._escapeAttr(alt || filename);
+
+      const videoExts = ['mp4', 'webm', 'ogg', 'mov', 'mkv', 'avi'];
+      const audioExts = ['mp3', 'wav', 'm4a', 'aac', 'flac', 'ogg'];
+
+      if (videoExts.includes(ext)) {
+        return `<div class="local-media-card my-2 block max-w-xl rounded-xl overflow-hidden border border-slate-800 bg-slate-950/80 shadow-xl" data-file-path="${escapedClean}">
+          <video controls preload="metadata" class="w-full max-h-72 rounded-t-xl bg-black" src="${rawUrl}">متصفحك لا يدعم تشغيل الفيديو</video>
+          <div class="px-3 py-1.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400 font-mono">
+            <span class="truncate max-w-[200px] text-[11px]">${this._escapeHtml(filename)}</span>
+            <div class="flex items-center gap-1.5">
+              <button type="button" class="btn btn-ghost btn-xs text-cyan-400 hover:text-cyan-300 btn-preview-file text-[11px] gap-1"><i class="fa-solid fa-expand text-[10px]"></i><span>تكبير</span></button>
+              <button type="button" class="btn btn-ghost btn-xs text-emerald-400 hover:text-emerald-300 btn-download-file text-[11px] gap-1"><i class="fa-solid fa-download text-[10px]"></i><span>تنزيل</span></button>
+            </div>
+          </div>
+        </div>`;
+      }
+
+      if (audioExts.includes(ext)) {
+        return `<div class="local-media-card my-2 block max-w-md rounded-xl p-3 border border-slate-800 bg-slate-950/80 shadow-xl" data-file-path="${escapedClean}">
+          <div class="flex items-center justify-between mb-2 text-xs text-slate-300 font-mono">
+            <span class="truncate flex items-center gap-1.5"><i class="fa-solid fa-music text-amber-400"></i>${this._escapeHtml(filename)}</span>
+            <button type="button" class="btn btn-ghost btn-xs text-emerald-400 btn-download-file gap-1"><i class="fa-solid fa-download text-[10px]"></i></button>
+          </div>
+          <audio controls preload="metadata" class="w-full" src="${rawUrl}"></audio>
+        </div>`;
+      }
+
+      // Default: Image
+      return `<div class="local-media-card my-2 inline-block max-w-full rounded-xl overflow-hidden border border-slate-800 bg-slate-950/60 shadow-xl group" data-file-path="${escapedClean}">
+        <div class="relative cursor-pointer overflow-hidden">
+          <img src="${rawUrl}" alt="${escapedAlt}" class="max-h-80 max-w-full object-contain rounded-t-xl transition-transform duration-200 group-hover:scale-[1.01]" loading="lazy" />
+          <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+            <button type="button" class="btn btn-sm btn-circle bg-cyan-600 hover:bg-cyan-500 text-white border-none shadow-lg btn-preview-file" title="معاينة بالحجم الكامل">
+              <i class="fa-solid fa-expand text-xs"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-circle bg-emerald-600 hover:bg-emerald-500 text-white border-none shadow-lg btn-download-file" title="تنزيل الصورة (أو نقر مطول)">
+              <i class="fa-solid fa-download text-xs"></i>
+            </button>
+          </div>
+        </div>
+        <div class="px-3 py-1.5 bg-slate-900/90 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 font-mono">
+          <span class="truncate max-w-[200px]" title="${escapedClean}">${this._escapeHtml(filename)}</span>
+          <span class="text-[10px] text-slate-500 font-arabic">نقر: معاينة | نقر مطول: تنزيل</span>
+        </div>
+      </div>`;
+    },
+
+    initMarkedParser() {
+      if (!window.marked || typeof window.marked.use !== 'function') return;
+      if (this._markedInitialized) return;
+      this._markedInitialized = true;
+
+      const self = this;
+
+      // Custom Extension to auto-detect standalone file:/// links in text
+      const fileUrlExtension = {
+        name: 'fileUrl',
+        level: 'inline',
+        start(src) { return src.indexOf('file://'); },
+        tokenizer(src) {
+          const match = /^file:\/\/[^\s\)\`"<>]+/.exec(src);
+          if (match) {
+            let full = match[0];
+            let trail = '';
+            const punctMatch = full.match(/([.,;:!?]+)$/);
+            if (punctMatch) {
+              trail = punctMatch[1];
+              full = full.slice(0, -trail.length);
+            }
+            return {
+              type: 'fileUrl',
+              raw: match[0],
+              href: full,
+              text: full,
+              trail: trail
+            };
+          }
+        },
+        renderer(token) {
+          const chip = self.renderLocalFileChip(token.href, token.text);
+          return chip + (token.trail || '');
+        }
+      };
+
+      // Custom Renderer for links, images, and codespans
+      const customRenderer = {
+        link(tokenOrHref, title, text) {
+          let href = '', linkTitle = '', linkText = '';
+          if (typeof tokenOrHref === 'object' && tokenOrHref !== null) {
+            href = tokenOrHref.href || '';
+            linkTitle = tokenOrHref.title || '';
+            linkText = tokenOrHref.text || href;
+          } else {
+            href = tokenOrHref || '';
+            linkTitle = title || '';
+            linkText = text || href;
+          }
+
+          if (self.isLocalPath(href)) {
+            return self.renderLocalFileChip(href, linkText, linkTitle);
+          }
+
+          const escapedHref = self._escapeAttr(href);
+          const escapedTitle = linkTitle ? ` title="${self._escapeAttr(linkTitle)}"` : '';
+          return `<a href="${escapedHref}" target="_blank" rel="noopener noreferrer"${escapedTitle} class="text-cyan-400 hover:text-cyan-300 underline inline-flex items-center gap-1">${linkText} <i class="fa-solid fa-arrow-up-right-from-square text-[9px] opacity-70"></i></a>`;
+        },
+
+        image(tokenOrHref, title, text) {
+          let href = '', imgTitle = '', imgAlt = '';
+          if (typeof tokenOrHref === 'object' && tokenOrHref !== null) {
+            href = tokenOrHref.href || '';
+            imgTitle = tokenOrHref.title || '';
+            imgAlt = tokenOrHref.text || '';
+          } else {
+            href = tokenOrHref || '';
+            imgTitle = title || '';
+            imgAlt = text || '';
+          }
+
+          if (self.isLocalPath(href)) {
+            return self.renderLocalMedia(href, imgAlt, imgTitle);
+          }
+
+          const escapedHref = self._escapeAttr(href);
+          const escapedAlt = self._escapeAttr(imgAlt);
+          const escapedTitle = imgTitle ? ` title="${self._escapeAttr(imgTitle)}"` : '';
+          return `<img src="${escapedHref}" alt="${escapedAlt}"${escapedTitle} class="max-w-full rounded-lg my-2 border border-slate-800 shadow-md" loading="lazy" />`;
+        },
+
+        codespan(tokenOrText) {
+          const codeText = (typeof tokenOrText === 'object' && tokenOrText !== null) ? (tokenOrText.text || '') : (tokenOrText || '');
+          if (self.isLocalPath(codeText)) {
+            return self.renderLocalFileChip(codeText, codeText, '');
+          }
+          return `<code>${self._escapeHtml(codeText)}</code>`;
+        }
+      };
+
+      try {
+        window.marked.use({
+          extensions: [fileUrlExtension],
+          renderer: customRenderer,
+          gfm: true,
+          breaks: true
+        });
+      } catch (e) {
+        console.warn('Could not initialize marked extensions:', e);
+      }
+    },
+
+    setupLocalFileInteractions() {
+      if (this._localFileInteractionsInitialized) return;
+      this._localFileInteractionsInitialized = true;
+
+      let pressTimer = null;
+      let targetChip = null;
+      let startX = 0;
+      let startY = 0;
+      let longPressFired = false;
+
+      const cancelPress = () => {
+        if (pressTimer) {
+          clearTimeout(pressTimer);
+          pressTimer = null;
+        }
+        if (targetChip) {
+          targetChip.classList.remove('is-pressing');
+          targetChip = null;
+        }
+      };
+
+      const getChip = (e) => {
+        return e.target ? e.target.closest('.local-file-chip, .local-media-card') : null;
+      };
+
+      // Pointer Down (Mouse click hold or Mobile touch hold)
+      document.addEventListener('pointerdown', (e) => {
+        const chip = getChip(e);
+        if (!chip) return;
+
+        // If clicked directly on the explicit preview or download icon, let click handler take care of it immediately
+        if (e.target.closest('.btn-download-file') || e.target.closest('.btn-preview-file')) {
+          return;
+        }
+
+        targetChip = chip;
+        startX = e.clientX;
+        startY = e.clientY;
+        longPressFired = false;
+        chip.classList.add('is-pressing');
+
+        pressTimer = setTimeout(() => {
+          longPressFired = true;
+          const filePath = chip.getAttribute('data-file-path');
+          cancelPress();
+          if (filePath && window._agent) {
+            if (navigator.vibrate) {
+              try { navigator.vibrate(60); } catch (err) {}
+            }
+            window._agent.downloadFile(filePath);
+          }
+        }, 450); // 450ms long-press threshold
+      });
+
+      // Pointer Move (cancel long-press if user moves finger/mouse)
+      document.addEventListener('pointermove', (e) => {
+        if (!targetChip) return;
+        const dx = Math.abs(e.clientX - startX);
+        const dy = Math.abs(e.clientY - startY);
+        if (dx > 8 || dy > 8) {
+          cancelPress();
+        }
+      });
+
+      // Pointer Up / Cancel
+      document.addEventListener('pointerup', () => {
+        cancelPress();
+      });
+      document.addEventListener('pointercancel', () => {
+        cancelPress();
+      });
+
+      // Click Event
+      document.addEventListener('click', (e) => {
+        const chip = getChip(e);
+        if (!chip) return;
+
+        // If long press already fired, prevent standard click
+        if (longPressFired) {
+          longPressFired = false;
+          e.preventDefault();
+          e.stopPropagation();
+          return;
+        }
+
+        const filePath = chip.getAttribute('data-file-path');
+        if (!filePath || !window._agent) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        // If clicked on download button explicitly
+        if (e.target.closest('.btn-download-file')) {
+          window._agent.downloadFile(filePath);
+          return;
+        }
+
+        // Default: Open Preview Modal
+        window._agent.openFilePreview(filePath);
+      });
+
+      // Context Menu (Right Click on Desktop)
+      document.addEventListener('contextmenu', (e) => {
+        const chip = getChip(e);
+        if (!chip) return;
+
+        const filePath = chip.getAttribute('data-file-path');
+        if (!filePath || !window._agent) return;
+
+        // Right-click triggers download directly!
+        e.preventDefault();
+        window._agent.downloadFile(filePath);
+      });
+    },
+
     renderMarkdown(text) {
       if (!text) return '';
       if (window.marked && typeof window.marked.parse === 'function') {
         try {
           return window.marked.parse(text);
-        } catch (e) {}
+        } catch (e) {
+          console.warn('Error parsing markdown:', e);
+        }
       }
       return text.replace(/\n/g, '<br>');
     },

@@ -395,36 +395,181 @@
             <i class="fa-solid fa-list-check text-cyan-400"></i>
             <span>جلسات الوكلاء والمشاريع المخصصة</span>
           </h2>
-          <p class="text-xs text-slate-400">كل جلسة معزولة في مجلد محدد ومحمية برمز وصول خاص (Token) لأعضاء الفريق</p>
+          <p class="text-xs text-slate-400">إدارة الجلسات المعزولة، التفرعات (Forks)، وفرز المشاريع حسب النشاط والمفضلة</p>
         </div>
 
         <div class="flex items-center gap-2">
-          <!-- Search filter -->
-          <div class="relative">
-            <input type="text" x-model="searchQuery" placeholder="بحث باسم الوكيل أو المجلد..."
-                   class="input input-sm input-bordered bg-slate-900 border-slate-800 text-xs w-60 pl-8 text-slate-200">
-            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-2.5 text-slate-500 text-xs"></i>
-          </div>
+          <button @click="showCreateModal = true" class="btn btn-sm bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border-none shadow-md shadow-cyan-600/20 text-xs px-3.5 gap-1.5">
+            <i class="fa-solid fa-plus text-xs"></i>
+            <span>إنشاء جلسة جديدة</span>
+          </button>
         </div>
       </div>
 
-      <!-- Sessions Grid Cards -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <!-- ==================== SESSIONS FILTER & SORTING TOOLBAR ==================== -->
+      <div class="bg-slate-900/90 border border-slate-800/90 rounded-2xl p-4 shadow-xl space-y-3">
+        <!-- Top Row: Filter Type Tabs & View Mode Switcher -->
+        <div class="flex items-center justify-between gap-3 flex-wrap">
+          
+          <!-- Filter Type Tabs -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button @click="setTypeFilter('all')" class="btn btn-xs rounded-lg transition-all"
+                    :class="typeFilter === 'all' ? 'btn-primary bg-cyan-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
+              <i class="fa-solid fa-layer-group text-[10px]"></i>
+              <span>الكل</span>
+              <span class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'all' ? 'bg-cyan-800 text-cyan-100' : 'badge-ghost text-slate-400'" x-text="sessions.length"></span>
+            </button>
+
+            <button @click="setTypeFilter('favorites')" class="btn btn-xs rounded-lg transition-all"
+                    :class="typeFilter === 'favorites' ? 'btn-warning bg-amber-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
+              <i class="fa-solid fa-star text-[10px] text-amber-400"></i>
+              <span>المفضلة</span>
+              <span x-show="favoritesCount > 0" class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'favorites' ? 'bg-amber-800 text-amber-100' : 'bg-amber-950 text-amber-400 border border-amber-800/40'" x-text="favoritesCount"></span>
+            </button>
+
+            <button @click="setTypeFilter('pinned')" class="btn btn-xs rounded-lg transition-all"
+                    :class="typeFilter === 'pinned' ? 'btn-info bg-blue-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
+              <i class="fa-solid fa-thumbtack text-[10px] text-cyan-400 rotate-45"></i>
+              <span>المثبتة</span>
+              <span x-show="pinnedCount > 0" class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'pinned' ? 'bg-blue-800 text-blue-100' : 'bg-cyan-950 text-cyan-400 border border-cyan-800/40'" x-text="pinnedCount"></span>
+            </button>
+
+            <button @click="setTypeFilter('roots')" class="btn btn-xs rounded-lg transition-all"
+                    :class="typeFilter === 'roots' ? 'btn-neutral bg-slate-800 text-cyan-300 border border-cyan-500/30' : 'btn-ghost text-slate-400 hover:text-white'">
+              <i class="fa-solid fa-cube text-[10px]"></i>
+              <span>الأصلية (الجذور)</span>
+              <span class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'roots' ? 'bg-slate-700 text-cyan-200' : 'badge-ghost text-slate-400'" x-text="rootsCount"></span>
+            </button>
+
+            <button @click="setTypeFilter('forks')" class="btn btn-xs rounded-lg transition-all"
+                    :class="typeFilter === 'forks' ? 'bg-purple-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
+              <i class="fa-solid fa-code-fork text-[10px] text-purple-400"></i>
+              <span>التفرعات (Forks)</span>
+              <span x-show="forksCount > 0" class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'forks' ? 'bg-purple-800 text-purple-100' : 'bg-purple-950 text-purple-300 border border-purple-800/40'" x-text="forksCount"></span>
+            </button>
+          </div>
+
+          <!-- View Mode Switcher: Grid vs Tree -->
+          <div class="join border border-slate-800 bg-slate-950/80 p-0.5 rounded-xl">
+            <button @click="setViewMode('grid')" class="btn btn-xs join-item border-none gap-1.5 transition-all"
+                    :class="viewMode === 'grid' ? 'bg-cyan-600 text-white shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'"
+                    title="عرض عادي (شبكة بطاقات)">
+              <i class="fa-solid fa-table-cells text-xs"></i>
+              <span>عرض شبكي</span>
+            </button>
+            <button @click="setViewMode('tree')" class="btn btn-xs join-item border-none gap-1.5 transition-all"
+                    :class="viewMode === 'tree' ? 'bg-purple-600 text-white shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'"
+                    title="عرض شجرة التفرع (كل مشروع رئيسي وأسفله تفرعاته)">
+              <i class="fa-solid fa-sitemap text-xs"></i>
+              <span>شجرة التفرع (Tree)</span>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Bottom Row: Search Bar, Sort By, Status Filter, Engine Filter & Counter -->
+        <div class="flex items-center justify-between gap-3 flex-wrap pt-2.5 border-t border-slate-800/60 text-xs">
+          
+          <div class="flex items-center gap-2 flex-wrap flex-1">
+            <!-- Search Input -->
+            <div class="relative min-w-[210px] flex-1 max-w-xs">
+              <input type="text" x-model="searchQuery" placeholder="بحث بالاسم، المسار، العضو..."
+                     class="input input-xs input-bordered bg-slate-950 border-slate-800 text-slate-200 w-full pl-7 pr-7 focus:border-cyan-500 rounded-lg">
+              <i class="fa-solid fa-magnifying-glass absolute left-2 top-2 text-slate-500 text-[10px]"></i>
+              <button x-show="searchQuery" @click="searchQuery = ''" class="absolute right-2 top-1.5 text-slate-500 hover:text-white text-xs">✕</button>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div class="flex items-center gap-1 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-0.5">
+              <i class="fa-solid fa-arrow-down-wide-short text-slate-400 text-xs"></i>
+              <span class="text-[11px] text-slate-400 shrink-0">ترتيب:</span>
+              <select :value="sortBy" @change="setSort($event.target.value)" class="select select-ghost select-xs bg-transparent text-slate-200 text-xs focus:bg-slate-900 border-none font-medium pr-1">
+                <option value="createdAt_desc" class="bg-slate-900">📅 الأحدث إنشاءً</option>
+                <option value="createdAt_asc" class="bg-slate-900">📅 الأقدم إنشاءً</option>
+                <option value="lastActive_desc" class="bg-slate-900">⚡ الأنشط مؤخراً</option>
+                <option value="lastActive_asc" class="bg-slate-900">⏳ الأقل نشاطاً</option>
+                <option value="messages_desc" class="bg-slate-900">💬 الأكثر أوامر ورسائل</option>
+                <option value="name_asc" class="bg-slate-900">🔤 الاسم (أ - ي)</option>
+              </select>
+            </div>
+
+            <!-- Status Filter Dropdown -->
+            <div class="flex items-center gap-1 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-0.5">
+              <i class="fa-solid fa-circle-dot text-slate-400 text-xs"></i>
+              <select x-model="statusFilter" class="select select-ghost select-xs bg-transparent text-slate-200 text-xs focus:bg-slate-900 border-none font-medium pr-1">
+                <option value="all" class="bg-slate-900">الحالة: الكل</option>
+                <option value="active" class="bg-slate-900">🟢 نشط فقط</option>
+                <option value="paused" class="bg-slate-900">🟡 موقوف مؤقتاً</option>
+              </select>
+            </div>
+
+            <!-- Engine Filter Dropdown -->
+            <div class="flex items-center gap-1 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-0.5">
+              <i class="fa-solid fa-microchip text-slate-400 text-xs"></i>
+              <select x-model="engineFilter" class="select select-ghost select-xs bg-transparent text-slate-200 text-xs focus:bg-slate-900 border-none font-medium pr-1">
+                <option value="all" class="bg-slate-900">المحرك: الكل</option>
+                <option value="agy" class="bg-slate-900">AGY Engine</option>
+                <option value="claude" class="bg-slate-900">Claude Code</option>
+                <option value="codex" class="bg-slate-900">Codex</option>
+                <option value="vibe" class="bg-slate-900">Mistral Vibe</option>
+                <option value="opencode" class="bg-slate-900">OpenCode</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Matching Sessions Counter -->
+          <div class="text-slate-400 text-[11px] font-mono flex items-center gap-1 shrink-0">
+            <span>عرض:</span>
+            <span class="text-cyan-400 font-bold" x-text="filteredSessions.length"></span>
+            <span>من أصل</span>
+            <span class="text-slate-300 font-bold" x-text="sessions.length"></span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ==================== VIEW MODE 1: FLAT GRID VIEW ==================== -->
+      <div x-show="viewMode === 'grid'" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
         
         <template x-for="sess in filteredSessions" :key="sess.id">
-          <div class="card bg-slate-900/90 border border-slate-800/90 shadow-xl hover:border-slate-700 transition-all">
-            <div class="card-body p-5 space-y-4">
+          <div class="card bg-slate-900/90 border shadow-xl hover:border-slate-700 transition-all"
+               :class="sess.isPinned ? 'border-cyan-500/50 bg-gradient-to-br from-cyan-950/20 via-slate-900 to-slate-900 shadow-cyan-950/30' : 'border-slate-800/90'">
+            <div class="card-body p-5 space-y-3.5">
               
-              <!-- Card Header -->
+              <!-- Card Header: Title & Badges on Right, 3-Dots Action Menu on Left -->
               <div class="flex items-start justify-between gap-3">
-                <div class="space-y-1">
+                <div class="space-y-1.5 flex-1 min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
-                    <span class="font-bold text-base text-white" x-text="sess.name"></span>
-                    <span x-show="sess.forkedFrom" class="badge bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold py-1 px-2 gap-1 tooltip tooltip-bottom" :data-tip="'جلسة متفرعة من: ' + (sess.forkedFrom?.sessionName || '')">
+                    <span class="font-bold text-base text-white break-words" x-text="sess.name"></span>
+                    
+                    <!-- Pinned Badge -->
+                    <span x-show="sess.isPinned" class="badge bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 text-[10px] font-semibold py-0.5 px-2 gap-1 shadow-sm">
+                      <i class="fa-solid fa-thumbtack text-[8px] rotate-45 text-cyan-400"></i>
+                      <span>مثبتة</span>
+                    </span>
+
+                    <!-- Favorite Badge -->
+                    <span x-show="sess.isFavorite" class="badge bg-amber-950/90 text-amber-300 border border-amber-500/50 text-[10px] font-semibold py-0.5 px-2 gap-1 shadow-sm">
+                      <i class="fa-solid fa-star text-[8px] text-amber-400"></i>
+                      <span>مفضلة</span>
+                    </span>
+
+                    <!-- Forked Session Badge -->
+                    <span x-show="sess.forkedFrom || sess.parentId" class="badge bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold py-0.5 px-2 gap-1 tooltip tooltip-bottom"
+                          :data-tip="'جلسة متفرعة من: ' + (sess.forkedFrom?.sessionName || '')">
                       <i class="fa-solid fa-code-fork text-[9px] text-purple-400"></i>
                       <span>فرع</span>
                     </span>
-                    <span class="badge text-[10px] font-semibold py-1 px-2"
+
+                    <!-- Direct Descendant Forks Count Badge -->
+                    <span x-show="getForksCount(sess.id) > 0" class="badge bg-indigo-950/80 text-indigo-300 border border-indigo-500/40 text-[10px] font-mono py-0.5 px-1.5 gap-1 tooltip tooltip-bottom"
+                          :data-tip="getForksCount(sess.id) + ' جلسة متفرعة من هذا المشروع'">
+                      <i class="fa-solid fa-sitemap text-[8px] text-indigo-400"></i>
+                      <span x-text="getForksCount(sess.id) + ' فروع'"></span>
+                    </span>
+
+                    <!-- Status Badge -->
+                    <span class="badge text-[10px] font-semibold py-0.5 px-2"
                           :class="{
                             'badge-success bg-emerald-950 border-emerald-500/40 text-emerald-400': sess.status === 'active',
                             'badge-warning bg-amber-950 border-amber-500/40 text-amber-400': sess.status === 'paused',
@@ -433,27 +578,76 @@
                           x-text="sess.status === 'active' ? 'نشط' : (sess.status === 'paused' ? 'موقوف مؤقتاً' : 'مغلق')">
                     </span>
                   </div>
-                  <div class="text-xs text-slate-400 flex items-center gap-2">
-                    <i class="fa-solid fa-user-circle text-slate-500"></i>
-                    <span>العضو المخصص:</span>
-                    <span class="text-slate-200 font-semibold" x-text="sess.assignee || 'عام للفريق'"></span>
-                  </div>
                 </div>
 
-                <!-- Status Toggle & Delete -->
-                <div class="flex items-center gap-1">
-                  <button @click="toggleSessionStatus(sess)" 
-                          class="btn btn-xs btn-ghost"
-                          :class="sess.status === 'active' ? 'text-amber-400 hover:bg-amber-950/40' : 'text-emerald-400 hover:bg-emerald-950/40'"
-                          :title="sess.status === 'active' ? 'إيقاف مؤقت' : 'تنشيط الجلسة'">
-                    <i :class="sess.status === 'active' ? 'fa-solid fa-pause' : 'fa-solid fa-play'"></i>
+                <!-- 3-Dots Dropdown Action Menu (Replaces crowded icons) -->
+                <div class="dropdown dropdown-end shrink-0">
+                  <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" title="خيارات وإجراءات الجلسة">
+                    <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                   </button>
-                  <button @click="openEditModal(sess)" class="btn btn-xs btn-ghost text-slate-400 hover:text-white" title="تعديل الصلاحيات">
-                    <i class="fa-solid fa-sliders"></i>
-                  </button>
-                  <button @click="deleteSession(sess)" class="btn btn-xs btn-ghost text-rose-400 hover:bg-rose-950/40" title="حذف الجلسة">
-                    <i class="fa-solid fa-trash-can"></i>
-                  </button>
+                  <ul tabindex="0" class="dropdown-content z-[30] menu p-1.5 shadow-2xl bg-slate-950 border border-slate-800 rounded-xl w-48 text-xs space-y-0.5 text-slate-200">
+                    <li>
+                      <button @click="toggleFavorite(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800">
+                        <i :class="sess.isFavorite ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-400'" class="w-4 text-center"></i>
+                        <span x-text="sess.isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'"></span>
+                      </button>
+                    </li>
+                    <li>
+                      <button @click="togglePin(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800">
+                        <i class="fa-solid fa-thumbtack w-4 text-center" :class="sess.isPinned ? 'rotate-45 text-cyan-400' : 'text-slate-400'"></i>
+                        <span x-text="sess.isPinned ? 'إلغاء التثبيت' : 'تثبيت في المقدمة'"></span>
+                      </button>
+                    </li>
+                    <li>
+                      <button @click="toggleSessionStatus(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800"
+                              :class="sess.status === 'active' ? 'text-amber-400' : 'text-emerald-400'">
+                        <i :class="sess.status === 'active' ? 'fa-solid fa-pause' : 'fa-solid fa-play'" class="w-4 text-center"></i>
+                        <span x-text="sess.status === 'active' ? 'إيقاف الجلسة مؤقتاً' : 'تنشيط الجلسة'"></span>
+                      </button>
+                    </li>
+                    <div class="h-px bg-slate-800 my-1"></div>
+                    <li>
+                      <button @click="openEditModal(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800 text-slate-300">
+                        <i class="fa-solid fa-sliders w-4 text-center text-slate-400"></i>
+                        <span>تعديل الصلاحيات</span>
+                      </button>
+                    </li>
+                    <li>
+                      <button @click="openRemoteMcpModal(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800 text-purple-300">
+                        <i class="fa-solid fa-satellite-dish w-4 text-center text-purple-400"></i>
+                        <span>ربط Remote MCP</span>
+                      </button>
+                    </li>
+                    <div class="h-px bg-slate-800 my-1"></div>
+                    <li>
+                      <button @click="deleteSession(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-rose-950/60 text-rose-400">
+                        <i class="fa-solid fa-trash-can w-4 text-center"></i>
+                        <span>حذف الجلسة</span>
+                      </button>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Full-Width Assignee & Timestamps Row (Balanced across card) -->
+              <div class="flex items-center justify-between gap-3 text-xs text-slate-400 border-t border-slate-800/60 pt-2.5 flex-wrap">
+                <div class="flex items-center gap-2">
+                  <i class="fa-solid fa-user-circle text-slate-500 text-sm"></i>
+                  <span>العضو:</span>
+                  <span class="text-slate-200 font-semibold" x-text="sess.assignee || 'عام للفريق'"></span>
+                </div>
+
+                <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400">
+                  <span class="flex items-center gap-1.5" :title="'تاريخ الإنشاء: ' + new Date(sess.createdAt).toLocaleString('ar-EG')">
+                    <i class="fa-regular fa-calendar-plus text-slate-500"></i>
+                    <span>إنشاء:</span>
+                    <span class="text-slate-300 font-semibold" x-text="new Date(sess.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' })"></span>
+                  </span>
+                  <span class="flex items-center gap-1.5" :title="'آخر نشاط: ' + new Date(sess.lastActive || sess.createdAt).toLocaleString('ar-EG')">
+                    <i class="fa-solid fa-bolt text-amber-400"></i>
+                    <span>نشاط:</span>
+                    <span class="text-slate-300 font-semibold" x-text="new Date(sess.lastActive || sess.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
+                  </span>
                 </div>
               </div>
 
@@ -464,7 +658,7 @@
                     <i class="fa-solid fa-folder-tree text-amber-400"></i>
                     <span>مجلد الساندبوكس (Workspace):</span>
                   </span>
-                  <span class="font-mono text-cyan-300 text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800" x-text="sess.targetDir"></span>
+                  <span class="font-mono text-cyan-300 text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800 truncate max-w-[280px]" x-text="sess.targetDir" :title="sess.targetDir"></span>
                 </div>
 
                 <!-- Badges for active flags -->
@@ -513,37 +707,35 @@
                 </div>
               </div>
 
-              <!-- Access Token & Link Bar -->
-              <div class="space-y-1.5 text-xs">
-                <div class="text-slate-400 text-[11px]">رمز الوصول والرابط المباشر للعضو:</div>
-                <div class="join w-full">
-                  <input type="text" readonly :value="sess.token"
-                         class="input input-xs input-bordered join-item w-full bg-slate-950 text-slate-400 font-mono text-[11px] select-all">
-                  <button @click="copyToken(sess.token)" class="btn btn-xs btn-ghost join-item border-slate-700 bg-slate-800 text-slate-200" title="نسخ الرمز">
-                    <i class="fa-solid fa-key text-[10px]"></i>
+              <!-- Card Footer: Messages Count, Quick Copy Token & Link, Open Session -->
+              <div class="flex items-center justify-between pt-2.5 border-t border-slate-800/80 text-xs flex-wrap gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <div class="text-slate-400 text-[11px] font-mono flex items-center gap-1">
+                    <i class="fa-solid fa-message text-slate-500 text-[10px]"></i>
+                    <span>رسائل:</span>
+                    <span class="font-bold text-slate-200" x-text="sess.stats?.messagesCount || 0"></span>
+                  </div>
+
+                  <!-- Quick Copy Token button (Without bulky text box) -->
+                  <button @click="copyToken(sess.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" title="نسخ رمز الوصول Token">
+                    <i class="fa-solid fa-key text-[10px] text-amber-400"></i>
                     <span>نسخ الرمز</span>
                   </button>
-                  <button @click="copyDirectLink(sess.token)" class="btn btn-xs btn-primary join-item bg-cyan-600 hover:bg-cyan-500 border-none text-white" title="نسخ الرابط المباشر">
-                    <i class="fa-solid fa-share-nodes text-[10px]"></i>
+
+                  <!-- Quick Copy Direct Link button -->
+                  <button @click="copyDirectLink(sess.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" title="نسخ الرابط المباشر">
+                    <i class="fa-solid fa-share-nodes text-[10px] text-cyan-400"></i>
                     <span>نسخ الرابط</span>
                   </button>
-                </div>
-              </div>
-
-              <!-- Card Footer Actions -->
-              <div class="flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs">
-                <div class="text-slate-500 text-[11px]">
-                  <span>الرسائل: </span>
-                  <span class="font-mono text-slate-300 font-bold" x-text="sess.stats?.messagesCount || 0"></span>
                 </div>
 
                 <div class="flex items-center gap-2">
                   <button @click="openRemoteMcpModal(sess)" class="btn btn-xs bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 gap-1.5" title="ربط الجلسة مع Claude أو ChatGPT عبر Remote MCP">
                     <i class="fa-solid fa-satellite-dish text-[11px] text-purple-400"></i>
-                    <span>ربط Remote MCP</span>
+                    <span>Remote MCP</span>
                   </button>
                   <a :href="`/agent.html?token=${sess.token}`" target="_blank"
-                     class="btn btn-xs btn-outline btn-info gap-1 text-xs">
+                     class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1.5 text-xs shadow-md shadow-cyan-600/20">
                     <span>فتح الجلسة</span>
                     <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                   </a>
@@ -554,6 +746,378 @@
           </div>
         </template>
 
+      </div>
+
+      <!-- ==================== VIEW MODE 2: HIERARCHICAL TREE VIEW ==================== -->
+      <div x-show="viewMode === 'tree'" class="space-y-6">
+        
+        <template x-for="root in sessionTree" :key="root.id">
+          <div class="space-y-3">
+            
+            <!-- Root Session Card -->
+            <div class="card bg-slate-900/90 border shadow-xl hover:border-slate-700 transition-all"
+                 :class="root.isPinned ? 'border-cyan-500/50 bg-gradient-to-br from-cyan-950/20 via-slate-900 to-slate-900 shadow-cyan-950/30' : 'border-slate-800/90'">
+              <div class="card-body p-5 space-y-3.5">
+                
+                <!-- Root Card Header: Title & Badges on Right, 3-Dots Action Menu on Left -->
+                <div class="flex items-start justify-between gap-3">
+                  <div class="space-y-1.5 flex-1 min-w-0">
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="font-bold text-base text-white break-words" x-text="root.name"></span>
+                      
+                      <!-- Root indicator -->
+                      <span x-show="!root.parentId" class="badge bg-slate-800 text-cyan-300 border border-cyan-500/30 text-[10px] font-semibold py-0.5 px-2 gap-1">
+                        <i class="fa-solid fa-cube text-[8px] text-cyan-400"></i>
+                        <span>مشروع رئيسي</span>
+                      </span>
+
+                      <!-- Pinned Badge -->
+                      <span x-show="root.isPinned" class="badge bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 text-[10px] font-semibold py-0.5 px-2 gap-1 shadow-sm">
+                        <i class="fa-solid fa-thumbtack text-[8px] rotate-45 text-cyan-400"></i>
+                        <span>مثبتة</span>
+                      </span>
+
+                      <!-- Favorite Badge -->
+                      <span x-show="root.isFavorite" class="badge bg-amber-950/90 text-amber-300 border border-amber-500/50 text-[10px] font-semibold py-0.5 px-2 gap-1 shadow-sm">
+                        <i class="fa-solid fa-star text-[8px] text-amber-400"></i>
+                        <span>مفضلة</span>
+                      </span>
+
+                      <!-- Direct Descendant Forks Count Badge -->
+                      <span x-show="root.children && root.children.length > 0" class="badge bg-purple-950 text-purple-300 border border-purple-500/50 text-[10px] font-mono py-0.5 px-2 gap-1">
+                        <i class="fa-solid fa-sitemap text-[8px] text-purple-400"></i>
+                        <span x-text="root.children.length + ' فروع متفرعة'"></span>
+                      </span>
+
+                      <!-- Status Badge -->
+                      <span class="badge text-[10px] font-semibold py-0.5 px-2"
+                            :class="{
+                              'badge-success bg-emerald-950 border-emerald-500/40 text-emerald-400': root.status === 'active',
+                              'badge-warning bg-amber-950 border-amber-500/40 text-amber-400': root.status === 'paused',
+                              'badge-error bg-rose-950 border-rose-500/40 text-rose-400': root.status === 'closed'
+                            }"
+                            x-text="root.status === 'active' ? 'نشط' : (root.status === 'paused' ? 'موقوف مؤقتاً' : 'مغلق')">
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Root Actions 3-Dots Dropdown Menu -->
+                  <div class="dropdown dropdown-end shrink-0">
+                    <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" title="خيارات وإجراءات الجلسة">
+                      <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
+                    </button>
+                    <ul tabindex="0" class="dropdown-content z-[30] menu p-1.5 shadow-2xl bg-slate-950 border border-slate-800 rounded-xl w-48 text-xs space-y-0.5 text-slate-200">
+                      <li>
+                        <button @click="toggleFavorite(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800">
+                          <i :class="root.isFavorite ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-400'" class="w-4 text-center"></i>
+                          <span x-text="root.isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'"></span>
+                        </button>
+                      </li>
+                      <li>
+                        <button @click="togglePin(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800">
+                          <i class="fa-solid fa-thumbtack w-4 text-center" :class="root.isPinned ? 'rotate-45 text-cyan-400' : 'text-slate-400'"></i>
+                          <span x-text="root.isPinned ? 'إلغاء التثبيت' : 'تثبيت في المقدمة'"></span>
+                        </button>
+                      </li>
+                      <li>
+                        <button @click="toggleSessionStatus(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800"
+                                :class="root.status === 'active' ? 'text-amber-400' : 'text-emerald-400'">
+                          <i :class="root.status === 'active' ? 'fa-solid fa-pause' : 'fa-solid fa-play'" class="w-4 text-center"></i>
+                          <span x-text="root.status === 'active' ? 'إيقاف الجلسة مؤقتاً' : 'تنشيط الجلسة'"></span>
+                        </button>
+                      </li>
+                      <div class="h-px bg-slate-800 my-1"></div>
+                      <li>
+                        <button @click="openEditModal(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800 text-slate-300">
+                          <i class="fa-solid fa-sliders w-4 text-center text-slate-400"></i>
+                          <span>تعديل الصلاحيات</span>
+                        </button>
+                      </li>
+                      <li>
+                        <button @click="openRemoteMcpModal(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800 text-purple-300">
+                          <i class="fa-solid fa-satellite-dish w-4 text-center text-purple-400"></i>
+                          <span>ربط Remote MCP</span>
+                        </button>
+                      </li>
+                      <div class="h-px bg-slate-800 my-1"></div>
+                      <li>
+                        <button @click="deleteSession(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-rose-950/60 text-rose-400">
+                          <i class="fa-solid fa-trash-can w-4 text-center"></i>
+                          <span>حذف الجلسة</span>
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <!-- Full-Width Assignee & Timestamps Row -->
+                <div class="flex items-center justify-between gap-3 text-xs text-slate-400 border-t border-slate-800/60 pt-2.5 flex-wrap">
+                  <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-user-circle text-slate-500 text-sm"></i>
+                    <span>العضو:</span>
+                    <span class="text-slate-200 font-semibold" x-text="root.assignee || 'عام للفريق'"></span>
+                  </div>
+
+                  <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400">
+                    <span class="flex items-center gap-1.5" :title="'تاريخ الإنشاء: ' + new Date(root.createdAt).toLocaleString('ar-EG')">
+                      <i class="fa-regular fa-calendar-plus text-slate-500"></i>
+                      <span>إنشاء:</span>
+                      <span class="text-slate-300 font-semibold" x-text="new Date(root.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' })"></span>
+                    </span>
+                    <span class="flex items-center gap-1.5" :title="'آخر نشاط: ' + new Date(root.lastActive || root.createdAt).toLocaleString('ar-EG')">
+                      <i class="fa-solid fa-bolt text-amber-400"></i>
+                      <span>نشاط:</span>
+                      <span class="text-slate-300 font-semibold" x-text="new Date(root.lastActive || root.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Workspace Sandbox Folder Display -->
+                <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3 space-y-2">
+                  <div class="flex items-center justify-between text-xs">
+                    <span class="text-slate-400 flex items-center gap-1.5">
+                      <i class="fa-solid fa-folder-tree text-amber-400"></i>
+                      <span>مجلد الساندبوكس (Workspace):</span>
+                    </span>
+                    <span class="font-mono text-cyan-300 text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800 truncate max-w-[280px]" x-text="root.targetDir" :title="root.targetDir"></span>
+                  </div>
+
+                  <!-- Badges for active flags -->
+                  <div class="flex items-center gap-2 flex-wrap pt-1">
+                    <span class="badge badge-xs py-1.5 px-2 gap-1 font-mono text-[10px] font-semibold"
+                          :class="{
+                            'bg-emerald-950 text-emerald-300 border-emerald-700/50': root.engine === 'codex',
+                            'bg-violet-950 text-violet-300 border-violet-700/50': root.engine === 'claude',
+                            'bg-rose-950 text-rose-300 border-rose-700/50': root.engine === 'vibe',
+                            'bg-amber-950 text-amber-300 border-amber-700/50': root.engine === 'opencode',
+                            'bg-cyan-950 text-cyan-300 border-cyan-800/40': !root.engine || root.engine === 'agy'
+                          }">
+                      <i :class="{
+                        'fa-solid fa-code text-emerald-400': root.engine === 'codex',
+                        'fa-solid fa-brain text-violet-400': root.engine === 'claude',
+                        'fa-solid fa-bolt-lightning text-rose-400': root.engine === 'vibe',
+                        'fa-solid fa-cube text-amber-400': root.engine === 'opencode',
+                        'fa-solid fa-robot text-cyan-400': !root.engine || root.engine === 'agy'
+                      }"></i>
+                      <span x-text="root.engine === 'codex' ? 'Codex' : (root.engine === 'claude' ? 'Claude Code' : (root.engine === 'vibe' ? 'Mistral Vibe' : (root.engine === 'opencode' ? 'OpenCode' : 'AGY')))"></span>
+                    </span>
+                    <span x-show="root.model" class="badge badge-xs bg-slate-800 text-slate-300 border-slate-700 py-1.5 px-2 gap-1 font-mono text-[10px]" x-text="root.model"></span>
+                    <span x-show="root.sandbox" class="badge badge-xs bg-cyan-950 text-cyan-300 border-cyan-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
+                      <i class="fa-solid fa-shield"></i> Sandbox Active
+                    </span>
+                    <span x-show="root.autoApprove" class="badge badge-xs bg-emerald-950 text-emerald-300 border-emerald-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
+                      <i class="fa-solid fa-bolt"></i> Auto-Approve
+                    </span>
+                    <span x-show="root.continueSession" class="badge badge-xs bg-indigo-950 text-indigo-300 border-indigo-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
+                      <i class="fa-solid fa-link"></i> Continue Context
+                    </span>
+                    <span class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 text-[10px]">
+                      <i class="fa-solid fa-desktop"></i>
+                      <span x-text="root.allowedModes === 'both' ? 'دردشة وترمنال' : (root.allowedModes === 'chat' ? 'دردشة فقط' : 'ترمنال فقط')"></span>
+                    </span>
+                    <span x-show="root.enableMcp !== false" class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
+                      <i class="fa-solid fa-brain text-purple-400"></i> MemoryZ MCP
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Card Footer Actions -->
+                <div class="flex items-center justify-between pt-2.5 border-t border-slate-800/80 text-xs flex-wrap gap-2">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <div class="text-slate-400 text-[11px] font-mono flex items-center gap-1">
+                      <i class="fa-solid fa-message text-slate-500 text-[10px]"></i>
+                      <span>رسائل:</span>
+                      <span class="font-bold text-slate-200" x-text="root.stats?.messagesCount || 0"></span>
+                    </div>
+
+                    <!-- Quick Copy Token button -->
+                    <button @click="copyToken(root.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" title="نسخ رمز الوصول Token">
+                      <i class="fa-solid fa-key text-[10px] text-amber-400"></i>
+                      <span>نسخ الرمز</span>
+                    </button>
+
+                    <!-- Quick Copy Direct Link button -->
+                    <button @click="copyDirectLink(root.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" title="نسخ الرابط المباشر">
+                      <i class="fa-solid fa-share-nodes text-[10px] text-cyan-400"></i>
+                      <span>نسخ الرابط</span>
+                    </button>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button @click="openRemoteMcpModal(root)" class="btn btn-xs bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 gap-1.5">
+                      <i class="fa-solid fa-satellite-dish text-[11px] text-purple-400"></i>
+                      <span>Remote MCP</span>
+                    </button>
+                    <a :href="`/agent.html?token=${root.token}`" target="_blank"
+                       class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1.5 text-xs shadow-md shadow-cyan-600/20">
+                      <span>فتح الجلسة</span>
+                      <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                    </a>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ==================== NESTED FORK BRANCHES SECTION ==================== -->
+            <div x-show="root.children && root.children.length > 0" class="mr-4 sm:mr-8 my-2 pr-3 sm:pr-4 border-r-2 border-purple-500/40 space-y-3">
+              
+              <!-- Branches Collapsible Header -->
+              <div class="flex items-center justify-between bg-purple-950/40 hover:bg-purple-950/70 border border-purple-500/30 rounded-xl px-4 py-2 cursor-pointer select-none transition-colors"
+                   @click="toggleBranchCollapse(root.id)">
+                <div class="flex items-center gap-2 text-xs text-purple-300 font-semibold">
+                  <i class="fa-solid fa-code-fork text-purple-400"></i>
+                  <span>الفروع المتفرعة من "<span x-text="root.name"></span>" (<span x-text="root.children.length"></span>)</span>
+                </div>
+                <div class="flex items-center gap-1.5 text-[11px] text-purple-400 font-medium">
+                  <span x-text="isBranchCollapsed(root.id) ? 'إظهار الفروع' : 'طي الفروع'"></span>
+                  <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
+                     :class="isBranchCollapsed(root.id) ? '-rotate-90' : 'rotate-0'"></i>
+                </div>
+              </div>
+
+              <!-- Children Branches Cards -->
+              <div x-show="!isBranchCollapsed(root.id)" class="space-y-3">
+                <template x-for="child in root.children" :key="child.id">
+                  <div class="space-y-2">
+                    
+                    <!-- Child Session Sub-Card -->
+                    <div class="card bg-slate-900/80 border border-purple-500/30 shadow-lg hover:border-purple-400/50 transition-all">
+                      <div class="card-body p-4 space-y-3">
+                        
+                        <!-- Child Card Header -->
+                        <div class="flex items-start justify-between gap-3">
+                          <div class="space-y-1 flex-1 min-w-0">
+                            <div class="flex items-center gap-2 flex-wrap">
+                              <i class="fa-solid fa-code-fork text-purple-400 text-xs"></i>
+                              <span class="font-bold text-sm text-white break-words" x-text="child.name"></span>
+                              
+                              <span class="badge bg-purple-950 text-purple-300 border border-purple-500/40 text-[9px] font-semibold py-0.5 px-1.5 gap-1">
+                                <span x-text="'متفرع عند #' + (child.forkedFrom?.atIndex !== undefined ? child.forkedFrom.atIndex + 1 : '1')"></span>
+                              </span>
+
+                              <span x-show="child.isPinned" class="badge bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[9px] py-0.5 px-1.5 gap-1">
+                                <i class="fa-solid fa-thumbtack text-[8px] rotate-45"></i> مثبتة
+                              </span>
+
+                              <span x-show="child.isFavorite" class="badge bg-amber-950 text-amber-300 border border-amber-500/40 text-[9px] py-0.5 px-1.5 gap-1">
+                                <i class="fa-solid fa-star text-[8px]"></i> مفضلة
+                              </span>
+                            </div>
+                          </div>
+
+                          <!-- Child Actions Dropdown -->
+                          <div class="dropdown dropdown-end shrink-0">
+                            <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" title="خيارات">
+                              <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
+                            </button>
+                            <ul tabindex="0" class="dropdown-content z-[30] menu p-1 shadow-xl bg-slate-950 border border-slate-800 rounded-xl w-40 text-xs space-y-0.5 text-slate-200">
+                              <li>
+                                <button @click="toggleFavorite(child)" class="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-800">
+                                  <i :class="child.isFavorite ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-400'"></i>
+                                  <span x-text="child.isFavorite ? 'إزالة المفضلة' : 'تفضيل'"></span>
+                                </button>
+                              </li>
+                              <li>
+                                <button @click="togglePin(child)" class="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-800">
+                                  <i class="fa-solid fa-thumbtack" :class="child.isPinned ? 'rotate-45 text-cyan-400' : 'text-slate-400'"></i>
+                                  <span x-text="child.isPinned ? 'إلغاء التثبيت' : 'تثبيت'"></span>
+                                </button>
+                              </li>
+                              <div class="h-px bg-slate-800 my-0.5"></div>
+                              <li>
+                                <button @click="openEditModal(child)" class="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-800">
+                                  <i class="fa-solid fa-sliders text-slate-400"></i>
+                                  <span>تعديل</span>
+                                </button>
+                              </li>
+                              <li>
+                                <button @click="deleteSession(child)" class="flex items-center gap-2 py-1 px-2 rounded hover:bg-rose-950/60 text-rose-400">
+                                  <i class="fa-solid fa-trash-can"></i>
+                                  <span>حذف</span>
+                                </button>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+
+                        <!-- Child Assignee & Timestamps Row -->
+                        <div class="text-[11px] text-slate-400 flex items-center justify-between gap-2 flex-wrap border-t border-slate-800/50 pt-2">
+                          <span class="font-mono text-cyan-300 bg-slate-950 px-2 py-0.5 rounded text-[10px] truncate max-w-[200px]" x-text="child.targetDir" :title="child.targetDir"></span>
+                          <div class="flex items-center gap-3 font-mono text-[10px] text-slate-400">
+                            <span class="text-slate-400" x-text="'تفرع: ' + new Date(child.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })"></span>
+                            <span class="text-slate-300" x-text="'نشاط: ' + new Date(child.lastActive || child.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
+                          </div>
+                        </div>
+
+                        <!-- Child Footer -->
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs flex-wrap gap-2">
+                          <div class="flex items-center gap-1.5">
+                            <button @click="copyToken(child.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 text-slate-300 hover:text-white gap-1 text-[10px]" title="نسخ الرمز">
+                              <i class="fa-solid fa-key text-[9px] text-amber-400"></i>
+                              <span>الرمز</span>
+                            </button>
+                            <button @click="copyDirectLink(child.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 text-slate-300 hover:text-white gap-1 text-[10px]" title="نسخ الرابط">
+                              <i class="fa-solid fa-share-nodes text-[9px] text-cyan-400"></i>
+                              <span>الرابط</span>
+                            </button>
+                          </div>
+                          <a :href="`/agent.html?token=${child.token}`" target="_blank"
+                             class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1 text-[11px] px-2.5">
+                            <span>فتح</span>
+                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                          </a>
+                        </div>
+
+                      </div>
+                    </div>
+
+                    <!-- Level 2 Sub-Branches (if child itself has forks) -->
+                    <div x-show="child.children && child.children.length > 0" class="mr-4 pr-3 border-r-2 border-purple-400/30 space-y-2">
+                      <template x-for="subChild in child.children" :key="subChild.id">
+                        <div class="card bg-slate-950/90 border border-purple-500/20 p-3 flex items-center justify-between text-xs">
+                          <div class="flex items-center gap-2 truncate">
+                            <i class="fa-solid fa-code-fork text-purple-400 text-xs"></i>
+                            <span class="font-bold text-white truncate" x-text="subChild.name"></span>
+                            <span class="badge badge-xs badge-ghost text-[9px] font-mono" x-text="(subChild.stats?.messagesCount || 0) + ' رسائل'"></span>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <button @click="copyToken(subChild.token)" class="btn btn-xs btn-ghost text-slate-400 hover:text-white text-[10px]" title="نسخ الرمز">
+                              <i class="fa-solid fa-key text-[9px] text-amber-400"></i>
+                            </button>
+                            <a :href="`/agent.html?token=${subChild.token}`" target="_blank" class="btn btn-xs btn-ghost text-cyan-400 hover:text-cyan-300">
+                              <span>فتح</span>
+                              <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                            </a>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+
+                  </div>
+                </template>
+              </div>
+
+            </div>
+
+          </div>
+        </template>
+
+      </div>
+
+      <!-- ==================== EMPTY STATE ==================== -->
+      <div x-show="filteredSessions.length === 0" class="card bg-slate-900/60 border border-slate-800 p-12 text-center space-y-3">
+        <div class="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700/60 mx-auto flex items-center justify-center text-slate-400 text-2xl shadow-inner">
+          <i class="fa-solid fa-filter-circle-xmark"></i>
+        </div>
+        <h3 class="text-base font-bold text-white">لا توجد جلسات تطابق خيارات الفلترة المحددة</h3>
+        <p class="text-xs text-slate-400 max-w-md mx-auto">جرب تغيير كلمات البحث، أو تصفية نوع الجلسات، أو إعادة ضبط الفلاتر لعرض الجلسات المتاحة.</p>
+        <div class="pt-2">
+          <button @click="searchQuery = ''; setTypeFilter('all'); statusFilter = 'all'; engineFilter = 'all'" class="btn btn-sm btn-outline btn-info gap-1.5 text-xs">
+            <i class="fa-solid fa-rotate-left text-xs"></i>
+            <span>إعادة ضبط جميع الفلاتر</span>
+          </button>
+        </div>
       </div>
 
     </main>

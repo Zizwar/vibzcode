@@ -152,6 +152,82 @@
   color: #7dd3fc;
 }
 
+/* ==================== INTERACTIVE LOCAL FILE & MEDIA IN CHAT ==================== */
+.local-file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.2rem 0.55rem;
+  margin: 0.15rem 0.2rem;
+  border-radius: 0.5rem;
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #f1f5f9;
+  font-size: 0.8rem;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  vertical-align: middle;
+}
+
+.local-file-chip:hover {
+  background: rgba(30, 41, 59, 0.95);
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 2px 8px rgba(56, 189, 248, 0.2);
+  transform: translateY(-1px);
+}
+
+.local-file-chip:active,
+.local-file-chip.is-pressing {
+  transform: scale(0.96);
+  border-color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.2) !important;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.5) !important;
+}
+
+.local-file-chip .btn-action {
+  transition: all 0.15s ease;
+}
+
+.local-file-chip .btn-action:hover {
+  background: rgba(255, 255, 255, 0.15);
+  transform: scale(1.1);
+}
+
+/* Local Media Card (Images, Videos, Audio inside Chat) */
+.local-media-card {
+  margin: 0.6rem 0;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  border: 1px solid rgba(51, 65, 85, 0.8);
+  background: #020617;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  max-width: 100%;
+  display: inline-block;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.local-media-card:hover {
+  border-color: rgba(56, 189, 248, 0.5);
+}
+
+.local-media-card.is-pressing {
+  transform: scale(0.98);
+  border-color: #10b981 !important;
+  box-shadow: 0 0 16px rgba(16, 185, 129, 0.5) !important;
+}
+
+.local-media-card img {
+  display: block;
+  max-height: 22rem;
+  max-width: 100%;
+  object-fit: contain;
+  margin: 0 auto;
+}
+
 /* Animations */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
@@ -358,5 +434,57 @@ html[data-theme="light"],
 /* Join containers */
 [data-theme="light"] .join {
   border-color: #e2e8f0 !important;
+}
+
+/* Local File Chip & Media Card Light Mode */
+[data-theme="light"] .local-file-chip {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="light"] .local-file-chip:hover {
+  background: #e2e8f0;
+  border-color: #0284c7;
+  box-shadow: 0 2px 6px rgba(2, 132, 199, 0.15);
+}
+
+[data-theme="light"] .local-file-chip.is-pressing {
+  background: #ecfdf5 !important;
+  border-color: #059669 !important;
+}
+
+[data-theme="light"] .local-media-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Tree & Pinned Sessions in Light Mode */
+[data-theme="light"] .border-purple-500\/30,
+[data-theme="light"] .border-purple-500\/40 {
+  border-color: #d8b4fe !important;
+}
+
+[data-theme="light"] .bg-purple-950\/40 {
+  background-color: #f5f3ff !important;
+}
+
+[data-theme="light"] .bg-purple-950 {
+  background-color: #f3e8ff !important;
+  color: #7e22ce !important;
+}
+
+[data-theme="light"] .bg-cyan-950\/90,
+[data-theme="light"] .bg-cyan-950 {
+  background-color: #e0f2fe !important;
+  color: #0369a1 !important;
+}
+
+[data-theme="light"] .bg-amber-950\/90,
+[data-theme="light"] .bg-amber-950 {
+  background-color: #fef3c7 !important;
+  color: #b45309 !important;
 }
 

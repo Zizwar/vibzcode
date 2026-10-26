@@ -276,16 +276,16 @@ https://test.10rg.com/openapi.json?token=<YOUR_SESSION_TOKEN>
 curl -s http://127.0.0.1:3333/api/mcp/status
 
 # 2. فحص خادم Remote MCP مع توكن جلسة
-curl -s "http://127.0.0.1:3333/mcp?token=agyz_f7ca93475aef251cb159ac928082e124"
+curl -s "http://127.0.0.1:3333/mcp?token=vibz_session_token_example"
 
 # 3. اختبار مصافحة Claude Initialize عبر HTTPS
-curl -s -X POST "https://test.10rg.com/mcp?token=agyz_f7ca93475aef251cb159ac928082e124" \
+curl -s -X POST "https://test.10rg.com/mcp?token=vibz_session_token_example" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
   -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test-agent","version":"1.0"}}}'
 
 # 4. فحص مواصفة OpenAPI لـ ChatGPT
-curl -s "https://test.10rg.com/openapi.json?token=agyz_f7ca93475aef251cb159ac928082e124" | head -n 10
+curl -s "https://test.10rg.com/openapi.json?token=vibz_session_token_example" | head -n 10
 ```
 
 ---

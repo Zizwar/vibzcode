@@ -413,7 +413,7 @@ app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
     return res.status(404).json({ success: false, error: 'الجلسة غير موجودة' });
   }
 
-  const allowedUpdates = ['name', 'assignee', 'role', 'systemPrompt', 'namespace', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'timeout', 'status'];
+  const allowedUpdates = ['name', 'assignee', 'role', 'systemPrompt', 'namespace', 'targetDir', 'engine', 'model', 'sandbox', 'autoApprove', 'continueSession', 'allowedModes', 'enableMcp', 'timeout', 'status', 'isPinned', 'isFavorite'];
   for (const key of allowedUpdates) {
     if (req.body[key] !== undefined) {
       if (key === 'targetDir') {
@@ -428,6 +428,24 @@ app.patch('/api/admin/sessions/:id', requireAdmin, (req, res) => {
 
   saveSessions(sessions);
   return res.json({ success: true, session: sessions[index] });
+});
+
+// Admin Toggle Session Flag (isPinned, isFavorite)
+app.post('/api/admin/sessions/:id/toggle-flag', requireAdmin, (req, res) => {
+  const { id } = req.params;
+  const { flag } = req.body;
+  if (!['isPinned', 'isFavorite'].includes(flag)) {
+    return res.status(400).json({ success: false, error: 'خاصية غير صالحة' });
+  }
+
+  const session = sessions.find(s => s.id === id);
+  if (!session) {
+    return res.status(404).json({ success: false, error: 'الجلسة غير موجودة' });
+  }
+
+  session[flag] = !session[flag];
+  saveSessions(sessions);
+  return res.json({ success: true, session, [flag]: session[flag] });
 });
 
 // Admin Delete Session
@@ -564,6 +582,48 @@ app.get('/api/session/workspace/tree', (req, res) => {
   return res.json({ success: true, tree, targetDir });
 });
 
+// Helper to resolve workspace file path reliably (handles file://, absolute paths, and relative paths)
+function resolveWorkspaceFilePath(targetDir, rawPath, session = {}, token = '') {
+  if (!rawPath || typeof rawPath !== 'string') return null;
+  let p = rawPath.trim();
+  p = p.replace(/^file:\/\//i, '');
+  p = p.split('#')[0].split('?')[0];
+  try { p = decodeURIComponent(p); } catch (e) {}
+
+  const resolvedTarget = path.resolve(targetDir);
+  const isAdmin = token === ADMIN_SECRET;
+  const isNoSandbox = session && session.sandbox === false;
+
+  if (path.isAbsolute(p)) {
+    const absPath = path.resolve(p);
+    // 1. Direct path inside targetDir
+    if (absPath.startsWith(resolvedTarget)) {
+      return absPath;
+    }
+    // 2. Path written with leading slash intended relative to targetDir (e.g. /myimage.png)
+    const relFromTarget = path.resolve(resolvedTarget, p.replace(/^\/+/, ''));
+    if (fs.existsSync(relFromTarget)) {
+      return relFromTarget;
+    }
+    // 3. Admin or non-sandboxed session accessing existing system path
+    if ((isAdmin || isNoSandbox) && fs.existsSync(absPath)) {
+      return absPath;
+    }
+    // 4. Default fallback if relFromTarget starts with targetDir
+    if (relFromTarget.startsWith(resolvedTarget)) {
+      return relFromTarget;
+    }
+    return null;
+  }
+
+  // Relative path
+  const relPath = path.resolve(resolvedTarget, p);
+  if (relPath.startsWith(resolvedTarget)) {
+    return relPath;
+  }
+  return null;
+}
+
 // Workspace File Content Preview API
 app.get('/api/session/workspace/file', (req, res) => {
   const token = getAuthToken(req);
@@ -576,8 +636,8 @@ app.get('/api/session/workspace/file', (req, res) => {
   const requestedPath = req.query.path;
   if (!requestedPath) return res.status(400).json({ success: false, error: 'المسار مطلوب' });
 
-  const fullPath = path.resolve(targetDir, requestedPath);
-  if (!fullPath.startsWith(targetDir)) {
+  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, session, token);
+  if (!fullPath) {
     return res.status(403).json({ success: false, error: 'مسار غير مسموح' });
   }
 
@@ -604,13 +664,16 @@ const WORKSPACE_MIME_TYPES = {
   webp: 'image/webp', svg: 'image/svg+xml', ico: 'image/x-icon', bmp: 'image/bmp',
   // Video
   mp4: 'video/mp4', webm: 'video/webm', ogg: 'video/ogg', mov: 'video/quicktime',
+  mkv: 'video/x-matroska', avi: 'video/x-msvideo',
   // Audio
   mp3: 'audio/mpeg', wav: 'audio/wav', m4a: 'audio/mp4', aac: 'audio/aac', flac: 'audio/flac',
   // Documents & Data
-  pdf: 'application/pdf', json: 'application/json', txt: 'text/plain',
+  pdf: 'application/pdf', json: 'application/json', txt: 'text/plain', csv: 'text/csv', xml: 'application/xml',
   // Code & text
   html: 'text/html', css: 'text/css', js: 'application/javascript', ts: 'text/plain',
-  py: 'text/plain', sh: 'text/plain', md: 'text/markdown', yml: 'text/yaml', yaml: 'text/yaml'
+  py: 'text/plain', sh: 'text/plain', md: 'text/markdown', yml: 'text/yaml', yaml: 'text/yaml',
+  // Archives
+  zip: 'application/zip', tar: 'application/x-tar', gz: 'application/gzip', '7z': 'application/x-7z-compressed'
 };
 
 function getWorkspaceMimeType(filePath) {
@@ -630,8 +693,8 @@ app.get('/api/session/workspace/raw', (req, res) => {
   const requestedPath = req.query.path;
   if (!requestedPath) return res.status(400).send('Path is required');
 
-  const fullPath = path.resolve(targetDir, requestedPath);
-  if (!fullPath.startsWith(targetDir) || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
+  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, session, token);
+  if (!fullPath || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
     return res.status(404).send('File not found');
   }
 
@@ -678,8 +741,8 @@ app.get('/api/session/workspace/download', (req, res) => {
   const requestedPath = req.query.path;
   if (!requestedPath) return res.status(400).send('Path is required');
 
-  const fullPath = path.resolve(targetDir, requestedPath);
-  if (!fullPath.startsWith(targetDir) || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
+  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, session, token);
+  if (!fullPath || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
     return res.status(404).send('File not found');
   }
 
@@ -734,10 +797,10 @@ app.all('/api/session/workspace/zip', (req, res) => {
   archive.pipe(res);
 
   for (const relItem of itemsToZip) {
-    const safeRel = (relItem || '').replace(/^(\.\.[\/\\])+/, '');
-    const fullPath = path.resolve(targetDir, safeRel);
+    const safeRel = (relItem || '').replace(/^file:\/\//i, '').replace(/^(\.\.[\/\\])+/, '');
+    const fullPath = resolveWorkspaceFilePath(targetDir, relItem, session, token) || path.resolve(targetDir, safeRel);
 
-    if (!fullPath.startsWith(targetDir) || !fs.existsSync(fullPath)) {
+    if (!fullPath || !fullPath.startsWith(targetDir) || !fs.existsSync(fullPath)) {
       continue;
     }
 

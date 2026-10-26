@@ -13,6 +13,8 @@ data_backup*
 root/
 .claude/
 .tmp/
+deno/
+deno_backup*
 
 # Logs & OS artifacts
 *.log
