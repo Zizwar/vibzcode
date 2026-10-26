@@ -39,6 +39,20 @@ flowchart TD
 
 ---
 
+## 📸 Visual Showcase & Dashboards
+
+| Central Sessions Dashboard (Grid View) | Hierarchical Branching & Forks (Tree View) |
+| :---: | :---: |
+| ![Admin Sessions Grid](docs/assets/screenshots/admin-sessions-grid.png) | ![Admin Sessions Tree](docs/assets/screenshots/admin-sessions-tree.png) |
+
+| Interactive Agent Console & Media Preview | Workspace Sandbox Explorer |
+| :---: | :---: |
+| ![Agent Chat](docs/assets/screenshots/agent-chat.png) | ![Agent Workspace](docs/assets/screenshots/agent-workspace.png) |
+
+> 🌐 **الصفحة التعريفية باللغة العربية:** يمكنك زيارة [الصفحة التعريفية الشاملة لمنصة VibzCode](https://zizwar.github.io/vibzcode/) للاطلاع على المميزات الكاملة ودليل الاستخدام السريع.
+
+---
+
 ## 🚀 Key Highlights & Capabilities
 
 ### 1. Instant One-Command Boot (`npx vibzcode`)

@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VibzCode (agyz) | منصة إدارة وتنسيق الوكلاء البرمجية المعزولة</title>
+  <meta name="description" content="منصة متطورة لإدارة وتنسيق مساحات عمل الوكلاء الأذكياء (AI Coding Agents)، تدعم Google Antigravity، وتوفر خادم Remote MCP موحد، ونظام تفرع الجلسات، ومعاينة الميديا التفاعلية.">
+  
+  <!-- Fonts: Cairo & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS & DaisyUI 4 -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
+  
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Cairo', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfeff',
+              100: '#cffafe',
+              400: '#22d3ee',
+              500: '#06b6d4',
+              600: '#0891b2',
+              900: '#164e63',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Cairo', sans-serif;
+      background-color: #030712;
+      color: #f3f4f6;
+    }
+    .gradient-text {
+      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-glow {
+      position: absolute;
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 70%);
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 0;
+      pointer-events: none;
+      filter: blur(40px);
+    }
+    .glass-card {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(56, 189, 248, 0.15);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .glass-card:hover {
+      border-color: rgba(56, 189, 248, 0.4);
+      transform: translateY(-3px);
+      box-shadow: 0 12px 30px -10px rgba(6, 182, 212, 0.2);
+    }
+    .tab-active-btn {
+      background: rgba(6, 182, 212, 0.2) !important;
+      border-color: #06b6d4 !important;
+      color: #38bdf8 !important;
+    }
+  </style>
+</head>
+<body class="min-h-screen selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- Ambient Glow -->
+  <div class="hero-glow"></div>
+
+  <!-- Navigation Bar -->
+  <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-600 via-indigo-600 to-purple-600 p-0.5 flex items-center justify-center shadow-lg shadow-cyan-500/20">
+          <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+            <i class="fa-solid fa-microchip text-xl text-cyan-400"></i>
+          </div>
+        </div>
+        <div>
+          <span class="text-xl font-black tracking-tight text-white flex items-center gap-2">
+            VibzCode
+            <span class="badge badge-sm badge-info font-mono text-[10px] uppercase font-bold tracking-wider">agyz v2.5</span>
+          </span>
+          <p class="text-xs text-slate-400">بيئة إدارة وتنسيق مساحات عمل الوكلاء الأذكياء</p>
+        </div>
+      </div>
+
+      <!-- Quick Nav Links -->
+      <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-300">
+        <a href="#showcase" class="hover:text-cyan-400 transition-colors">استعراض الواجهات</a>
+        <a href="#features" class="hover:text-cyan-400 transition-colors">المميزات الجوهرية</a>
+        <a href="#architecture" class="hover:text-cyan-400 transition-colors">المعمارية والربط</a>
+        <a href="#quickstart" class="hover:text-cyan-400 transition-colors">التشغيل السريع</a>
+      </nav>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-3">
+        <a href="https://github.com/Zizwar/vibzcode" target="_blank" rel="noopener noreferrer"
+           class="btn btn-sm btn-outline border-slate-700 hover:border-cyan-500 text-slate-200 gap-2">
+          <i class="fa-brands fa-github text-base"></i>
+          <span>GitHub</span>
+        </a>
+        <a href="#quickstart" class="btn btn-sm bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold border-none shadow-md shadow-cyan-500/20">
+          <i class="fa-solid fa-play text-xs"></i>
+          <span>ابدأ الآن</span>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="relative pt-20 pb-16 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+      
+      <!-- Top Pill -->
+      <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-6 shadow-inner">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>الجيل الجديد من بيئات الأتمتة البرمجية متعددة الوكلاء</span>
+      </div>
+
+      <!-- Main Headline -->
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight max-w-5xl mx-auto mb-6">
+        تحكم كامل، ساندبوكس معزول،
+        <br>
+        <span class="gradient-text">وتنسيق فائق للوكلاء الأذكياء</span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-10 font-normal">
+        منصة <strong>VibzCode</strong> توفر نظام إدارة مركزي متكامل للجلسات البرمجية المستقلة، تدعم محركات 
+        <span class="text-cyan-400 font-semibold font-mono">Google Antigravity (AGY)</span> و 
+        <span class="text-purple-400 font-semibold font-mono">Claude Code</span>، مع خادم 
+        <span class="text-emerald-400 font-semibold font-mono">Remote MCP</span> موحد للربط المباشر مع Cursor و Claude و ChatGPT.
+      </p>
+
+      <!-- CTA Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
+        <a href="#showcase" class="btn btn-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black border-none gap-2 shadow-xl shadow-cyan-500/25">
+          <i class="fa-solid fa-images"></i>
+          <span>استعراض لقطات حية</span>
+        </a>
+        <a href="#features" class="btn btn-lg btn-outline border-slate-700 hover:border-slate-500 text-white gap-2">
+          <i class="fa-solid fa-bolt-lightning text-amber-400"></i>
+          <span>المميزات المتقدمة</span>
+        </a>
+      </div>
+
+      <!-- Quick Highlights Bar -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-2xl sm:text-3xl font-black text-cyan-400 font-mono">100%</div>
+          <div class="text-xs text-slate-400 mt-1">عزل ساندبوكس للمجلدات</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-2xl sm:text-3xl font-black text-purple-400 font-mono">One URL</div>
+          <div class="text-xs text-slate-400 mt-1">خادم Remote MCP موحد</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">Tree Forks</div>
+          <div class="text-xs text-slate-400 mt-1">تفرع شجري غير محدود للجلسات</div>
+        </div>
+        <div class="glass-card p-4 rounded-2xl text-center">
+          <div class="text-2xl sm:text-3xl font-black text-amber-400 font-mono">Instant</div>
+          <div class="text-xs text-slate-400 mt-1">معاينة وتنزيل وسائط وميديا</div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Interactive Showcase & Screenshots Section -->
+  <section id="showcase" class="py-20 bg-slate-900/40 border-t border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-12">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4">
+          واجهات مصممة باحترافية لتجربة عمل سلسة
+        </h2>
+        <p class="text-slate-400 text-base">
+          لقطات حقيقية من منصة VibzCode توضح كفاءة لوحة التحكم المركزية وبيئة عمل الوكيل الذكي.
+        </p>
+      </div>
+
+      <!-- Tab Buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mb-8">
+        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard"
+                class="btn btn-sm glass-card border border-slate-700 text-slate-300 font-semibold gap-2 tab-active-btn">
+          <i class="fa-solid fa-table-cells text-cyan-400"></i>
+          <span>لوحة الجلسات (شبكي)</span>
+        </button>
+        <button onclick="switchTab('tree')" id="tab-btn-tree"
+                class="btn btn-sm glass-card border border-slate-700 text-slate-300 font-semibold gap-2">
+          <i class="fa-solid fa-sitemap text-purple-400"></i>
+          <span>شجرة التفرع (Tree View)</span>
+        </button>
+        <button onclick="switchTab('chat')" id="tab-btn-chat"
+                class="btn btn-sm glass-card border border-slate-700 text-slate-300 font-semibold gap-2">
+          <i class="fa-solid fa-comments text-emerald-400"></i>
+          <span>محادثة الوكيل وتفاعل الميديا</span>
+        </button>
+        <button onclick="switchTab('workspace')" id="tab-btn-workspace"
+                class="btn btn-sm glass-card border border-slate-700 text-slate-300 font-semibold gap-2">
+          <i class="fa-solid fa-folder-tree text-amber-400"></i>
+          <span>مستكشف الملفات والساندبوكس</span>
+        </button>
+      </div>
+
+      <!-- Screenshot Showcase Container -->
+      <div class="relative glass-card rounded-2xl p-2 sm:p-4 overflow-hidden border border-slate-700/80 shadow-2xl">
+        
+        <!-- Mock Browser Chrome Header -->
+        <div class="flex items-center justify-between pb-3 px-2 border-b border-slate-800 mb-3 text-xs text-slate-400">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
+            <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
+          </div>
+          <div id="mock-url" class="font-mono bg-slate-950/80 px-4 py-1 rounded-md text-[11px] text-slate-400 border border-slate-800">
+            https://vibzcode.local:3334/
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="badge badge-xs badge-success">Online</span>
+          </div>
+        </div>
+
+        <!-- Tab 1: Admin Dashboard -->
+        <div id="tab-view-dashboard" class="tab-view-content block">
+          <img src="assets/screenshots/admin-sessions-grid.png" alt="لوحة الجلسات العادية في VibzCode"
+               class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
+          <div class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-circle-check text-cyan-400"></i>
+              <span><strong>لوحة الإدارة المركزية:</strong> فرز الجلسات حسب تاريخ الإنشاء أو النشاط، مفضلة، تثبيت بالقمة، وقائمة 3-dots للتحكم الكامل.</span>
+            </div>
+            <span class="badge badge-sm badge-info font-mono">35+ Sessions</span>
+          </div>
+        </div>
+
+        <!-- Tab 2: Admin Tree View -->
+        <div id="tab-view-tree" class="tab-view-content hidden">
+          <img src="assets/screenshots/admin-sessions-tree.png" alt="شجرة تفرع الجلسات في VibzCode"
+               class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
+          <div class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-sitemap text-purple-400"></i>
+              <span><strong>نظام التفرع الهرمي (Tree):</strong> عرض كل مشروع أصلي وأسفله كافة الفروع المتشعبة منه بنقرة زر مع إمكانية الطي والتوسيع.</span>
+            </div>
+            <span class="badge badge-sm badge-secondary font-mono">Forks Hierarchy</span>
+          </div>
+        </div>
+
+        <!-- Tab 3: Agent Chat View -->
+        <div id="tab-view-chat" class="tab-view-content hidden">
+          <img src="assets/screenshots/agent-chat.png" alt="شاشة محادثة العضو مع الوكيل الذكي"
+               class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
+          <div class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
+              <span><strong>بيئة المحادثة التفاعلية:</strong> دعم لغة عربية متقدم، تفاعل فوري مع روابط الوسائط والملفات المنشأة، ومعاينتها أو تحميلها بالضغط المطول.</span>
+            </div>
+            <span class="badge badge-sm badge-success font-mono">Interactive Chips</span>
+          </div>
+        </div>
+
+        <!-- Tab 4: Agent Workspace -->
+        <div id="tab-view-workspace" class="tab-view-content hidden">
+          <img src="assets/screenshots/agent-workspace.png" alt="مستكشف الملفات وساندبوكس المشروع"
+               class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
+          <div class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 gap-2">
+            <div class="flex items-center gap-2">
+              <i class="fa-solid fa-folder-open text-amber-400"></i>
+              <span><strong>مستكشف مساحة العمل (Workspace):</strong> استعراض فوري لكامل ملفات ومجلدات الساندبوكس، تنزيل أرشيف ZIP، ومعاينة كود نظيفة.</span>
+            </div>
+            <span class="badge badge-sm badge-warning font-mono">ZIP & Direct Raw</span>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Core Features Grid -->
+  <section id="features" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="text-cyan-400 font-bold tracking-wider uppercase text-xs">قوة ومرونة لا تضاهى</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 mb-4">
+        المميزات الجوهرية لمنصة VibzCode
+      </h2>
+      <p class="text-slate-400 text-base">
+        صُممت المنصة لتلبي احتياجات الفرق البرمجية وتطوير الوكلاء المستقلين بأعلى درجات العزل والأمان.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+      <!-- Card 1 -->
+      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-4">
+            <i class="fa-solid fa-shield-halved"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">عزل كامل بالساندبوكس (Per-Session Sandbox)</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            كل عضو وكل مشروع يمتلك مساراً معزولاً ورمز وصول خاص (<code class="text-cyan-300 font-mono">Token</code>)، ولا يمكن لأي وكيل تجاوز حدود المجلد المحدد له ما لم يمنحه المدير صلاحية صريحة.
+          </p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <span>أمان بيئات العمل</span>
+          <span class="text-cyan-400 font-semibold">Strict Path Check</span>
+        </div>
+      </div>
+
+      <!-- Card 2 -->
+      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-center text-purple-400 text-xl mb-4">
+            <i class="fa-solid fa-network-wired"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">خادم Remote MCP برابط موحد</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            ربط فوري عبر البروتوكول الرسمي <code class="text-purple-300 font-mono">@modelcontextprotocol/sdk</code> يتيح تشغيل الجلسة داخل <strong>Claude Desktop</strong> و <strong>Cursor</strong> و <strong>ChatGPT Actions</strong> برابط واحد موحد ومحمي.
+          </p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <span>دعم SSE و JSON-RPC 2.0</span>
+          <span class="text-purple-400 font-semibold">Standard MCP</span>
+        </div>
+      </div>
+
+      <!-- Card 3 -->
+      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl mb-4">
+            <i class="fa-solid fa-code-fork"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">تفرع الجلسات اللانهائي (Session Forking)</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            إمكانية نسخ أي جلسة أو تفريعها عند أي نقطة زمنية لتجربة فكرة برمجية جديدة دون التأثير على المسار الأصلي، مع عرض هرمي ذكي يوضح شجرة العائلة لكل فرع.
+          </p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <span>إدارة فروع المهام</span>
+          <span class="text-emerald-400 font-semibold">Hierarchical Tree</span>
+        </div>
+      </div>
+
+      <!-- Card 4 -->
+      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-amber-950/80 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl mb-4">
+            <i class="fa-solid fa-photo-film"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">معاينة تفاعلية وتحميل بالضغط المطول</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            عند إنشاء الوكيل لأي ملف وسائط (صور، فيديو MP4، صوت، PDF، أكواد)، يتم تحويل الروابط فوراً لشرائح تفاعلية تُفتح بنافذة منبثقة، وتدعم التنزيل الفوري عند الضغط المطول.
+          </p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <span>تفاعل وسائط متقدم</span>
+          <span class="text-amber-400 font-semibold">Long-Press Download</span>
+        </div>
+      </div>
+
+      <!-- Card 5 -->
+      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-blue-950/80 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl mb-4">
+            <i class="fa-solid fa-terminal"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">طرفية تفاعلية حية (Live Terminal BiDi)</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            جلسة Bash حقيقية في المتصفح مبنية على <code class="text-blue-300 font-mono">node-pty</code> و <code class="text-blue-300 font-mono">xterm.js</code> تدعم تشكيل الحروف العربية والنصوص ثنائية الاتجاه، ومحصورة بالساندبوكس.
+          </p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <span>تيرمنال ويب حقيقي</span>
+          <span class="text-blue-400 font-semibold">WebSocket PTY</span>
+        </div>
+      </div>
+
+      <!-- Card 6 -->
+      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
+        <div>
+          <div class="w-12 h-12 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400 text-xl mb-4">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2">ذاكرة مشتركة مع MemoryZ و Jev AI</h3>
+          <p class="text-sm text-slate-400 leading-relaxed">
+            ربط الوكلاء مع منصة <code class="text-pink-300 font-mono">MemoryZ</code> لاسترجاع القواعد البرمجية والذكريات المشتركة دلالياً (Semantic Search)، وتحليل الأخطاء البرمجية ذاتياً عبر النماذج الذكية.
+          </p>
+        </div>
+        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
+          <span>التعلم المستمر</span>
+          <span class="text-pink-400 font-semibold">Shared Substrate</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- System Architecture & Flow -->
+  <section id="architecture" class="py-20 bg-slate-950 border-t border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center max-w-3xl mx-auto mb-16">
+        <span class="text-indigo-400 font-bold tracking-wider uppercase text-xs">بنية هندسية متينة</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-4">
+          كيف تعمل منظومة VibzCode تحت الغطاء؟
+        </h2>
+        <p class="text-slate-400 text-base">
+          تكامل سلس بين طبقة العرض الأمامية وخوادم التنسيق ومحركات الذكاء الاصطناعي الخارجية.
+        </p>
+      </div>
+
+      <div class="glass-card rounded-2xl p-6 sm:p-10 border border-slate-800">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
+          
+          <!-- Column 1: Clients -->
+          <div class="space-y-4">
+            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-desktop text-cyan-400"></i>
+              <span>واجهات الاستخدام والعملاء</span>
+            </h4>
+            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
+              <div class="font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-user-shield text-cyan-400"></i>
+                <span>Admin Portal</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">إدارة الجلسات، التواريخ، التوكنات، والمفضلة</p>
+            </div>
+            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
+              <div class="font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-laptop-code text-emerald-400"></i>
+                <span>Member Agent Console</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">محادثة حية، معاينة وسائط، وتيرمنال تفاعلي</p>
+            </div>
+            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
+              <div class="font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-plug text-purple-400"></i>
+                <span>Claude Desktop & Cursor</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">اتصال MCP مباشر بالساندبوكس عبر SSE</p>
+            </div>
+          </div>
+
+          <!-- Column 2: Core Server -->
+          <div class="p-6 bg-slate-900/90 rounded-2xl border-2 border-cyan-500/30 text-center space-y-4 relative">
+            <div class="badge badge-info badge-outline font-mono text-[11px] mb-2">VibzCode Core (Node.js)</div>
+            <h3 class="text-xl font-bold text-white">Express Gateway & Orchestrator</h3>
+            <ul class="text-xs text-slate-300 space-y-2 text-right">
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-cyan-400"></i>
+                <span>فحص ومصادقة الرموز (Token Verification)</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-cyan-400"></i>
+                <span>عزل مسارات الساندبوكس (Chroot-like Jail)</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-cyan-400"></i>
+                <span>مواصفات OpenAPI 3.1 لـ ChatGPT Actions</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i class="fa-solid fa-check text-cyan-400"></i>
+                <span>خدمة بث الملفات والوسائط وضغط ZIP</span>
+              </li>
+            </ul>
+            <div class="pt-2">
+              <span class="text-[11px] font-mono text-cyan-400 bg-cyan-950/60 px-3 py-1 rounded-full border border-cyan-800">
+                Port 3333 / 3334
+              </span>
+            </div>
+          </div>
+
+          <!-- Column 3: Engines & Substrates -->
+          <div class="space-y-4">
+            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+              <i class="fa-solid fa-gears text-indigo-400"></i>
+              <span>المحركات والخدمات الخلفية</span>
+            </h4>
+            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
+              <div class="font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-robot text-cyan-400"></i>
+                <span>Google Antigravity (AGY)</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">تنفيذ الأوامر البرمجية وبناء المشاريع تلقائياً</p>
+            </div>
+            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
+              <div class="font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-database text-pink-400"></i>
+                <span>MemoryZ Substrate</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">الذاكرة المشتركة، خزن البيانات، والبحث الدلالي</p>
+            </div>
+            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
+              <div class="font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-bolt text-amber-400"></i>
+                <span>Gemini 3 Flash & Jev AI</span>
+              </div>
+              <p class="text-xs text-slate-400 mt-1">توليد التلخيصات واستخلاص المهارات البرمجية</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Quick Start & Deployment Guide -->
+  <section id="quickstart" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-16">
+      <span class="text-emerald-400 font-bold tracking-wider uppercase text-xs">تنصيب وتشغيل في دقائق</span>
+      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 mb-4">
+        دليل البدء السريع (Quick Start)
+      </h2>
+      <p class="text-slate-400 text-base">
+        خطوات بسيطة لتشغيل المنصة على خادم Linux أو محلياً باستخدام Node.js.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- Step 1 -->
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="w-8 h-8 rounded-full bg-cyan-500/20 text-cyan-400 font-bold flex items-center justify-center mb-4">1</div>
+        <h3 class="text-base font-bold text-white mb-2">استنساخ المستودع وتثبيت الحزم</h3>
+        <p class="text-xs text-slate-400 mb-4">قم بسحب الكود المصدري وتثبيت مكتبات Node الأصلية:</p>
+        <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr"><code>git clone https://github.com/Zizwar/vibzcode.git
+cd vibzcode
+npm install</code></pre>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="w-8 h-8 rounded-full bg-purple-500/20 text-purple-400 font-bold flex items-center justify-center mb-4">2</div>
+        <h3 class="text-base font-bold text-white mb-2">إعداد متغيرات البيئة</h3>
+        <p class="text-xs text-slate-400 mb-4">انسخ قالب البيئة وعيّن كلمات مرور الجلسات:</p>
+        <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-purple-300 overflow-x-auto text-left" dir="ltr"><code>cp .env.example .env
+# عدّل PORT و ADMIN_PASS في .env
+nano .env</code></pre>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="glass-card p-6 rounded-2xl">
+        <div class="w-8 h-8 rounded-full bg-emerald-500/20 text-emerald-400 font-bold flex items-center justify-center mb-4">3</div>
+        <h3 class="text-base font-bold text-white mb-2">التشغيل عبر PM2 أو Node</h3>
+        <p class="text-xs text-slate-400 mb-4">شغّل السيرفر فوراً وادخل لوحة التحكم بالمتصفح:</p>
+        <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto text-left" dir="ltr"><code># تشغيل مباشر
+node server.js
+
+# أو كخدمة مستمرة عبر PM2:
+pm2 start ecosystem.config.cjs</code></pre>
+      </div>
+
+    </div>
+
+    <div class="mt-8 p-4 bg-slate-950/70 border border-slate-800 rounded-2xl text-center text-xs text-slate-400 max-w-2xl mx-auto">
+      💡 <strong>ملاحظة:</strong> لوحة التحكم تفتح تلقائياً على الرابط <code class="text-cyan-400 font-mono">http://localhost:3333</code> أو <code class="text-cyan-400 font-mono">http://localhost:3334</code> بحسب رقم المنفذ في ملف <code class="text-cyan-400 font-mono">.env</code>.
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-12 text-slate-400 text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+      
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-slate-950 font-black text-sm">
+          V
+        </div>
+        <div>
+          <span class="font-bold text-white">VibzCode (agyz)</span>
+          <p class="text-xs text-slate-500">تم البناء والتطوير لإدارة مساحات عمل الوكلاء البرمجية بأعلى كفاءة</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-6 text-xs font-semibold">
+        <a href="#showcase" class="hover:text-cyan-400 transition-colors">استعراض الواجهات</a>
+        <a href="#features" class="hover:text-cyan-400 transition-colors">المميزات</a>
+        <a href="#quickstart" class="hover:text-cyan-400 transition-colors">دليل التشغيل</a>
+        <a href="https://github.com/Zizwar/vibzcode" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5">
+          <i class="fa-brands fa-github text-sm"></i>
+          <span>GitHub</span>
+        </a>
+      </div>
+
+    </div>
+  </footer>
+
+  <!-- Simple Tab Switcher Script -->
+  <script>
+    function switchTab(tabId) {
+      // Hide all tabs
+      document.querySelectorAll('.tab-view-content').forEach(el => {
+        el.classList.add('hidden');
+        el.classList.remove('block');
+      });
+
+      // Remove active state on buttons
+      document.querySelectorAll('#showcase button').forEach(btn => {
+        btn.classList.remove('tab-active-btn');
+      });
+
+      // Show selected tab
+      const selectedView = document.getElementById('tab-view-' + tabId);
+      if (selectedView) {
+        selectedView.classList.remove('hidden');
+        selectedView.classList.add('block');
+      }
+
+      // Activate clicked button
+      const activeBtn = document.getElementById('tab-btn-' + tabId);
+      if (activeBtn) {
+        activeBtn.classList.add('tab-active-btn');
+      }
+
+      // Update mock URL
+      const mockUrl = document.getElementById('mock-url');
+      if (mockUrl) {
+        if (tabId === 'dashboard') mockUrl.textContent = 'https://vibzcode.local:3334/ (Grid View)';
+        else if (tabId === 'tree') mockUrl.textContent = 'https://vibzcode.local:3334/ (Forks Tree View)';
+        else if (tabId === 'chat') mockUrl.textContent = 'https://vibzcode.local:3334/agent.html?token=vibz_... (Chat)';
+        else if (tabId === 'workspace') mockUrl.textContent = 'https://vibzcode.local:3334/agent.html?token=vibz_... (Workspace)';
+      }
+    }
+  </script>
+
+</body>
+</html>

@@ -1647,6 +1647,7 @@ app.post('/api/mcp/memoryz/context', (req, res) => {
 
 // Serve Static Assets
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/docs', express.static(path.join(__dirname, 'docs')));
 
 // Create HTTP and WebSocket Server
 const server = http.createServer(app);
