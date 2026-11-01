@@ -37,6 +37,13 @@ document.addEventListener('alpine:init', () => {
     directForks: [],
     forkCountByMsgId: {},
 
+    // Edit Message State
+    showEditModal: false,
+    editTargetMsg: null,
+    editTargetIdx: -1,
+    editContentInput: '',
+    editLoading: false,
+
     // Workspace File Explorer State (Inspired by Vibzcode)
     fileStructure: null,
     fileSearchQuery: '',
@@ -925,6 +932,117 @@ document.addEventListener('alpine:init', () => {
       window.location.href = `/agent.html?token=${token}`;
     },
 
+    // ==================== EDIT MESSAGE LOGIC ====================
+
+    openEditModal(msg, idx) {
+      if (this.chatLoading) {
+        this.showToast('لا يمكن التعديل أثناء تنفيذ عملية جارية. يرجى الانتظار أو إيقافها.', 'warning');
+        return;
+      }
+      this.editTargetMsg = msg;
+      this.editTargetIdx = idx;
+      this.editContentInput = msg.content || '';
+      this.showEditModal = true;
+      this.$nextTick(() => {
+        const el = document.getElementById('edit-message-textarea');
+        if (el) {
+          el.focus();
+          el.setSelectionRange(el.value.length, el.value.length);
+        }
+      });
+    },
+
+    async executeEditAndResend() {
+      const prompt = (this.editContentInput || '').trim();
+      if (!prompt) {
+        this.showToast('نص الرسالة لا يمكن أن يكون فارغاً', 'error');
+        return;
+      }
+      if (this.editLoading || !this.session?.id) return;
+      this.editLoading = true;
+
+      try {
+        const res = await fetch('/api/session/message/edit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.token
+          },
+          body: JSON.stringify({
+            sessionId: this.session.id,
+            messageId: this.editTargetMsg?.id,
+            messageIndex: this.editTargetIdx,
+            newContent: prompt,
+            action: 'resend'
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          this.showToast(data.error || 'تعذر تعديل الرسالة', 'error');
+          this.editLoading = false;
+          return;
+        }
+
+        // Truncate local chat history before target index
+        this.chatMessages = Array.isArray(data.messages) ? data.messages : this.chatMessages.slice(0, this.editTargetIdx);
+        this.chatConversationId = null;
+        this.showEditModal = false;
+        this.editLoading = false;
+
+        this.showToast('تم تعديل الرسالة وحذف الردود اللاحقة. جاري استئناف العمل...', 'info');
+
+        // Immediately trigger chat execution with the edited prompt
+        await this.sendChatMessage(prompt, true);
+      } catch (e) {
+        this.showToast('حدث خطأ أثناء التعديل: ' + e.message, 'error');
+        this.editLoading = false;
+      }
+    },
+
+    async executeEditAndSaveOnly() {
+      const content = (this.editContentInput || '').trim();
+      if (!content) {
+        this.showToast('نص الرسالة لا يمكن أن يكون فارغاً', 'error');
+        return;
+      }
+      if (this.editLoading || !this.session?.id) return;
+      this.editLoading = true;
+
+      try {
+        const res = await fetch('/api/session/message/edit', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': this.token
+          },
+          body: JSON.stringify({
+            sessionId: this.session.id,
+            messageId: this.editTargetMsg?.id,
+            messageIndex: this.editTargetIdx,
+            newContent: content,
+            action: 'save_only'
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok || !data.success) {
+          this.showToast(data.error || 'تعذر حفظ التعديل', 'error');
+          this.editLoading = false;
+          return;
+        }
+
+        this.chatMessages = Array.isArray(data.messages) ? data.messages : this.chatMessages.slice(0, this.editTargetIdx + 1);
+        this.chatConversationId = null;
+        this.showEditModal = false;
+        this.editLoading = false;
+        this.showToast(data.message || 'تم حفظ التعديل وحذف كافة الردود والرسائل اللاحقة بنجاح', 'success');
+      } catch (e) {
+        this.showToast('حدث خطأ أثناء حفظ التعديل: ' + e.message, 'error');
+        this.editLoading = false;
+      }
+    },
+
     async checkActiveChatJob() {
       if (!this.session?.id) return;
       try {
@@ -974,7 +1092,7 @@ document.addEventListener('alpine:init', () => {
       }, 1000);
     },
 
-    async sendChatMessage(customPrompt = null) {
+    async sendChatMessage(customPrompt = null, isEditedTurn = false) {
       const prompt = (customPrompt || this.chatInputText).trim();
       if (!prompt || this.chatLoading) return;
 
@@ -1007,8 +1125,9 @@ document.addEventListener('alpine:init', () => {
           body: JSON.stringify({
             token: this.token,
             prompt: prompt,
-            conversationId: this.chatContinue ? this.chatConversationId : null,
-            continueSession: this.chatContinue,
+            conversationId: isEditedTurn ? null : (this.chatContinue ? this.chatConversationId : null),
+            continueSession: !isEditedTurn && this.chatContinue,
+            isEditedTurn: !!isEditedTurn,
             useMemoryz: this.useMemoryzMcp
           })
         });

@@ -422,6 +422,7 @@
                     <div class="flex items-center gap-1.5">
                       <span class="font-bold" x-text="msg.sender || session?.assignee || 'أنت'"></span>
                       <span x-show="msg.sender" class="badge badge-xs bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 text-[9px] px-1 py-0">MCP</span>
+                      <span x-show="msg.editedAt" class="badge badge-xs bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[9px] px-1 py-0">معدلة</span>
                     </div>
                     <div class="flex items-center gap-1.5">
                       <span x-show="forkCountByMsgId[msg.id]" @click="openBranchesModal()" class="badge badge-xs bg-purple-950 text-purple-300 border border-purple-500/40 text-[9px] px-1.5 py-0 cursor-pointer gap-1 tooltip tooltip-bottom" :data-tip="forkCountByMsgId[msg.id] + ' فروع متفرعة من هذا الطلب'">
@@ -431,6 +432,10 @@
                       <button @click="openForkModal(msg, idx)" class="btn btn-ghost btn-xs text-cyan-400/80 hover:text-cyan-300 gap-1 tooltip tooltip-bottom p-0.5 h-auto min-h-0" data-tip="تفريع جلسة جديدة من هذا الطلب">
                         <i class="fa-solid fa-code-fork text-[10px] text-cyan-400"></i>
                         <span class="text-[9px]">فورك</span>
+                      </button>
+                      <button @click="openEditModal(msg, idx)" :disabled="chatLoading" class="btn btn-ghost btn-xs text-amber-400/80 hover:text-amber-300 gap-1 tooltip tooltip-bottom p-0.5 h-auto min-h-0" data-tip="تعديل هذا الطلب واستئناف الدردشة من هنا">
+                        <i class="fa-solid fa-pen-to-square text-[10px] text-amber-400"></i>
+                        <span class="text-[9px]">تعديل</span>
                       </button>
                       <span x-text="msg.time" class="font-mono text-slate-400"></span>
                     </div>
@@ -454,6 +459,10 @@
                         <i class="fa-solid fa-bolt text-[8px]"></i>
                         <span>تحديث مرحلي</span>
                       </span>
+                      <span x-show="msg.editedAt" class="badge badge-xs bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[9px] px-1.5 py-0.5 gap-1">
+                        <i class="fa-solid fa-pen-to-square text-[8px] text-amber-400"></i>
+                        <span>معدل</span>
+                      </span>
                       <span x-show="msg.duration" class="badge badge-xs badge-ghost font-mono text-[10px] text-slate-400 gap-1">
                         <i class="fa-solid fa-stopwatch text-slate-500 text-[9px]"></i>
                         <span x-text="msg.duration + 's'"></span>
@@ -467,6 +476,10 @@
                       <button @click="openForkModal(msg, idx)" class="btn btn-ghost btn-xs text-cyan-400/80 hover:text-cyan-300 hover:bg-cyan-950/40 border border-cyan-500/20 gap-1 tooltip tooltip-bottom px-2" data-tip="تفريع جلسة جديدة من هذا الرد (Fork Session)">
                         <i class="fa-solid fa-code-fork text-[10px] text-cyan-400"></i>
                         <span class="text-[10px] font-semibold">فورك</span>
+                      </button>
+                      <button @click="openEditModal(msg, idx)" :disabled="chatLoading" class="btn btn-ghost btn-xs text-amber-400/80 hover:text-amber-300 hover:bg-amber-950/40 border border-amber-500/20 gap-1 tooltip tooltip-bottom px-2" data-tip="تعديل هذا الرد واستئناف الدردشة من هنا">
+                        <i class="fa-solid fa-pen-to-square text-[10px] text-amber-400"></i>
+                        <span class="text-[10px] font-semibold">تعديل</span>
                       </button>
                       <button @click="copyMessageText(msg.content)" class="btn btn-ghost btn-xs text-slate-400 hover:text-white gap-1 tooltip tooltip-bottom" data-tip="نسخ الرد">
                         <i class="fa-solid fa-copy text-[10px]"></i>
@@ -1392,6 +1405,120 @@
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
       <button @click="showForkModal = false">إغلاق</button>
+    </form>
+  </dialog>
+
+  <!-- ==================== MODAL: EDIT MESSAGE & RESUME CHAT ==================== -->
+  <dialog class="modal" :class="{ 'modal-open': showEditModal }">
+    <div class="modal-box bg-slate-900 border border-amber-500/30 max-w-2xl p-0 overflow-hidden shadow-2xl">
+      <!-- Modal Header -->
+      <div class="bg-gradient-to-r from-amber-950/60 via-slate-900 to-slate-950 px-6 py-4 border-b border-amber-500/20 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400">
+            <i class="fa-solid fa-pen-to-square text-sm"></i>
+          </div>
+          <div>
+            <h3 class="font-bold text-sm text-white">تعديل الرسالة واستئناف الدردشة</h3>
+            <p class="text-[10px] text-slate-400">تعديل النص وحذف ما بعده لاستئناف مسار العمل من هذه النقطة</p>
+          </div>
+        </div>
+        <button @click="showEditModal = false" class="btn btn-ghost btn-xs btn-circle text-slate-400 hover:text-white">✕</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4 text-xs">
+        <!-- Explanatory / Warning Alert -->
+        <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-200 leading-relaxed space-y-1">
+          <div class="font-bold flex items-center gap-1.5 text-white">
+            <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
+            <span>تنبيه حذف الردود والرسائل اللاحقة:</span>
+          </div>
+          <p class="text-[11px] text-slate-300">
+            سيتم استئناف الجلسة من هذا التعليق بعد تعديله، وحذف كافة التعليقات والردود التي كانت أسفله (<span class="text-amber-400 font-bold" x-text="Math.max(0, chatMessages.length - 1 - editTargetIdx)"></span> رسائل سابقة). ولن يتعرف الذكاء الاصطناعي على تلك الردود المحذوفة لضمان عدم تراكم الذاكرة والتوكنز.
+          </p>
+        </div>
+
+        <!-- Target Message Header & Info -->
+        <div class="flex items-center justify-between text-slate-400 text-[11px]">
+          <span class="font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-message text-amber-400 text-[10px]"></i>
+            <span>نص الرسالة المراد تعديلها:</span>
+          </span>
+          <div class="flex items-center gap-2">
+            <span class="badge badge-xs text-[9px]"
+                  :class="editTargetMsg?.role === 'user' ? 'badge-primary' : 'badge-neutral'"
+                  x-text="editTargetMsg?.role === 'user' ? 'طلب المستخدم' : 'رد الوكيل الذكي'"></span>
+            <span class="font-mono text-slate-500" x-text="'#' + (editTargetIdx + 1)"></span>
+          </div>
+        </div>
+
+        <!-- Textarea for Editing Message -->
+        <div class="form-control space-y-1">
+          <textarea id="edit-message-textarea"
+                    x-model="editContentInput"
+                    rows="7"
+                    @keydown.ctrl.enter="editTargetMsg?.role === 'user' ? executeEditAndResend() : executeEditAndSaveOnly()"
+                    @keydown.meta.enter="editTargetMsg?.role === 'user' ? executeEditAndResend() : executeEditAndSaveOnly()"
+                    placeholder="أدخل النص المعدل هنا..."
+                    class="textarea textarea-bordered w-full bg-slate-950 border-slate-700 text-slate-100 text-xs focus:border-amber-500 font-arabic leading-relaxed resize-y select-text"></textarea>
+          <div class="text-[10px] text-slate-500 text-left dir-ltr">
+            اضغط <kbd class="kbd kbd-xs bg-slate-800 text-slate-300">Ctrl + Enter</kbd> للحفظ والإرسال السريع
+          </div>
+        </div>
+
+        <!-- Specs Recap -->
+        <div class="grid grid-cols-2 gap-2 p-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-[11px] text-slate-400">
+          <div class="flex items-center gap-1.5">
+            <i class="fa-solid fa-layer-group text-slate-500"></i>
+            <span>الرسائل المحتفظ بها قبل هذه النقطة:</span>
+            <strong class="text-white" x-text="editTargetIdx + ' رسائل'"></strong>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <i class="fa-solid fa-trash-can text-rose-400"></i>
+            <span>الرسائل التي ستُحذف:</span>
+            <strong class="text-rose-400" x-text="Math.max(0, chatMessages.length - 1 - editTargetIdx) + ' رسائل'"></strong>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex items-center justify-between">
+        <button @click="showEditModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">
+          إلغاء
+        </button>
+
+        <div class="flex items-center gap-2">
+          <!-- If Assistant Message: Save and truncate only -->
+          <template x-if="editTargetMsg?.role === 'assistant'">
+            <button @click="executeEditAndSaveOnly()" :disabled="editLoading || !editContentInput.trim()"
+                    class="btn btn-sm bg-amber-600 hover:bg-amber-500 border-none text-white font-bold text-xs gap-1.5 shadow-md shadow-amber-600/20">
+              <span x-show="editLoading" class="loading loading-spinner loading-xs"></span>
+              <i x-show="!editLoading" class="fa-solid fa-check"></i>
+              <span>حفظ التعديل وحذف اللاحق</span>
+            </button>
+          </template>
+
+          <!-- If User Message: Save only OR Edit & Resend -->
+          <template x-if="editTargetMsg?.role === 'user'">
+            <div class="flex items-center gap-2">
+              <button @click="executeEditAndSaveOnly()" :disabled="editLoading || !editContentInput.trim()"
+                      class="btn btn-sm btn-ghost text-slate-300 hover:text-white text-xs gap-1"
+                      title="حفظ التعديل وحذف الردود اللاحقة دون إرسال طلب جديد للذكاء الاصطناعي الآن">
+                <span>حفظ دون إرسال</span>
+              </button>
+              <button @click="executeEditAndResend()" :disabled="editLoading || !editContentInput.trim()"
+                      class="btn btn-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border-none text-white font-bold text-xs gap-1.5 shadow-md shadow-amber-500/20">
+                <span x-show="editLoading" class="loading loading-spinner loading-xs"></span>
+                <i x-show="!editLoading" class="fa-solid fa-paper-plane"></i>
+                <span>تعديل واستئناف الدردشة</span>
+              </button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+      <button @click="showEditModal = false">إغلاق</button>
     </form>
   </dialog>
 

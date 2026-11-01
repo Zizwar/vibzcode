@@ -19,6 +19,7 @@ const {
   getSessionChatMessages,
   saveSessionChatMessages,
   appendSessionChatMessage,
+  truncateSessionChatMessages,
   hydrateSessionChatFromJobs,
   hydrateAllSessionsFromJobs
 } = require('./lib/chatLogger');
@@ -1087,6 +1088,7 @@ async function dispatchSessionChatTask({
   conversationId = null,
   continueSession = true,
   isFirstForkTurn = false,
+  isEditedTurn = false,
   isAdmin = false,
   source = 'web',
   telegramMeta = null
@@ -1109,8 +1111,12 @@ async function dispatchSessionChatTask({
     }
   }
 
-  // 1b. If session is forked and starting its branch, inject clean context up to the fork point
-  if (session.forkedFrom && (!conversationId || isFirstForkTurn)) {
+  // 1b. If session is forked or edited, or starting a new branch, inject clean context up to this point
+  const shouldInjectContext = (session.forkedFrom && (!conversationId || isFirstForkTurn)) ||
+                              isEditedTurn ||
+                              (!conversationId && !isFirstForkTurn);
+
+  if (shouldInjectContext) {
     try {
       const pastMessages = getSessionChatMessages(session.id);
       if (pastMessages && pastMessages.length > 0) {
@@ -1120,19 +1126,26 @@ async function dispatchSessionChatTask({
           return `[${roleLabel}]:\n${text}`;
         }).join('\n\n---\n\n');
 
-        const forkNotice = `[تنبيه سياق التفريع / Forked Branch Context]:
+        const noticeHeader = isEditedTurn
+          ? `[تنبيه تعديل مسار الحوار / Conversation Branch Edited]:
+تم تعديل الحوار واستئناف الدردشة ابتداءً من هذه النقطة. تم حذف كافة الردود والرسائل اللاحقة، والمطلوب إكمال العمل بناءً على سياق الحوار السابق فقط واستبعاد أي افتراضات أو خطوات لرسائل لاحقة محذوفة:`
+          : (session.forkedFrom
+              ? `[تنبيه سياق التفريع / Forked Branch Context]:
 هذه جلسة متفرعة (Fork) من الجلسة: "${session.forkedFrom.sessionName}".
-المطلوب منك هو إكمال العمل على المسار الجديد بناءً على سياق الحوار السابق حتى نقطة التفريع، واستبعاد أي مهام أو أحداث لم تكن موجودة في هذا السياق:
+المطلوب منك هو إكمال العمل على المسار الجديد بناءً على سياق الحوار السابق حتى نقطة التفريع، واستبعاد أي مهام أو أحداث لم تكن موجودة في هذا السياق:`
+              : `[سياق الحوار السابق / Prior Conversation Context]:`);
+
+        const contextNotice = `${noticeHeader}
 
 --- بداية سياق الحوار السابق ---
 ${contextTurns}
 --- نهاية سياق الحوار السابق ---
 
 `;
-        finalPrompt = `${forkNotice}${finalPrompt}`;
+        finalPrompt = `${contextNotice}${finalPrompt}`;
       }
     } catch (e) {
-      console.warn('Could not inject fork context:', e.message);
+      console.warn('Could not inject context:', e.message);
     }
   }
 
@@ -1394,7 +1407,7 @@ app.post('/api/session/chat', async (req, res) => {
   req.setTimeout(0);
   res.setTimeout(0);
 
-  const { prompt, conversationId, continueSession, isFirstForkTurn } = req.body;
+  const { prompt, conversationId, continueSession, isFirstForkTurn, isEditedTurn } = req.body;
   if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
     return res.status(400).json({ success: false, error: 'نص البرومبت فارغ' });
   }
@@ -1404,9 +1417,10 @@ app.post('/api/session/chat', async (req, res) => {
       session,
       prompt,
       memoryRefs: req.body.memoryRefs || req.body.memory_refs || [],
-      conversationId,
-      continueSession,
+      conversationId: isEditedTurn ? null : conversationId,
+      continueSession: isEditedTurn ? false : continueSession,
       isFirstForkTurn,
+      isEditedTurn: !!isEditedTurn,
       isAdmin,
       source: 'web'
     });
@@ -1627,6 +1641,85 @@ app.post('/api/session/fork', async (req, res) => {
     session: forkedSession,
     url: `/agent.html?token=${forkedToken}`,
     message: 'تم تفريع الجلسة بنجاح'
+  });
+});
+
+// Edit message and truncate subsequent conversation history in current session
+app.post('/api/session/message/edit', async (req, res) => {
+  const token = getAuthToken(req);
+  if (!token) return res.status(401).json({ success: false, error: 'غير مصرح' });
+
+  let session = null;
+  if (token === ADMIN_SECRET) {
+    const sId = req.body.sessionId;
+    session = sessions.find(s => s.id === sId);
+  } else {
+    session = getSessionByToken(token);
+  }
+
+  if (!session) {
+    return res.status(404).json({ success: false, error: 'الجلسة غير موجودة أو تم إغلاقها' });
+  }
+
+  const { messageId, messageIndex, newContent, action } = req.body;
+  if (typeof newContent !== 'string' || !newContent.trim()) {
+    return res.status(400).json({ success: false, error: 'نص الرسالة فارغ' });
+  }
+
+  const messages = getSessionChatMessages(session.id);
+  if (!messages || messages.length === 0) {
+    return res.status(400).json({ success: false, error: 'لا توجد رسائل في هذه الجلسة' });
+  }
+
+  // Find index of target message
+  let targetIndex = -1;
+  if (messageId !== undefined && messageId !== null) {
+    targetIndex = messages.findIndex(m => String(m.id) === String(messageId));
+  }
+  if (targetIndex === -1 && typeof messageIndex === 'number' && messageIndex >= 0 && messageIndex < messages.length) {
+    targetIndex = messageIndex;
+  }
+  if (targetIndex === -1) {
+    return res.status(404).json({ success: false, error: 'الرسالة المطلوبة غير موجودة' });
+  }
+
+  const targetMessage = messages[targetIndex];
+  const targetTimestamp = targetMessage.id || Date.now();
+
+  // Abort any active execution for this session
+  if (activeChatProcesses.has(session.token)) {
+    try {
+      activeChatProcesses.get(session.token).kill('SIGTERM');
+      activeChatProcesses.delete(session.token);
+    } catch (e) {}
+  }
+  if (activeChatJobs.has(session.id)) {
+    activeChatJobs.delete(session.id);
+  }
+
+  const isSaveOnly = action === 'save_only' || targetMessage.role === 'assistant';
+  const result = truncateSessionChatMessages(session.id, targetIndex, newContent, isSaveOnly);
+  if (!result) {
+    return res.status(500).json({ success: false, error: 'تعذر تعديل وحفظ الرسائل' });
+  }
+
+  // Prune any persistent jobs from jobsManager that started after this point
+  if (jobsManager && typeof jobsManager.pruneJobsForSessionAfter === 'function') {
+    jobsManager.pruneJobsForSessionAfter(session.id, targetTimestamp - 500);
+  }
+
+  // Update session message stats
+  if (!session.stats) session.stats = { messagesCount: 0 };
+  session.stats.messagesCount = result.truncated.filter(m => m.role === 'user').length;
+  session.lastActive = new Date().toISOString();
+  saveSessions(sessions);
+
+  return res.json({
+    success: true,
+    message: isSaveOnly ? 'تم حفظ التعديل وحذف الردود اللاحقة بنجاح' : 'تم تهيئة المحادثة لاستئناف الدردشة من الرسالة المعدلة',
+    messages: result.truncated,
+    targetIndex,
+    deletedCount: Math.max(0, messages.length - (isSaveOnly ? targetIndex + 1 : targetIndex))
   });
 });
 
