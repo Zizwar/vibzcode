@@ -1111,18 +1111,30 @@ async function dispatchSessionChatTask({
     }
   }
 
-  // 1b. If session is forked or edited, or starting a new branch, inject clean context up to this point
+  // 1b. If session is forked or edited, inject clean context up to this point
   const shouldInjectContext = (session.forkedFrom && (!conversationId || isFirstForkTurn)) ||
                               isEditedTurn ||
-                              (!conversationId && !isFirstForkTurn);
+                              (!conversationId && session.parentId);
 
   if (shouldInjectContext) {
     try {
-      const pastMessages = getSessionChatMessages(session.id);
-      if (pastMessages && pastMessages.length > 0) {
+      let pastMessages = getSessionChatMessages(session.id);
+      if (Array.isArray(pastMessages) && pastMessages.length > 0) {
+        // Exclude intermediate steps and error messages to keep context pure and compact
+        pastMessages = pastMessages.filter(m => !m.isIntermediate && !m.isError && (m.content || '').trim().length > 0);
+
+        // Keep at most the last 12 relevant turns prior to this point to prevent prompt bloating
+        if (pastMessages.length > 12) {
+          pastMessages = pastMessages.slice(-12);
+        }
+
         const contextTurns = pastMessages.map(m => {
           const roleLabel = m.role === 'user' ? 'المستخدم (User)' : 'المساعد (AI Assistant)';
-          const text = (m.content || '').trim();
+          let text = (m.content || '').trim();
+          // Cap long assistant responses to 500 characters
+          if (m.role === 'assistant' && text.length > 500) {
+            text = text.slice(0, 500) + '... [تم اختصار الرد السابق للحفاظ على سرعة الاستجابة]';
+          }
           return `[${roleLabel}]:\n${text}`;
         }).join('\n\n---\n\n');
 
