@@ -19,7 +19,7 @@ Vibz.adminAuth = {
     this.authError = '';
 
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/admin/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -30,16 +30,17 @@ Vibz.adminAuth = {
 
       const data = await res.json();
 
-      if (res.ok && data.success) {
+      if (res.ok && data.success && data.token) {
         this.adminToken = data.token;
         localStorage.setItem('vibz_admin_token', data.token);
         localStorage.setItem('agyz_admin_token', data.token);
         this.authenticated = true;
         this.username = '';
         this.password = '';
-        this.showToast(Vibz.i18n ? (Vibz.i18n.currentLang === 'ar' ? 'تم تسجيل الدخول بنجاح!' : 'Logged in successfully!') : 'Login successful', 'success');
-        if (typeof this.loadSessions === 'function') await this.loadSessions();
-        if (typeof this.loadSettings === 'function') await this.loadSettings();
+        this.showToast(Vibz.i18n ? (Vibz.i18n.currentLang === 'ar' ? 'تم تسجيل دخول المدير بنجاح!' : 'Logged in successfully!') : 'Login successful', 'success');
+        if (typeof this.loadSessions === 'function') this.loadSessions();
+        if (typeof this.loadSettings === 'function') this.loadSettings();
+        if (typeof this.loadTelegramConfigs === 'function') this.loadTelegramConfigs();
       } else {
         this.authError = data.error || (Vibz.i18n && Vibz.i18n.currentLang === 'ar' ? 'اسم المستخدم أو كلمة المرور غير صحيحة' : 'Invalid username or password');
       }
@@ -52,13 +53,24 @@ Vibz.adminAuth = {
 
   async verifyAdminToken(token) {
     try {
-      const res = await fetch('/api/auth/verify', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch('/api/admin/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token
+        },
+        body: JSON.stringify({ token })
       });
       if (res.ok) {
-        this.authenticated = true;
-        if (typeof this.loadSessions === 'function') await this.loadSessions();
-        if (typeof this.loadSettings === 'function') await this.loadSettings();
+        const data = await res.json();
+        if (data && data.valid) {
+          this.authenticated = true;
+          if (typeof this.loadSessions === 'function') this.loadSessions();
+          if (typeof this.loadSettings === 'function') this.loadSettings();
+          if (typeof this.loadTelegramConfigs === 'function') this.loadTelegramConfigs();
+        } else {
+          this.handleLogout();
+        }
       } else {
         this.handleLogout();
       }
