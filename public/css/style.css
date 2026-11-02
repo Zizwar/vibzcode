@@ -1,5 +1,16 @@
 /* VibzCode - Sovereign Multi-Engine AI Agent Platform Stylesheet */
 
+/* Internationalization & Typography Direction */
+html[dir="rtl"] body,
+html[dir="rtl"] .font-arabic {
+  font-family: 'Noto Sans Arabic', 'Plus Jakarta Sans', sans-serif;
+}
+
+html[dir="ltr"] body,
+html[dir="ltr"] .font-arabic {
+  font-family: 'Plus Jakarta Sans', 'Noto Sans Arabic', sans-serif;
+}
+
 * {
   -webkit-tap-highlight-color: transparent;
 }

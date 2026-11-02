@@ -1,0 +1,333 @@
+// VibzCode - Internationalization Module (AR/EN + RTL/LTR)
+window.Vibz = window.Vibz || {};
+
+Vibz.i18n = {
+  currentLang: localStorage.getItem('vibz_lang') || 'ar',
+
+  translations: {
+    ar: {
+      // Brand & General
+      appName: 'VibzCode',
+      appTagline: 'منصة تنسيق وإدارة وكلاء الذكاء الاصطناعي السيادية',
+      adminTitle: 'لوحة تحكم وتنسيق وكلاء الذكاء الاصطناعي',
+      loginDesc: 'سجل الدخول لإدارة وكلاء الذكاء الاصطناعي والجلسات النشطة',
+      themeLight: 'الوضع النهاري',
+      themeDark: 'الوضع الليلي',
+      langSwitch: 'English',
+      langName: 'العربية',
+      login: 'تسجيل الدخول',
+      logout: 'تسجيل الخروج',
+      username: 'اسم المستخدم',
+      password: 'كلمة المرور',
+      enterDashboard: 'دخول لوحة التحكم',
+      loggingIn: 'جاري التحقق...',
+
+      // Actions
+      save: 'حفظ',
+      cancel: 'إلغاء',
+      close: 'إغلاق',
+      delete: 'حذف',
+      edit: 'تعديل',
+      create: 'إنشاء',
+      update: 'تحديث',
+      refresh: 'تحديث',
+      copy: 'نسخ',
+      copied: 'تم النسخ إلى الحافظة 📋',
+      loading: 'جاري التحميل...',
+      search: 'بحث...',
+      filter: 'تصفية',
+      all: 'الكل',
+      confirm: 'تأكيد',
+      confirmDelete: 'هل أنت متأكد من الحذف؟',
+      status: 'الحالة',
+      actions: 'الإجراءات',
+      date: 'التاريخ',
+      time: 'الوقت',
+      open: 'فتح',
+      download: 'تحميل',
+      upload: 'رفع',
+      stop: 'إيقاف',
+      send: 'إرسال',
+
+      // Admin Navbar & Drawer
+      newSession: 'جلسة جديدة',
+      settingsMenu: 'القائمة وإعدادات النظام',
+      closeMenu: 'إغلاق القائمة',
+      toolsAndEngines: 'الأدوات والمحركات',
+      systemKeys: 'مفاتيح النظام والبيئة (.env)',
+      systemKeysDesc: 'ضبط مفاتيح Gemini، MemoryZ، والتشفير',
+      jevAi: 'محرك Jev AI الذكي',
+      jevAiDesc: 'فرز المهام والذاكرة وتقييم المهارات',
+      jevActive: 'مفعّل (يستهلك توكنات)',
+      jevDisabled: 'معطّل (حفظ الرصيد 100%)',
+      consumptionStatus: 'حالة الاستهلاك:',
+      orchestratorMcp: 'موصل MCP للمنصة',
+      orchestratorMcpDesc: 'ربط المنصة كـ MCP Server مع Claude Code و Cursor',
+      telegramBots: 'بوتات وقنوات تيليجرام',
+      telegramBotsDesc: 'إرسال واستقبال الأوامر وتنبيهات الوكلاء عبر التيليجرام',
+      apiKeysSetup: 'إعداد مفاتيح API للمحركات',
+      apiKeysSetupDesc: 'تهيئة نماذج Gemini و Claude و OpenAI',
+      foldersTreeTitle: 'مستعرض مجلدات الخادم',
+      foldersTreeDesc: 'تصفح مسارات العمل في /root/wino',
+
+      // Dashboard Filters & Views
+      searchSessions: 'بحث باسم الجلسة أو المجلد أو المكلف...',
+      favorites: 'المفضلة',
+      pinned: 'المثبتة',
+      roots: 'الجذور',
+      forks: 'الفروع',
+      gridView: 'عرض شبكي',
+      treeView: 'عرض هرمي',
+      sortBy: 'ترتيب حسب:',
+      sortLatest: 'الأحدث أولاً',
+      sortOldest: 'الأقدم أولاً',
+      sortName: 'الاسم (أ-ي)',
+      active: 'نشطة',
+      paused: 'متوقفة',
+      allEngines: 'كل المحركات',
+      allStatus: 'كل الحالات',
+      noSessionsFound: 'لا توجد جلسات تطابق البحث أو التصنيف المحدد.',
+      totalSessions: 'إجمالي الجلسات:',
+
+      // Session Cards
+      openWorkspace: 'فتح مساحة العمل',
+      viewTerminal: 'الطرفية',
+      viewChat: 'الدردشة',
+      pauseSession: 'إيقاف مؤقت',
+      resumeSession: 'استئناف',
+      editSession: 'تعديل الصلاحيات',
+      copyToken: 'نسخ توكن الجلسة',
+      forkSession: 'تفريغ جلسة (Fork)',
+      branches: 'الفروع المتشعبة',
+      targetDir: 'مجلد العمل:',
+      engine: 'المحرك:',
+      model: 'النموذج:',
+      assignee: 'المكلف:',
+
+      // Modals
+      createSessionTitle: 'إنشاء جلسة وكيل جديدة',
+      sessionNamePlaceholder: 'مثلاً: تطوير واجهة المستخدم أو فحص قاعدة البيانات...',
+      customTargetDirPlaceholder: 'أدخل مساراً مخصصاً يبدأ بـ /root/wino/...',
+      chooseFolder: 'اختر مجلد العمل',
+      customDirOption: 'مسار مخصص آخر...',
+      sandboxTitle: 'بيئة معزولة (Sandbox)',
+      sandboxDesc: 'تنفيذ الأوامر في بيئة حماية مقيدة',
+      autoApproveTitle: 'موافقة تلقائية (Auto-Approve)',
+      autoApproveDesc: 'تنفيذ الأوامر وقراءة الملفات دون طلب تأكيد بشري مستمر',
+      continueSessionTitle: 'استكمال الجلسة السابقة (Resume)',
+      continueSessionDesc: 'الاحتفاظ بسياق المحادثة والملفات',
+      allowedModes: 'أوضاع التشغيل المتاحة:',
+      modeBoth: 'كلاهما (محادثة + طرفية)',
+      modeChatOnly: 'محادثة AI فقط',
+      modeTerminalOnly: 'طرفية PTY فقط',
+      enableMcpTitle: 'تفعيل بروتوكول MCP مع الذاكرة السيادية MemoryZ',
+      timeoutSec: 'مهلة الجلسة بالثواني (0 = غير محدود)',
+      telegramNotification: 'إشعارات وبوت تيليجرام:',
+      selectTelegramBot: 'اختر بوت تيليجرام محفوظ...',
+      submitCreate: 'إنشاء الجلسة فوراً 🚀',
+
+      editSessionTitle: 'تعديل إعدادات وصلاحيات الجلسة',
+      submitUpdate: 'حفظ التعديلات',
+
+      // Agent Workspace
+      agentWorkspace: 'مساحة عمل الوكيل',
+      backToDashboard: 'العودة للوحة الرئيسية',
+      chatMode: 'محادثة AI',
+      terminalMode: 'الطرفية المباشرة',
+      typePrompt: 'اكتب أمرك أو سؤالك للوكيل...',
+      promptPlaceholder: 'مثلاً: افحص الكود واقترح حلولاً للمشاكل، أو أنشئ اختبارات...',
+      clearChat: 'بدء محادثة جديدة وتصفير الشاشة',
+      abortCommand: 'إلغاء الأمر الحالي',
+      fileExplorer: 'مستكشف الملفات',
+      uploadFiles: 'رفع ملفات',
+      uploadFolder: 'رفع مجلد',
+      downloadZip: 'تحميل كـ ZIP',
+      filePreview: 'معاينة الملف',
+      arabicReshaper: 'معالجة النص العربي في الطرفية',
+      memoryzMcp: 'ذاكرة MemoryZ',
+      remoteMcp: 'موصل MCP عن بُعد',
+      fetchUrl: 'جلب صفحة ويب (Fetch URL)',
+      forkFromTurn: 'تفريغ مسار جديد من هذا الرد',
+      editAndResume: 'تعديل واستئناف المحادثة',
+      editOnly: 'تعديل وحفظ فقط',
+      branchesModalTitle: 'شجرة الفروع والجلسات المتشعبة',
+    },
+
+    en: {
+      // Brand & General
+      appName: 'VibzCode',
+      appTagline: 'Sovereign Multi-Engine AI Agent Platform',
+      adminTitle: 'AI Agents Orchestration & Control Plane',
+      loginDesc: 'Sign in to orchestrate and manage AI agent sessions',
+      themeLight: 'Light Mode',
+      themeDark: 'Dark Mode',
+      langSwitch: 'العربية',
+      langName: 'English',
+      login: 'Sign In',
+      logout: 'Sign Out',
+      username: 'Username',
+      password: 'Password',
+      enterDashboard: 'Sign In to Dashboard',
+      loggingIn: 'Verifying...',
+
+      // Actions
+      save: 'Save',
+      cancel: 'Cancel',
+      close: 'Close',
+      delete: 'Delete',
+      edit: 'Edit',
+      create: 'Create',
+      update: 'Update',
+      refresh: 'Refresh',
+      copy: 'Copy',
+      copied: 'Copied to clipboard 📋',
+      loading: 'Loading...',
+      search: 'Search...',
+      filter: 'Filter',
+      all: 'All',
+      confirm: 'Confirm',
+      confirmDelete: 'Are you sure you want to delete this?',
+      status: 'Status',
+      actions: 'Actions',
+      date: 'Date',
+      time: 'Time',
+      open: 'Open',
+      download: 'Download',
+      upload: 'Upload',
+      stop: 'Stop',
+      send: 'Send',
+
+      // Admin Navbar & Drawer
+      newSession: 'New Session',
+      settingsMenu: 'Settings & System Menu',
+      closeMenu: 'Close Menu',
+      toolsAndEngines: 'Tools & Engines',
+      systemKeys: 'System Keys & Environment (.env)',
+      systemKeysDesc: 'Configure Gemini, MemoryZ, and encryption keys',
+      jevAi: 'Smart Jev AI Engine',
+      jevAiDesc: 'Autonomous task triage, memory pruning, and skill evaluation',
+      jevActive: 'Active (Tokens enabled)',
+      jevDisabled: 'Disabled (100% quota saved)',
+      consumptionStatus: 'Consumption Status:',
+      orchestratorMcp: 'Platform Orchestrator MCP',
+      orchestratorMcpDesc: 'Connect platform as MCP Server with Claude Code & Cursor',
+      telegramBots: 'Telegram Bots & Channels',
+      telegramBotsDesc: 'Dispatch commands and agent notifications via Telegram',
+      apiKeysSetup: 'Engine API Keys Setup',
+      apiKeysSetupDesc: 'Configure Gemini, Claude, and OpenAI model keys',
+      foldersTreeTitle: 'Server Folder Explorer',
+      foldersTreeDesc: 'Browse workspace paths in /root/wino',
+
+      // Dashboard Filters & Views
+      searchSessions: 'Search by session name, directory, or assignee...',
+      favorites: 'Favorites',
+      pinned: 'Pinned',
+      roots: 'Roots',
+      forks: 'Forks',
+      gridView: 'Grid View',
+      treeView: 'Tree View',
+      sortBy: 'Sort by:',
+      sortLatest: 'Newest First',
+      sortOldest: 'Oldest First',
+      sortName: 'Name (A-Z)',
+      active: 'Active',
+      paused: 'Paused',
+      allEngines: 'All Engines',
+      allStatus: 'All Statuses',
+      noSessionsFound: 'No sessions matching the selected filter criteria.',
+      totalSessions: 'Total Sessions:',
+
+      // Session Cards
+      openWorkspace: 'Open Workspace',
+      viewTerminal: 'Terminal',
+      viewChat: 'Chat',
+      pauseSession: 'Pause',
+      resumeSession: 'Resume',
+      editSession: 'Edit Permissions',
+      copyToken: 'Copy Session Token',
+      forkSession: 'Fork Session',
+      branches: 'Branches',
+      targetDir: 'Directory:',
+      engine: 'Engine:',
+      model: 'Model:',
+      assignee: 'Assignee:',
+
+      // Modals
+      createSessionTitle: 'Create New Agent Session',
+      sessionNamePlaceholder: 'e.g. Frontend Refactoring, Database Audit...',
+      customTargetDirPlaceholder: 'Enter custom path starting with /root/wino/...',
+      chooseFolder: 'Choose Workspace Directory',
+      customDirOption: 'Other custom path...',
+      sandboxTitle: 'Isolated Sandbox',
+      sandboxDesc: 'Run agent inside a restricted sandbox environment',
+      autoApproveTitle: 'Auto-Approve Actions',
+      autoApproveDesc: 'Execute shell commands and file reads without human prompt',
+      continueSessionTitle: 'Resume Previous Session',
+      continueSessionDesc: 'Preserve previous chat context and workspace files',
+      allowedModes: 'Allowed Operating Modes:',
+      modeBoth: 'Both (AI Chat + Terminal)',
+      modeChatOnly: 'AI Chat Only',
+      modeTerminalOnly: 'PTY Terminal Only',
+      enableMcpTitle: 'Enable MCP Protocol with MemoryZ Substrate',
+      timeoutSec: 'Session Timeout in seconds (0 = unlimited)',
+      telegramNotification: 'Telegram Notifications & Bot:',
+      selectTelegramBot: 'Select a saved Telegram bot...',
+      submitCreate: 'Launch Session Now 🚀',
+
+      editSessionTitle: 'Edit Session Permissions & Settings',
+      submitUpdate: 'Save Changes',
+
+      // Agent Workspace
+      agentWorkspace: 'Agent Workspace',
+      backToDashboard: 'Back to Dashboard',
+      chatMode: 'AI Chat',
+      terminalMode: 'Live Terminal',
+      typePrompt: 'Type your prompt or instruction for the agent...',
+      promptPlaceholder: 'e.g. Audit the codebase, fix bugs, or generate unit tests...',
+      clearChat: 'Start New Chat & Clear Screen',
+      abortCommand: 'Abort Current Task',
+      fileExplorer: 'File Explorer',
+      uploadFiles: 'Upload Files',
+      uploadFolder: 'Upload Folder',
+      downloadZip: 'Download as ZIP',
+      filePreview: 'File Preview',
+      arabicReshaper: 'Terminal Arabic Reshaper',
+      memoryzMcp: 'MemoryZ Knowledge',
+      remoteMcp: 'Remote MCP Connector',
+      fetchUrl: 'Fetch Web URL',
+      forkFromTurn: 'Fork new branch from this turn',
+      editAndResume: 'Edit & Resume Chat',
+      editOnly: 'Edit & Save Only',
+      branchesModalTitle: 'Session Branches & Family Tree',
+    }
+  },
+
+  t(key) {
+    const lang = this.currentLang || 'ar';
+    const dict = this.translations[lang] || this.translations.ar;
+    if (dict && dict[key] !== undefined) return dict[key];
+    const fallback = this.translations.en || {};
+    return fallback[key] !== undefined ? fallback[key] : key;
+  },
+
+  setLang(lang) {
+    if (lang !== 'ar' && lang !== 'en') lang = 'ar';
+    this.currentLang = lang;
+    localStorage.setItem('vibz_lang', lang);
+    document.documentElement.lang = lang;
+    document.documentElement.dir = (lang === 'ar' ? 'rtl' : 'ltr');
+    document.dispatchEvent(new CustomEvent('vibz-lang-changed', { detail: lang }));
+  },
+
+  toggleLang() {
+    const next = this.currentLang === 'ar' ? 'en' : 'ar';
+    this.setLang(next);
+  },
+
+  init() {
+    this.setLang(this.currentLang);
+  }
+};
+
+// Auto initialize on load
+Vibz.i18n.init();

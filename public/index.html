@@ -8,6 +8,9 @@
     (function() {
       const t = localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark';
       document.documentElement.setAttribute('data-theme', t);
+      const l = localStorage.getItem('vibz_lang') || 'ar';
+      document.documentElement.setAttribute('lang', l);
+      document.documentElement.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
     })();
   </script>
 
@@ -43,8 +46,17 @@
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="/css/style.css">
 
-  <!-- Alpine.js & App Script -->
-  <script src="/js/admin.js"></script>
+  <!-- VibzCode Modular Scripts & i18n -->
+  <script src="/js/i18n.js"></script>
+  <script src="/js/admin/auth.js"></script>
+  <script src="/js/admin/sessions.js"></script>
+  <script src="/js/admin/create-modal.js"></script>
+  <script src="/js/admin/folder-tree.js"></script>
+  <script src="/js/admin/telegram.js"></script>
+  <script src="/js/admin/keys-modal.js"></script>
+  <script src="/js/admin/mcp-modals.js"></script>
+  <script src="/js/admin/jev.js"></script>
+  <script src="/js/admin/app.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 font-arabic antialiased select-none" x-data="adminApp">
@@ -151,19 +163,25 @@
 
       <!-- Header Actions -->
       <div class="flex items-center gap-2">
+        <!-- Language Switcher Button -->
+        <button @click="toggleLang()" class="btn btn-sm btn-ghost border border-slate-800 text-slate-300 hover:text-white px-2.5 font-sans text-xs gap-1.5 tooltip tooltip-bottom" :data-tip="currentLang === 'ar' ? 'Switch to English' : 'التحويل إلى العربية'">
+          <i class="fa-solid fa-language text-sm text-cyan-400"></i>
+          <span class="font-bold" x-text="currentLang === 'ar' ? 'English' : 'العربية'"></span>
+        </button>
+
         <!-- New Session Primary Button -->
-        <button @click="openCreateModal" class="btn btn-sm btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white shadow-md shadow-cyan-500/20 gap-1.5 px-3" title="إنشاء جلسة جديدة">
+        <button @click="openCreateModal" class="btn btn-sm btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white shadow-md shadow-cyan-500/20 gap-1.5 px-3" :title="t('newSession')">
           <i class="fa-solid fa-plus text-xs"></i>
-          <span class="text-xs font-bold hidden sm:inline">جلسة جديدة</span>
+          <span class="text-xs font-bold hidden sm:inline" x-text="t('newSession')">جلسة جديدة</span>
         </button>
 
         <!-- Theme Toggle (Light / Dark) -->
-        <button @click="toggleTheme" class="btn btn-sm btn-ghost btn-circle border border-slate-800 text-slate-300 hover:text-white tooltip tooltip-bottom" :data-tip="theme === 'dark' ? 'التحويل إلى الوضع النهاري' : 'التحويل إلى الوضع الليلي'">
+        <button @click="toggleTheme" class="btn btn-sm btn-ghost btn-circle border border-slate-800 text-slate-300 hover:text-white tooltip tooltip-bottom" :data-tip="theme === 'dark' ? t('themeLight') : t('themeDark')">
           <i class="fa-solid text-xs" :class="theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
         </button>
 
         <!-- BigMac Hamburger Menu Button -->
-        <button @click="showSideDrawer = true" class="btn btn-sm btn-ghost btn-circle border border-slate-800 text-slate-200 hover:text-cyan-400 hover:border-cyan-500/40 tooltip tooltip-bottom" data-tip="القائمة وإعدادات النظام">
+        <button @click="showSideDrawer = true" class="btn btn-sm btn-ghost btn-circle border border-slate-800 text-slate-200 hover:text-cyan-400 hover:border-cyan-500/40 tooltip tooltip-bottom" :data-tip="t('settingsMenu')">
           <i class="fa-solid fa-bars text-base"></i>
         </button>
       </div>
@@ -320,6 +338,22 @@
             <div class="h-px bg-slate-800/80 my-2"></div>
 
             <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2">المظهر والتحكم</div>
+
+            <!-- Item: Language Switcher -->
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/70 border border-slate-800">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-cyan-400 shrink-0">
+                  <i class="fa-solid fa-language text-sm"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-slate-200" x-text="t('langName')">اللغة</div>
+                  <div class="text-[10px] text-slate-400 font-mono" x-text="currentLang === 'ar' ? 'العربية (RTL)' : 'English (LTR)'"></div>
+                </div>
+              </div>
+              <button @click="toggleLang()" class="btn btn-xs btn-outline border-slate-700 text-cyan-400 hover:bg-cyan-500/20 px-2.5 font-bold font-sans">
+                <span x-text="t('langSwitch')"></span>
+              </button>
+            </div>
 
             <!-- Item 5: Theme Toggle -->
             <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/70 border border-slate-800">

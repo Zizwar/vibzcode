@@ -8,6 +8,9 @@
     (function() {
       const t = localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark';
       document.documentElement.setAttribute('data-theme', t);
+      const l = localStorage.getItem('vibz_lang') || 'ar';
+      document.documentElement.setAttribute('lang', l);
+      document.documentElement.setAttribute('dir', l === 'ar' ? 'rtl' : 'ltr');
     })();
   </script>
 
@@ -56,9 +59,17 @@
   <!-- Custom Stylesheet -->
   <link rel="stylesheet" href="/css/style.css?v=2.3">
 
-  <!-- Scripts -->
+  <!-- VibzCode Modular Scripts & i18n -->
   <script src="/js/arabic-reshaper.js"></script>
-  <script src="/js/agent.js?v=2.3"></script>
+  <script src="/js/i18n.js"></script>
+  <script src="/js/agent/auth.js"></script>
+  <script src="/js/agent/chat.js"></script>
+  <script src="/js/agent/terminal.js"></script>
+  <script src="/js/agent/files.js"></script>
+  <script src="/js/agent/fork.js"></script>
+  <script src="/js/agent/memoryz.js"></script>
+  <script src="/js/agent/remote-mcp.js"></script>
+  <script src="/js/agent/app.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
 </head>
 <body class="min-h-screen bg-slate-950 text-slate-100 font-arabic antialiased select-none" x-data="agentApp">
@@ -237,8 +248,14 @@
             </div>
           </template>
 
+          <!-- Language Toggle (AR / EN) -->
+          <button @click="toggleLang()" class="btn btn-sm btn-ghost border border-slate-800 text-slate-300 hover:text-white px-2 font-sans text-xs gap-1 tooltip tooltip-bottom" :data-tip="currentLang === 'ar' ? 'Switch to English' : 'التحويل إلى العربية'">
+            <i class="fa-solid fa-language text-sm text-cyan-400"></i>
+            <span class="font-bold text-[11px]" x-text="currentLang === 'ar' ? 'EN' : 'عربي'"></span>
+          </button>
+
           <!-- Theme Toggle (Light / Dark) -->
-          <button @click="toggleTheme" class="btn btn-sm btn-ghost btn-circle border border-slate-800 text-slate-300 hover:text-white tooltip tooltip-bottom" :data-tip="theme === 'dark' ? 'التحويل إلى الوضع النهاري' : 'التحويل إلى الوضع الليلي'">
+          <button @click="toggleTheme" class="btn btn-sm btn-ghost btn-circle border border-slate-800 text-slate-300 hover:text-white tooltip tooltip-bottom" :data-tip="theme === 'dark' ? t('themeLight') : t('themeDark')">
             <i class="fa-solid text-xs" :class="theme === 'dark' ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-400'"></i>
           </button>
 
