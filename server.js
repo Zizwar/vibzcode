@@ -189,7 +189,10 @@ masterAgent.bindServerContext({
   jobsManager,
   memoryz,
   dispatchSessionChatTask: async (opts) => await dispatchSessionChatTask(opts),
-  channelManager
+  channelManager,
+  getAdminSecret: () => ADMIN_SECRET,
+  getSessionByToken: (t) => getSessionByToken(t),
+  publicBaseUrl: () => process.env.PUBLIC_URL || 'https://vibz.10rg.com'
 });
 
 // ==================== AUTH & ADMIN APIS ====================
@@ -669,6 +672,15 @@ app.get('/api/session/workspace/tree', (req, res) => {
   return res.json({ success: true, tree, targetDir });
 });
 
+function isSensitiveSystemPath(filePath) {
+  if (!filePath || typeof filePath !== 'string') return true;
+  const lower = filePath.toLowerCase();
+  const base = path.basename(lower);
+  if (base === '.env' || base.startsWith('.env.') || base === 'telegram_configs.json') return true;
+  if (lower.includes('/.ssh/') || lower.includes('/.git/') || lower.includes('/etc/shadow') || lower.includes('/etc/passwd')) return true;
+  return false;
+}
+
 // Helper to resolve workspace file path reliably (handles file://, absolute paths, and relative paths)
 function resolveWorkspaceFilePath(targetDir, rawPath, session = {}, token = '') {
   if (!rawPath || typeof rawPath !== 'string') return null;
@@ -680,24 +692,31 @@ function resolveWorkspaceFilePath(targetDir, rawPath, session = {}, token = '') 
   const resolvedTarget = path.resolve(targetDir);
   const isAdmin = token === ADMIN_SECRET;
   const isNoSandbox = session && session.sandbox === false;
+  const hasValidSession = Boolean(session && (session.id || session.token || session.targetDir));
 
   if (path.isAbsolute(p)) {
     const absPath = path.resolve(p);
+    if (isSensitiveSystemPath(absPath)) return null;
+
     // 1. Direct path inside targetDir
-    if (absPath.startsWith(resolvedTarget)) {
+    if (absPath.startsWith(resolvedTarget) && fs.existsSync(absPath)) {
       return absPath;
     }
     // 2. Path written with leading slash intended relative to targetDir (e.g. /myimage.png)
     const relFromTarget = path.resolve(resolvedTarget, p.replace(/^\/+/, ''));
-    if (fs.existsSync(relFromTarget)) {
+    if (fs.existsSync(relFromTarget) && !isSensitiveSystemPath(relFromTarget)) {
       return relFromTarget;
     }
     // 3. Admin or non-sandboxed session accessing existing system path
     if ((isAdmin || isNoSandbox) && fs.existsSync(absPath)) {
       return absPath;
     }
-    // 4. Default fallback if relFromTarget starts with targetDir
-    if (relFromTarget.startsWith(resolvedTarget)) {
+    // 4. Authenticated session token accessing any project file under /root/wino
+    if (hasValidSession && absPath.startsWith('/root/wino') && fs.existsSync(absPath)) {
+      return absPath;
+    }
+    // 5. Default fallback if relFromTarget starts with targetDir
+    if (relFromTarget.startsWith(resolvedTarget) && fs.existsSync(relFromTarget)) {
       return relFromTarget;
     }
     return null;
@@ -705,7 +724,12 @@ function resolveWorkspaceFilePath(targetDir, rawPath, session = {}, token = '') 
 
   // Relative path
   const relPath = path.resolve(resolvedTarget, p);
-  if (relPath.startsWith(resolvedTarget)) {
+  if (isSensitiveSystemPath(relPath)) return null;
+
+  if (relPath.startsWith(resolvedTarget) && fs.existsSync(relPath)) {
+    return relPath;
+  }
+  if ((isAdmin || isNoSandbox || hasValidSession) && fs.existsSync(relPath)) {
     return relPath;
   }
   return null;
@@ -823,8 +847,8 @@ app.get('/api/session/workspace/download', (req, res) => {
     ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
     : getSessionByToken(token);
 
-  if (!session) return res.status(401).send('Unauthorized');
-  const targetDir = path.resolve(session.targetDir);
+  if (!session) return res.status(401).send('Unauthorized: Valid session or admin token required');
+  const targetDir = path.resolve(session.targetDir || '/root/wino');
   const requestedPath = req.query.path;
   if (!requestedPath) return res.status(400).send('Path is required');
 
@@ -833,7 +857,30 @@ app.get('/api/session/workspace/download', (req, res) => {
     return res.status(404).send('File not found');
   }
 
-  const filename = path.basename(fullPath);
+  const filename = req.query.filename ? path.basename(String(req.query.filename)) : path.basename(fullPath);
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
+  res.setHeader('Content-Type', getWorkspaceMimeType(fullPath));
+  fs.createReadStream(fullPath).pipe(res);
+});
+
+// Direct File Download API Alias (Protected by session token or admin token)
+app.get('/api/files/download', (req, res) => {
+  const token = getAuthToken(req);
+  const session = (token === ADMIN_SECRET)
+    ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
+    : getSessionByToken(token);
+
+  if (!session) return res.status(401).send('Unauthorized: Valid session or admin token required');
+  const targetDir = path.resolve(session.targetDir || '/root/wino');
+  const requestedPath = req.query.path;
+  if (!requestedPath) return res.status(400).send('Path is required');
+
+  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, session, token);
+  if (!fullPath || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
+    return res.status(404).send('File not found');
+  }
+
+  const filename = req.query.filename ? path.basename(String(req.query.filename)) : path.basename(fullPath);
   res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
   res.setHeader('Content-Type', getWorkspaceMimeType(fullPath));
   fs.createReadStream(fullPath).pipe(res);
