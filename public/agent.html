@@ -179,7 +179,7 @@
                       'bg-amber-950 text-amber-300 border-amber-700/50': session?.engine === 'opencode',
                       'bg-cyan-950 text-cyan-300 border-cyan-700/50': !session?.engine || session?.engine === 'agy'
                     }"
-                    x-text="session?.engine === 'codex' ? 'Codex' : (session?.engine === 'claude' ? 'Claude' : (session?.engine === 'vibe' ? 'Mistral Vibe' : (session?.engine === 'opencode' ? 'OpenCode' : 'AGY')))"></span>
+                    x-text="session?.engine === 'codex' ? 'Codex' : (session?.engine === 'claude' ? 'Claude' : (session?.engine === 'vibe' ? 'Mistral Vibe' : (session?.engine === 'opencode' ? 'OpenCode' : (session?.engine === 'master' ? '👑 Master Agent' : 'AGY'))))"></span>
               <span x-show="session?.assignee" class="badge badge-neutral text-[10px] py-0.5 px-1.5 font-semibold text-slate-300 hidden md:inline-flex" x-text="session?.assignee"></span>
               <span x-show="session?.forkedFrom" @click="openBranchesModal()"
                     class="badge bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] py-0.5 px-1.5 font-semibold gap-1 cursor-pointer hover:bg-purple-900 transition-colors tooltip tooltip-bottom"
@@ -283,7 +283,7 @@
                   'bg-amber-950 text-amber-300 border-amber-700/50': session?.engine === 'opencode',
                   'bg-cyan-950 text-cyan-300 border-cyan-700/50': !session?.engine || session?.engine === 'agy'
                 }"
-                x-text="session?.engine === 'codex' ? 'Codex' : (session?.engine === 'claude' ? 'Claude' : (session?.engine === 'vibe' ? 'Vibe' : (session?.engine === 'opencode' ? 'OpenCode' : 'AGY')))"></span>
+                x-text="session?.engine === 'codex' ? 'Codex' : (session?.engine === 'claude' ? 'Claude' : (session?.engine === 'vibe' ? 'Vibe' : (session?.engine === 'opencode' ? 'OpenCode' : (session?.engine === 'master' ? '👑 Master Agent' : 'AGY'))))"></span>
           <span x-show="session?.forkedFrom" @click="openBranchesModal()"
                 class="badge bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[9px] py-0 px-1 font-semibold shrink-0 cursor-pointer">
             <i class="fa-solid fa-code-fork text-[8px] text-purple-400"></i>

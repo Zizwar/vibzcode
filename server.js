@@ -26,6 +26,7 @@ const {
 const { getSettings, updateSettings } = require('./lib/jevClient');
 const { loadEnv, checkKeysStatus, saveKeys } = require('./lib/envHelper');
 const ChannelManager = require('./lib/channels');
+const { defaultMasterAgent: masterAgent, MASTER_SESSION_ID } = require('./lib/masterAgent');
 
 // Automatically load .env if available
 loadEnv(true);
@@ -175,7 +176,20 @@ const channelManager = new ChannelManager({
   dispatchChat: async (opts) => {
     return await dispatchSessionChatTask(opts);
   },
+  masterAgent,
   logger: console
+});
+
+// Bind live server state to the Resident Master Orchestrator Agent
+masterAgent.bindServerContext({
+  getSessions: () => sessions,
+  saveSessions: (updated) => saveSessions(updated || sessions),
+  activeChatJobs,
+  activeChatProcesses,
+  jobsManager,
+  memoryz,
+  dispatchSessionChatTask: async (opts) => await dispatchSessionChatTask(opts),
+  channelManager
 });
 
 // ==================== AUTH & ADMIN APIS ====================
@@ -384,7 +398,7 @@ app.post('/api/admin/sessions', requireAdmin, (req, res) => {
     namespace: (req.body.namespace || 'default').trim(),
     token: 'vibz_' + crypto.randomBytes(16).toString('hex'),
     targetDir: path.resolve(targetDir),
-    engine: ['agy', 'opencode', 'codex', 'vibe', 'claude'].includes(req.body.engine) ? req.body.engine : 'agy',
+    engine: ['master', 'agy', 'opencode', 'codex', 'vibe', 'claude'].includes(req.body.engine) ? req.body.engine : 'agy',
     model: (req.body.model || '').trim(),
     sandbox: sandbox !== false,
     autoApprove: autoApprove !== false,
@@ -426,6 +440,7 @@ app.get('/api/admin/engines', requireAdmin, (req, res) => {
   return res.json({
     success: true,
     engines: [
+      { id: 'master', name: '👑 الوكيل العام السيادي (Master Orchestrator - Gemini Flash)', desc: 'وكيل عام ذكي يفهم السياق ويتذكر عبر MemoryZ ويتحكم بجميع الوكلاء والجلسات تلقائياً' },
       { id: 'agy', name: 'Google Antigravity CLI (agy)', desc: 'المحرك الرسمي لـ Antigravity مع دعم الساندبوكس وعزل المجلدات' },
       { id: 'opencode', name: 'OpenCode CLI (opencode)', desc: 'محرك OpenCode مفتوح المصدر متعدد النماذج مع دعم Auto-Approve' },
       { id: 'codex', name: 'OpenAI Codex CLI (codex)', desc: 'محرك OpenAI Codex المتطور للبرمجة مع دعم الفحص والتنفيذ' },
@@ -1827,57 +1842,136 @@ app.get('/api/mcp/status', (req, res) => {
   });
 });
 
-// Recall memories from MemoryZ
-app.post('/api/mcp/memoryz/recall', (req, res) => {
-  const { query, limit } = req.body;
+// Recall memories from MemoryZ (Native HTTP SDK with CLI fallback)
+app.post('/api/mcp/memoryz/recall', async (req, res) => {
+  const { query, limit, namespace } = req.body;
   const q = (query || '').trim();
   const lim = limit ? parseInt(limit, 10) : 5;
 
-  const args = ['recall', q || 'all', '--json', `--limit=${lim}`];
-  execFile('memoryz', args, { timeout: 15000 }, (err, stdout, stderr) => {
-    if (err && !stdout) {
-      return res.status(500).json({ success: false, error: stderr || err.message });
-    }
-    try {
-      const memories = JSON.parse(stdout.trim());
-      return res.json({ success: true, memories });
-    } catch (e) {
-      return res.json({ success: true, memories: [], raw: stdout });
-    }
-  });
+  try {
+    const data = await memoryz.recallMemory({ query: q || 'all', namespace, limit: lim, format: 'full' });
+    const memories = Array.isArray(data) ? data : (data?.memories || data?.results || []);
+    return res.json({ success: true, memories });
+  } catch (sdkErr) {
+    const args = ['recall', q || 'all', '--json', `--limit=${lim}`];
+    execFile('memoryz', args, { timeout: 15000 }, (err, stdout) => {
+      if (err && !stdout) {
+        return res.status(500).json({ success: false, error: sdkErr.message });
+      }
+      try {
+        const memories = JSON.parse(stdout.trim());
+        return res.json({ success: true, memories });
+      } catch (e) {
+        return res.json({ success: true, memories: [], raw: stdout });
+      }
+    });
+  }
 });
 
-// Store a new memory atom into MemoryZ
-app.post('/api/mcp/memoryz/store', (req, res) => {
-  const { type, content, title } = req.body;
+// Store a new memory atom into MemoryZ (Native HTTP SDK with CLI fallback)
+app.post('/api/mcp/memoryz/store', async (req, res) => {
+  const { type, content, title, namespace } = req.body;
   if (!content || !content.trim()) {
     return res.status(400).json({ success: false, error: 'المحتوى مطلوب' });
   }
 
-  const args = ['store', `--type=${type || 'note'}`, `--content=${content.trim()}`];
-  if (title && title.trim()) {
-    args.push(`--title=${title.trim()}`);
+  try {
+    const stored = await memoryz.storeMemory({
+      content: content.trim(),
+      title: title ? title.trim() : undefined,
+      type: type || 'note',
+      namespace: namespace || 'vibzcode',
+      agentId: 'web-console',
+      source: 'vibzcode:web'
+    });
+    return res.json({ success: true, message: 'تم حفظ الذاكرة بنجاح', memory: stored });
+  } catch (sdkErr) {
+    const args = ['store', `--type=${type || 'note'}`, `--content=${content.trim()}`];
+    if (title && title.trim()) args.push(`--title=${title.trim()}`);
+    execFile('memoryz', args, { timeout: 15000 }, (err, stdout) => {
+      if (err && !stdout) {
+        return res.status(500).json({ success: false, error: sdkErr.message });
+      }
+      return res.json({ success: true, message: stdout.trim() || 'تم حفظ الذاكرة بنجاح' });
+    });
   }
-
-  execFile('memoryz', args, { timeout: 15000 }, (err, stdout, stderr) => {
-    if (err && !stdout) {
-      return res.status(500).json({ success: false, error: stderr || err.message });
-    }
-    return res.json({ success: true, message: stdout.trim() || 'تم حفظ الذاكرة بنجاح' });
-  });
 });
 
-// Get Context block for prompt injection
-app.post('/api/mcp/memoryz/context', (req, res) => {
-  const { query } = req.body;
+// Get Context block for prompt injection (Native HTTP SDK)
+app.post('/api/mcp/memoryz/context', async (req, res) => {
+  const { query, namespace } = req.body;
   const q = (query || '').trim();
 
-  execFile('memoryz', ['context', q || 'general'], { timeout: 15000 }, (err, stdout, stderr) => {
-    if (err && !stdout) {
-      return res.status(500).json({ success: false, error: stderr || err.message });
+  try {
+    const data = await memoryz.recallMemory({ query: q || 'general', namespace, limit: 5, format: 'full' });
+    const list = Array.isArray(data) ? data : (data?.memories || data?.results || []);
+    let xml = '<memoryz_context>\n';
+    for (const m of list) {
+      xml += `  <memory type="${m.type || 'note'}" title="${(m.title || '').replace(/"/g, '&quot;')}" hash="${m.hash || ''}">\n    ${m.content || ''}\n  </memory>\n`;
     }
-    return res.json({ success: true, context: stdout.trim() });
-  });
+    xml += '</memoryz_context>';
+    return res.json({ success: true, context: xml });
+  } catch (sdkErr) {
+    execFile('memoryz', ['context', q || 'general'], { timeout: 15000 }, (err, stdout) => {
+      if (err && !stdout) {
+        return res.status(500).json({ success: false, error: sdkErr.message });
+      }
+      return res.json({ success: true, context: stdout.trim() });
+    });
+  }
+});
+
+// ==================== MASTER ORCHESTRATOR AGENT APIS ====================
+
+// Chat directly with the Resident Master Orchestrator Agent
+app.post('/api/orchestrator/master', async (req, res) => {
+  const token = getAuthToken(req);
+  if (token !== ADMIN_SECRET && !getSessionByToken(token)) {
+    return res.status(401).json({ success: false, error: 'غير مصرح' });
+  }
+
+  const { prompt, model, sessionId } = req.body;
+  if (!prompt || !String(prompt).trim()) {
+    return res.status(400).json({ success: false, error: 'يرجى إدخال الأمر الموجه للوكيل العام' });
+  }
+
+  try {
+    const outcome = await masterAgent.chat(String(prompt).trim(), {
+      model,
+      sessionId: sessionId || MASTER_SESSION_ID,
+      sender: 'Web Orchestrator'
+    });
+    return res.json({
+      success: !outcome.isError,
+      response: outcome.responseText,
+      model: outcome.model,
+      duration: outcome.duration,
+      steps: outcome.steps,
+      usage: outcome.usage
+    });
+  } catch (err) {
+    return res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Get Master Orchestrator Chat History
+app.get('/api/orchestrator/master/history', (req, res) => {
+  const token = getAuthToken(req);
+  if (token !== ADMIN_SECRET && !getSessionByToken(token)) {
+    return res.status(401).json({ success: false, error: 'غير مصرح' });
+  }
+  const messages = getSessionChatMessages(req.query.sessionId || MASTER_SESSION_ID);
+  return res.json({ success: true, messages });
+});
+
+// Clear Master Orchestrator Chat History
+app.delete('/api/orchestrator/master/history', (req, res) => {
+  const token = getAuthToken(req);
+  if (token !== ADMIN_SECRET && !getSessionByToken(token)) {
+    return res.status(401).json({ success: false, error: 'غير مصرح' });
+  }
+  saveSessionChatMessages(req.query.sessionId || MASTER_SESSION_ID, []);
+  return res.json({ success: true, message: 'تم مسح سجل الوكيل العام' });
 });
 
 // Serve Static Assets

@@ -56,6 +56,7 @@
   <script src="/js/admin/keys-modal.js"></script>
   <script src="/js/admin/mcp-modals.js"></script>
   <script src="/js/admin/jev.js"></script>
+  <script src="/js/admin/master-bar.js"></script>
   <script src="/js/admin/app.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.13.5/dist/cdn.min.js"></script>
 </head>
@@ -167,6 +168,13 @@
         <button @click="toggleLang()" class="btn btn-sm btn-ghost border border-slate-800 text-slate-300 hover:text-white px-2.5 font-sans text-xs gap-1.5 tooltip tooltip-bottom" :data-tip="currentLang === 'ar' ? 'Switch to English' : 'التحويل إلى العربية'">
           <i class="fa-solid fa-language text-sm text-cyan-400"></i>
           <span class="font-bold" x-text="currentLang === 'ar' ? 'English' : 'العربية'"></span>
+        </button>
+
+        <!-- Master Orchestrator Quick Toggle Button -->
+        <button @click="toggleMasterBar()" class="btn btn-sm bg-gradient-to-r from-amber-500/20 to-purple-600/20 hover:from-amber-500/30 hover:to-purple-600/30 border border-amber-500/40 text-amber-300 shadow-md shadow-amber-500/10 gap-1.5 px-3 tooltip tooltip-bottom" data-tip="الوكيل العام السيادي (Ctrl+K)">
+          <i class="fa-solid fa-crown text-xs text-amber-400"></i>
+          <span class="text-xs font-bold hidden sm:inline">الوكيل العام</span>
+          <kbd class="kbd kbd-xs bg-slate-950/80 text-amber-300/90 border-amber-500/30 hidden md:inline-flex font-mono text-[10px]">Ctrl+K</kbd>
         </button>
 
         <!-- New Session Primary Button -->
@@ -728,7 +736,7 @@
                       'fa-solid fa-cube text-amber-400': sess.engine === 'opencode',
                       'fa-solid fa-robot text-cyan-400': !sess.engine || sess.engine === 'agy'
                     }"></i>
-                    <span x-text="sess.engine === 'codex' ? 'Codex' : (sess.engine === 'claude' ? 'Claude Code' : (sess.engine === 'vibe' ? 'Mistral Vibe' : (sess.engine === 'opencode' ? 'OpenCode' : 'AGY')))"></span>
+                    <span x-text="sess.engine === 'codex' ? 'Codex' : (sess.engine === 'claude' ? 'Claude Code' : (sess.engine === 'vibe' ? 'Mistral Vibe' : (sess.engine === 'opencode' ? 'OpenCode' : (sess.engine === 'master' ? '👑 Master Agent' : 'AGY'))))"></span>
                   </span>
                   <span x-show="sess.model" class="badge badge-xs bg-slate-800 text-slate-300 border-slate-700 py-1.5 px-2 gap-1 font-mono text-[10px]" x-text="sess.model"></span>
                   <span x-show="sess.sandbox" class="badge badge-xs bg-cyan-950 text-cyan-300 border-cyan-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
@@ -951,7 +959,7 @@
                         'fa-solid fa-cube text-amber-400': root.engine === 'opencode',
                         'fa-solid fa-robot text-cyan-400': !root.engine || root.engine === 'agy'
                       }"></i>
-                      <span x-text="root.engine === 'codex' ? 'Codex' : (root.engine === 'claude' ? 'Claude Code' : (root.engine === 'vibe' ? 'Mistral Vibe' : (root.engine === 'opencode' ? 'OpenCode' : 'AGY')))"></span>
+                      <span x-text="root.engine === 'codex' ? 'Codex' : (root.engine === 'claude' ? 'Claude Code' : (root.engine === 'vibe' ? 'Mistral Vibe' : (root.engine === 'opencode' ? 'OpenCode' : (root.engine === 'master' ? '👑 Master Agent' : 'AGY'))))"></span>
                     </span>
                     <span x-show="root.model" class="badge badge-xs bg-slate-800 text-slate-300 border-slate-700 py-1.5 px-2 gap-1 font-mono text-[10px]" x-text="root.model"></span>
                     <span x-show="root.sandbox" class="badge badge-xs bg-cyan-950 text-cyan-300 border-cyan-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
@@ -1216,6 +1224,7 @@
               </span>
             </label>
             <select x-model="newSession.engine" class="select select-sm select-bordered bg-slate-900 border-slate-700 text-slate-100">
+              <option value="master">👑 الوكيل العام السيادي (Master Orchestrator - Gemini Flash)</option>
               <option value="agy">Google Antigravity (agy)</option>
               <option value="opencode">OpenCode CLI (opencode)</option>
               <option value="codex">OpenAI Codex CLI (codex)</option>
@@ -1475,7 +1484,8 @@
                 </span>
               </label>
               <select x-model="editingSession.engine" class="select select-sm select-bordered bg-slate-900 border-slate-700 text-slate-100">
-                <option value="agy">Google Antigravity (agy)</option>
+                <option value="master">👑 الوكيل العام السيادي (Master Orchestrator - Gemini Flash)</option>
+              <option value="agy">Google Antigravity (agy)</option>
                 <option value="opencode">OpenCode CLI (opencode)</option>
                 <option value="codex">OpenAI Codex CLI (codex)</option>
                 <option value="vibe">Mistral Vibe CLI (vibe)</option>
@@ -2210,6 +2220,193 @@ JEV_AI_KEY=your_jev_key_optional</div>
       <button @click="closeKeysModal()">إغلاق</button>
     </form>
   </dialog>
+
+
+  <!-- ==================== FLOATING MASTER ORCHESTRATOR COMMAND BAR ==================== -->
+  <div x-show="authenticated" x-cloak>
+    
+    <!-- Collapsed Floating Launcher Pill (When Closed) -->
+    <div x-show="!masterBarOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         class="fixed bottom-5 left-1/2 -translate-x-1/2 z-40 w-[92vw] max-w-lg">
+      <button @click="toggleMasterBar()"
+              class="w-full group flex items-center justify-between gap-3 px-4 py-3 rounded-2xl bg-slate-900/95 hover:bg-slate-900 border border-amber-500/40 hover:border-amber-400/70 shadow-2xl shadow-amber-500/10 backdrop-blur-xl transition-all duration-200">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500/25 to-purple-500/25 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-crown text-sm"></i>
+          </div>
+          <div class="text-right truncate">
+            <div class="text-xs font-bold text-slate-100 flex items-center gap-1.5">
+              <span>وجّه الوكيل العام السيادي (Master Agent)</span>
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            </div>
+            <div class="text-[11px] text-slate-400 truncate">يفهم السياق، يتذكر عبر MemoryZ، ويتحكم بجميع الجلسات...</div>
+          </div>
+        </div>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <kbd class="kbd kbd-xs bg-slate-950 text-amber-300 border-slate-700 font-mono text-[10px]">Ctrl+K</kbd>
+          <i class="fa-solid fa-chevron-up text-xs text-amber-400 group-hover:-translate-y-0.5 transition-transform"></i>
+        </div>
+      </button>
+    </div>
+
+    <!-- Expanded Floating Command Console (When Open) -->
+    <div x-show="masterBarOpen"
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-6 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+         x-transition:leave-end="opacity-0 translate-y-6 scale-95"
+         @keydown.escape.window="masterBarOpen = false"
+         class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[96vw] max-w-2xl bg-slate-900/95 border border-amber-500/40 rounded-2xl shadow-2xl shadow-black/80 backdrop-blur-2xl overflow-hidden flex flex-col">
+
+      <!-- Top Header Bar -->
+      <div class="bg-gradient-to-r from-amber-950/60 via-slate-900 to-purple-950/50 px-4 py-3 border-b border-amber-500/20 flex items-center justify-between gap-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-400 shrink-0">
+            <i class="fa-solid fa-crown text-sm"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <h4 class="text-xs font-black text-white truncate">الوكيل العام السيادي (Master Orchestrator)</h4>
+              <span class="badge badge-xs bg-amber-950 text-amber-300 border-amber-500/40 font-mono text-[10px]">12 أداة نشطة</span>
+            </div>
+            <p class="text-[10px] text-slate-400 truncate">متصل بـ Gemini Flash + MemoryZ + جميع جلسات الوكلاء</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-1.5 shrink-0">
+          <!-- Model Selector -->
+          <select x-model="masterModel" class="select select-xs bg-slate-950 border-slate-700 text-amber-300 font-mono text-[10px] rounded-lg focus:border-amber-500">
+            <option value="">Gemini 2.5 Flash (تلقائي)</option>
+            <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
+            <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
+          </select>
+
+          <!-- Clear History Button -->
+          <button @click="clearMasterHistory()" class="btn btn-xs btn-ghost text-slate-400 hover:text-rose-400 tooltip tooltip-bottom" data-tip="مسح السجل">
+            <i class="fa-solid fa-trash-can text-xs"></i>
+          </button>
+
+          <!-- Toggle Messages Drawer Height -->
+          <button @click="masterBarExpanded = !masterBarExpanded" class="btn btn-xs btn-ghost text-slate-300 hover:text-white tooltip tooltip-bottom" :data-tip="masterBarExpanded ? 'تصغير المحادثة' : 'توسيع المحادثة'">
+            <i class="fa-solid text-xs" :class="masterBarExpanded ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
+          </button>
+
+          <!-- Close Floating Bar -->
+          <button @click="masterBarOpen = false" class="btn btn-xs btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
+        </div>
+      </div>
+
+      <!-- Quick Command Chips -->
+      <div class="px-3 py-2 bg-slate-950/70 border-b border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
+        <span class="text-[10px] text-slate-500 font-bold shrink-0 ml-1"><i class="fa-solid fa-bolt text-amber-400"></i> أوامر سريعة:</span>
+        <button @click="sendMasterCommand('اعرض لي حالة جميع الجلسات المفتوحة والمهام الجارية حالياً باختصار')" :disabled="masterLoading"
+                class="btn btn-xs bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-lg shrink-0 gap-1 font-normal">
+          <i class="fa-solid fa-layer-group text-cyan-400 text-[10px]"></i>
+          <span>حالة الجلسات</span>
+        </button>
+        <button @click="sendMasterCommand('استرجع لي أهم القواعد والمهارات المحفوظة في ذاكرة MemoryZ')" :disabled="masterLoading"
+                class="btn btn-xs bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-lg shrink-0 gap-1 font-normal">
+          <i class="fa-solid fa-brain text-purple-400 text-[10px]"></i>
+          <span>ذكريات MemoryZ</span>
+        </button>
+        <button @click="sendMasterCommand('اعرض شجرة المهام الحالية في MemoryZ وحالة كل مهمة')" :disabled="masterLoading"
+                class="btn btn-xs bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-lg shrink-0 gap-1 font-normal">
+          <i class="fa-solid fa-sitemap text-emerald-400 text-[10px]"></i>
+          <span>شجرة المهام</span>
+        </button>
+        <button @click="masterInput = 'أنشئ جلسة جديدة باسم '; document.getElementById('master-command-input').focus()"
+                class="btn btn-xs bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-lg shrink-0 gap-1 font-normal">
+          <i class="fa-solid fa-plus text-amber-400 text-[10px]"></i>
+          <span>إنشاء جلسة بأمر</span>
+        </button>
+      </div>
+
+      <!-- Conversation Stream -->
+      <div x-show="masterBarExpanded"
+           id="master-messages-container"
+           class="p-4 space-y-3 max-h-[48vh] overflow-y-auto bg-slate-950/40 select-text">
+
+        <template x-if="masterMessages.length === 0 && !masterLoading">
+          <div class="text-center py-6 space-y-2 text-slate-400">
+            <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto">
+              <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-200">الوكيل العام جاهز لتلقي أوامرك</p>
+            <p class="text-[11px] text-slate-400 max-w-md mx-auto">
+              اطلب منه فحص أي مشروع، توجيه مهمة لـ Claude أو Antigravity أو Codex، تمرير مخرجات وكيل لآخر، أو حفظ قاعدة في MemoryZ.
+            </p>
+          </div>
+        </template>
+
+        <template x-for="msg in masterMessages" :key="msg.id">
+          <div class="flex flex-col gap-1" :class="msg.role === 'user' ? 'items-start' : 'items-end'">
+            <div class="max-w-[90%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed"
+                 :class="msg.role === 'user'
+                   ? 'bg-cyan-950/80 border border-cyan-500/30 text-cyan-100 rounded-tr-none'
+                   : (msg.isError ? 'bg-rose-950/80 border border-rose-500/40 text-rose-200 rounded-tl-none' : 'bg-slate-900 border border-amber-500/30 text-slate-100 rounded-tl-none')">
+              
+              <!-- Role Header -->
+              <div class="flex items-center justify-between gap-3 mb-1 text-[10px] opacity-75">
+                <span class="font-bold flex items-center gap-1">
+                  <i :class="msg.role === 'user' ? 'fa-solid fa-user text-cyan-400' : 'fa-solid fa-crown text-amber-400'"></i>
+                  <span x-text="msg.role === 'user' ? 'أنت' : 'الوكيل العام'"></span>
+                </span>
+                <span class="font-mono" x-text="msg.time || ''"></span>
+              </div>
+
+              <!-- Executed Tools Badges (if any) -->
+              <template x-if="msg.steps && msg.steps.length > 0">
+                <div class="mb-2 flex flex-wrap gap-1 border-b border-slate-800 pb-1.5">
+                  <template x-for="(st, sIdx) in msg.steps" :key="sIdx">
+                    <span class="badge badge-xs bg-amber-950/90 text-amber-300 border-amber-500/30 font-mono text-[9px] gap-1 py-2">
+                      <i class="fa-solid fa-screwdriver-wrench text-[8px]"></i>
+                      <span x-text="st.name.replace('master:', '')"></span>
+                      <span class="opacity-60" x-text="st.duration ? '(' + st.duration + 's)' : ''"></span>
+                    </span>
+                  </template>
+                </div>
+              </template>
+
+              <!-- Message Body -->
+              <div class="whitespace-pre-wrap break-words font-arabic" x-text="msg.content"></div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Loading Indicator -->
+        <div x-show="masterLoading" class="flex items-center gap-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-300 text-xs">
+          <span class="loading loading-dots loading-sm text-amber-400"></span>
+          <span>الوكيل العام يحلل السياق وينفذ الأدوات المطلوبة...</span>
+        </div>
+      </div>
+
+      <!-- Command Input Form -->
+      <form @submit.prevent="sendMasterCommand()" class="p-3 bg-slate-950 border-t border-slate-800 flex items-center gap-2">
+        <div class="relative flex-1">
+          <input id="master-command-input"
+                 type="text"
+                 x-model="masterInput"
+                 :disabled="masterLoading"
+                 placeholder="اكتب أمرك للوكيل العام (مثال: وجه جلسة الفيرم لفحص الأخطاء، أو تذكر أن المنفذ 4000)..."
+                 class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 focus:border-amber-500 text-slate-100 text-xs pr-3 pl-9 rounded-xl">
+          <i class="fa-solid fa-terminal absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+        </div>
+        <button type="submit"
+                :disabled="masterLoading || !masterInput.trim()"
+                class="btn btn-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border-none text-slate-950 font-black rounded-xl px-4 gap-1.5 shadow-lg shadow-amber-500/20">
+          <span x-show="masterLoading" class="loading loading-spinner loading-xs"></span>
+          <i x-show="!masterLoading" class="fa-solid fa-paper-plane text-xs"></i>
+          <span class="text-xs">تنفيذ</span>
+        </button>
+      </form>
+
+    </div>
+  </div>
 
 </body>
 </html>

@@ -1,7 +1,7 @@
 {
   "name": "vibzcode",
-  "version": "2.0.1",
-  "description": "VibzCode - Sovereign Multi-Engine AI Agent Orchestrator & Workspace Platform with Shared MemoryZ Substrate",
+  "version": "2.1.0",
+  "description": "VibzCode - Sovereign Multi-Engine AI Agent Orchestrator & Workspace Platform with Resident Gemini Master Agent & Shared MemoryZ Substrate",
   "main": "index.js",
   "bin": {
     "vibzcode": "bin/vibzcode.js"
@@ -14,6 +14,8 @@
     "server.js",
     "ecosystem.config.cjs",
     "README.md",
+    "iniskill.md",
+    "UPGRADE_MASTER_AGENT.md",
     ".env.example"
   ],
   "type": "commonjs",
@@ -30,6 +32,8 @@
     "ai",
     "agent",
     "orchestrator",
+    "master-agent",
+    "gemini",
     "mcp",
     "remote-mcp",
     "antigravity",

@@ -31,6 +31,9 @@ Vibz.createAdminApp = function() {
       if (typeof this.fetchKeysStatus === 'function') {
         this.fetchKeysStatus();
       }
+      if (typeof this.initMasterBar === 'function') {
+        this.initMasterBar();
+      }
       const savedToken = localStorage.getItem('vibz_admin_token') || localStorage.getItem('agyz_admin_token');
       if (savedToken) {
         this.adminToken = savedToken;
@@ -71,7 +74,8 @@ Vibz.createAdminApp = function() {
     Vibz.adminTelegram,
     Vibz.adminKeysModal,
     Vibz.adminMcpModals,
-    Vibz.adminJev
+    Vibz.adminJev,
+    Vibz.adminMasterBar
   ];
 
   for (const mod of modules) {

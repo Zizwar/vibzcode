@@ -137,10 +137,17 @@ function startServer(options = {}) {
   return require('./server.js');
 }
 
+const { MasterAgent, defaultMasterAgent } = require('./lib/masterAgent');
+const { GeminiClient, defaultGeminiClient } = require('./lib/geminiClient');
+
 module.exports = {
   vibzcode,
   askAgent,
   executeEngineTask,
+  MasterAgent,
+  defaultMasterAgent,
+  GeminiClient,
+  defaultGeminiClient,
   MemoryzClient,
   checkKeysStatus,
   loadEnv,

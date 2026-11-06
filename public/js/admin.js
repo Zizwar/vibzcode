@@ -12,6 +12,7 @@ window.Vibz = window.Vibz || {};
     '/js/admin/keys-modal.js',
     '/js/admin/mcp-modals.js',
     '/js/admin/jev.js',
+    '/js/admin/master-bar.js',
     '/js/admin/app.js'
   ];
 
@@ -21,7 +22,6 @@ window.Vibz = window.Vibz || {};
   }
 
   // Fallback loader if scripts were not individually loaded in HTML head
-  let loaded = 0;
   function loadScript(src, cb) {
     const s = document.createElement('script');
     s.src = src;
