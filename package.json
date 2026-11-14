@@ -1,6 +1,6 @@
 {
   "name": "vibzcode",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "description": "VibzCode - Sovereign Multi-Engine AI Agent Orchestrator & Workspace Platform with Resident Gemini Master Agent & Shared MemoryZ Substrate",
   "main": "index.js",
   "bin": {
