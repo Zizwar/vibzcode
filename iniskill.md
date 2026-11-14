@@ -230,29 +230,100 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ---
 
-### 3️⃣ خادم الـ Remote MCP الموحد (لـ Claude و ChatGPT و Cursor):
-كل جلسة في `agyz` تمتلك رابط MCP سحابي كامل يعمل برابط واحد:
+### 3️⃣ خادم الـ Remote MCP الموحد (لـ Claude و ChatGPT و Cursor و Miz / Autonomous Agents):
+كل جلسة في `agyz` تمتلك رابط MCP سحابي كامل يعمل برابط واحد موحد:
 ```text
-https://test.10rg.com/mcp?token=<SESSION_TOKEN>
+https://vibz.10rg.com/mcp?token=<SESSION_TOKEN>
+```
+كما يتوفر خادم تحكم وتنسيق عام لجميع الجلسات (Master Orchestrator MCP):
+```text
+https://vibz.10rg.com/mcp/orchestrator?token=<ADMIN_SECRET>
 ```
 
 #### الأدوات المتاحة للذكاء الاصطناعي (MCP Tools):
-1. `ask_agent(prompt, continue_conversation)`: إرسال مهام برمجية إلى `agy` لتعديل الكود وبناء الصفحات.
-2. `list_workspace_files(subpath)`: تصفح ملفات ومجلدات الساندبوكس.
-3. `read_workspace_file(relative_path)`: قراءة أي ملف كود داخل المشروع.
-4. `write_workspace_file(relative_path, content)`: إنشاء أو تعديل ملفات المشروع.
-5. `run_shell_command(command)`: تنفيذ أوامر باش داخل مجلد المشروع.
-6. `get_session_status()`: معرفة مسار المجلد وحالة الجلسة.
-7. `recall_memory(query)`: استدعاء الذكريات من خادم MemoryZ.
-8. `store_memory(content, title, type)`: حفظ ذكريات وقواعد جديدة في MemoryZ.
+
+##### أ) إدارة وتشغيل المهام والتتبع المباشر (Job Execution & Live Tracking):
+1. **`ask_agent(prompt, continue_conversation, memory_refs, async_mode, sender)`**:
+   - إرسال مهمة برمجية إلى وكيل الجلسة (`agy`, `claude`, `codex`, `opencode`).
+   - `async_mode: true`: يعيد معرف المهمة `job_id` فوراً دون انتظار انتهاء التنفيذ الطويل.
+   - `sender: "Miz"`: تحديد اسم الوكيل المُرسل ليظهر فوراً في شات الجلسة وسجل المحادثات كرسالة واضحة للمستخدم.
+   - `memory_refs: ["hash1", ...]`: جلب ذكريات وقواعد من MemoryZ وربطها تلقائياً بالسياق.
+
+2. **`get_job_progress(job_id)`** (أو الاسم البديل **`job_progress`**):
+   - **ميزة حصرية للوكلاء**: متابعة التقدم المباشر خطوة بخطوة أثناء تشغيل المهمة في الخلفية (الخطوة الجارية `currentStep` والأمر المنفذ مثل `run_command` أو `ffmpeg`، قائمة الخطوات المكتملة `recentSteps`، سجلات الحالة الزمنية `progressHistory`، ومقتطف من المخرجات الجزئية `partialOutput`). يتيح للوكيل الخارجي (مثل Miz) طمأنة المستخدم أو كشف أي توقف مبكراً دون انتظار انتهاء المهمة بالكامل.
+
+3. **`get_job_status(job_id)`** (أو الاسم البديل **`job_status`**):
+   - معرفة الحالة العامة (`running`, `completed`, `failed`, `aborted`) وعدد الثواني المنقضية `elapsedSeconds` ووجود النتيجة `hasResult`.
+
+4. **`get_job_result(job_id)`** (أو الاسم البديل **`job_result`**):
+   - استرجاع المخرجات النهائية الكاملة للنص البرمجي (`response`) ومعرف المحادثة `conversationId` ومدة التنفيذ بعد انتهاء المهمة.
+
+5. **`abort_job(job_id)`** (أو الاسم البديل **`job_abort`**):
+   - إلغاء وإيقاف فوري لأي مهمة خلفية جارية في حال تعطلها أو رغبة الوكيل في التراجع.
+
+##### ب) تنزيل وجلب ملفات مساحة العمل (File Fetch & Download Links):
+6. **`generate_file_download_link(file_path, custom_filename)`** (أو **`download_file_link`**):
+   - توليد رابط تحميل آمن ومحمي بتوكن الجلسة لأي ملف تم إنشاؤه داخل مساحة العمل أو على السيرفر (يدعم المسارات النسبية وكذلك المسارات المطلقة مثل `/root/elevenlabs/video.mp4` أو `/root/wino/...`).
+   - يعيد كائن JSON يحتوي على رابط التنزيل المباشر `download_url`، ورابط الـ API `direct_api_url`، وأمر `curl` جاهز للنسخ، ورابط Markdown قابل للنقر.
+
+7. **`fetch_workspace_file(file_path, max_bytes)`**:
+   - قراءة محتوى أي ملف نصي أو كود من السيرفر مباشرة عبر MCP (حتى 1 ميغابايت) للتحقق السريع دون الحاجة لتشغيل أمر في التيرمنال.
+
+8. **`list_workspace_files(subpath)`**:
+   - استعراض المجلدات والملفات داخل مساحة عمل الجلسة مع الأحجام.
+
+9. **`read_workspace_file(relative_path)`**:
+   - قراءة ملف نصي كامل داخل مساحة العمل.
+
+10. **`write_workspace_file(relative_path, content)`**:
+    - كتابة أو تعديل ملفات الكود مباشرة داخل مساحة العمل.
+
+11. **`run_shell_command(command)`**:
+    - تنفيذ أمر Bash داخل مسار الجلسة (في حال كانت الجلسة تتيح وضع التيرمنال).
+
+##### ج) سياق المنصة وذاكرة MemoryZ التشاركية:
+12. **`get_session_status()`**:
+    - الحصول على معلومات الجلسة، المحرك المستخدم، مسار العمل، والصلاحيات.
+
+13. **`get_orchestration_context(query, include_sessions, include_memories)`**:
+    - سياق مكثف شامل لمنصة VibzCode بالكامل: الجلسات النشطة، المهام الجارية، والقواعد المعمارية المسترجعة من MemoryZ.
+
+14. **`recall_memory(query)`** و **`store_memory(content, title, type)`** و **`get_memory(hash)`**:
+    - استرجاع وتخزين الذكريات والمهارات المكتسبة في خادم الذاكرة السيادي MemoryZ.
+
+15. **`task_claim(id, agent_id)`**:
+    - حجز المهام الهرمية ذرياً لمنع تعارض الوكلاء متعددي الأنظمة.
+
+---
+
+### 4️⃣ نقاط النهاية البرمجية (REST Endpoints & Direct Downloads):
+
+| المسار (Endpoint) | الطريقة | التوثيق (Auth) | الوصف |
+| :--- | :--- | :--- | :--- |
+| `/api/session/workspace/download` | `GET` | `?token=...` أو Header | تنزيل ملف من مساحة العمل أو مجلدات الميديا (مثل `/root/elevenlabs/`) مع هيدر التنزيل |
+| `/api/files/download` | `GET` | `?token=...` أو Header | مسار بديل مباشر لتنزيل الملفات بواسطة الوكلاء ومطوري المنصة |
+| `/api/session/job/progress/:jobId` | `GET` | `?token=...` أو Header | قراءة التقدم اللحظي للمهمة الجارية (الخطوة الحالية، الخطوات المنفذة، المخرجات الجزئية) |
+| `/api/session/chat/active/:sessionId`| `GET` | `?token=...` أو Header | فحص المهمة النشطة للجلسة الحالية وتغذية واجهة الدردشة بها |
+| `/api/session/messages/:sessionId` | `GET` | `?token=...` أو Header | استرجاع سجل رسائل الدردشة مع ترطيب تلقائي مباشر للمهام الموجهة خارجياً |
+| `/mcp` | `GET/POST` | `?token=<SESSION_TOKEN>` | خادم Remote MCP للجلسة الفردية بتقنية Streamable HTTP & SSE |
+| `/mcp/orchestrator` | `GET/POST` | `?token=<ADMIN_SECRET>` | خادم Remote MCP للتنسيق الشامل بين جميع الوكلاء |
+
+#### أمثلة تنزيل الملفات عبر curl:
+```bash
+# 1. تنزيل فيديو تم توليده بواسطة وكيل في /root/elevenlabs/
+curl -s -L "https://vibz.10rg.com/api/session/workspace/download?token=SESSION_TOKEN&path=/root/elevenlabs/boomerang_1min05_cut.mp4" -o "boomerang_cut.mp4"
+
+# 2. فحص التقدم اللحظي لمهمة جارية عبر REST API
+curl -s "https://vibz.10rg.com/api/session/job/progress/job_1794682569125_9052d9f5?token=SESSION_TOKEN"
+```
 
 #### الربط مع Claude Desktop أو Cursor:
-أضف الرابط في ملف إعدادات MCP:
+أضف الرابط في ملف إعدادات MCP (`claude_desktop_config.json` أو `.cursor/mcp.json`):
 ```json
 {
   "mcpServers": {
-    "agyz": {
-      "url": "https://test.10rg.com/mcp?token=<YOUR_SESSION_TOKEN>"
+    "vibz": {
+      "url": "https://vibz.10rg.com/mcp?token=<YOUR_SESSION_TOKEN>"
     }
   }
 }
@@ -261,7 +332,7 @@ https://test.10rg.com/mcp?token=<SESSION_TOKEN>
 #### الربط مع ChatGPT (Actions):
 استخدم رابط الـ OpenAPI 3.1:
 ```text
-https://test.10rg.com/openapi.json?token=<YOUR_SESSION_TOKEN>
+https://vibz.10rg.com/openapi.json?token=<YOUR_SESSION_TOKEN>
 ```
 في إعدادات Custom GPT، اضغط **Actions → Import from URL** والصق الرابط أعلاه.
 
@@ -273,19 +344,19 @@ https://test.10rg.com/openapi.json?token=<YOUR_SESSION_TOKEN>
 
 ```bash
 # 1. فحص استجابة السيرفر المحلي
-curl -s http://127.0.0.1:3333/api/mcp/status
+curl -s http://127.0.0.1:3334/api/mcp/status
 
 # 2. فحص خادم Remote MCP مع توكن جلسة
-curl -s "http://127.0.0.1:3333/mcp?token=vibz_session_token_example"
+curl -s "http://127.0.0.1:3334/mcp?token=vibz_session_token_example"
 
-# 3. اختبار مصافحة Claude Initialize عبر HTTPS
-curl -s -X POST "https://test.10rg.com/mcp?token=vibz_session_token_example" \
+# 3. اختبار مصافحة Remote MCP Initialize عبر HTTPS
+curl -s -X POST "https://vibz.10rg.com/mcp?token=vibz_session_token_example" \
   -H "Content-Type: application/json" \
   -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"test-agent","version":"1.0"}}}'
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","capabilities":{},"clientInfo":{"name":"miz-agent","version":"1.0"}}}'
 
 # 4. فحص مواصفة OpenAPI لـ ChatGPT
-curl -s "https://test.10rg.com/openapi.json?token=vibz_session_token_example" | head -n 10
+curl -s "https://vibz.10rg.com/openapi.json?token=vibz_session_token_example" | head -n 10
 ```
 
 ---

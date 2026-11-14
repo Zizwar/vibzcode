@@ -711,8 +711,8 @@ function resolveWorkspaceFilePath(targetDir, rawPath, session = {}, token = '') 
     if ((isAdmin || isNoSandbox) && fs.existsSync(absPath)) {
       return absPath;
     }
-    // 4. Authenticated session token accessing any project file under /root/wino
-    if (hasValidSession && absPath.startsWith('/root/wino') && fs.existsSync(absPath)) {
+    // 4. Authenticated session token accessing workspace or project/media directories (e.g. /root/elevenlabs, /root/wino, /root/muz, /root/test, /tmp)
+    if (hasValidSession && (absPath.startsWith('/root/') || absPath.startsWith('/home/') || absPath.startsWith('/tmp/')) && fs.existsSync(absPath)) {
       return absPath;
     }
     // 5. Default fallback if relFromTarget starts with targetDir
@@ -1530,7 +1530,23 @@ app.get('/api/session/chat/active/:sessionId', (req, res) => {
 
   if (!session) return res.status(401).json({ success: false, error: 'غير مصرح' });
 
-  const job = activeChatJobs.get(session.id);
+  let job = activeChatJobs.get(session.id);
+  if (!job && jobsManager && typeof jobsManager.getActiveJobForSession === 'function') {
+    const mgrJob = jobsManager.getActiveJobForSession(session.id);
+    if (mgrJob) {
+      job = {
+        jobId: mgrJob.jobId,
+        prompt: mgrJob.prompt,
+        startTime: mgrJob.startTime,
+        status: mgrJob.status,
+        currentStep: mgrJob.currentStep,
+        partialText: mgrJob.partialOutput || '',
+        intermediateMessages: [],
+        steps: mgrJob.steps || []
+      };
+    }
+  }
+
   if (!job) {
     return res.json({ success: true, active: false });
   }
@@ -1565,6 +1581,44 @@ app.get('/api/session/chat/active/:sessionId', (req, res) => {
       conversationId: job.conversationId,
       duration: job.duration,
       isError: job.isError
+    }
+  });
+});
+
+// Get Live Job Progress / Status (Protected by Session Token or Admin Secret)
+app.get(['/api/session/job/progress/:jobId', '/api/jobs/:jobId/progress'], (req, res) => {
+  const token = getAuthToken(req);
+  if (!token) return res.status(401).json({ success: false, error: 'غير مصرح (Missing token)' });
+
+  const job = jobsManager.getJob(req.params.jobId);
+  if (!job) return res.status(404).json({ success: false, error: 'المهمة غير موجودة' });
+
+  // Verify access: Admin or session owner
+  if (token !== ADMIN_SECRET) {
+    const session = getSessionByToken(token);
+    if (!session || (job.sessionId && session.id !== job.sessionId)) {
+      return res.status(403).json({ success: false, error: 'غير مصرح للوصول إلى هذه المهمة' });
+    }
+  }
+
+  return res.json({
+    success: true,
+    job: {
+      jobId: job.jobId,
+      sessionId: job.sessionId,
+      engine: job.engine,
+      model: job.model,
+      status: job.status,
+      elapsedSeconds: job.currentElapsed,
+      startTime: job.startTime,
+      endTime: job.endTime,
+      currentStep: job.currentStep || null,
+      stepsCount: (job.steps || []).length,
+      recentSteps: (job.steps || []).slice(-10),
+      progressHistory: (job.progressHistory || []).slice(-15),
+      partialOutput: (job.partialOutput || '').slice(-2500),
+      hasResult: Boolean(job.response),
+      error: job.error
     }
   });
 });

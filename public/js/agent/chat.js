@@ -102,6 +102,8 @@ Vibz.agentChat = {
         this.activeStep = data.job.currentStep || null;
         this.activeStepsHistory = data.job.steps || [];
         this.lastIntermediateCount = data.job.intermediateCount || 0;
+        // Immediately reload chat history so dispatched prompt appears on screen right away
+        await this.loadChatHistory(true);
         this.startActiveJobPolling();
       }
     } catch (e) {}
@@ -127,6 +129,10 @@ Vibz.agentChat = {
         } else if (data.job) {
           this.activeStep = data.job.currentStep || null;
           this.activeStepsHistory = data.job.steps || [];
+          // Ensure prompt is visible in chat immediately
+          if (data.job.prompt && !this.chatMessages.some(m => m.role === 'user' && m.content === data.job.prompt)) {
+            await this.loadChatHistory(true);
+          }
           if ((data.job.intermediateCount || 0) > this.lastIntermediateCount) {
             this.lastIntermediateCount = data.job.intermediateCount;
             await this.loadChatHistory(true);
