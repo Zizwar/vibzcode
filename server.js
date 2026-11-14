@@ -40,6 +40,25 @@ function computeAdminSecret(user, pass) {
   return crypto.createHash('sha256').update(`${user}:${pass}:agyz_master_salt_2026`).digest('hex');
 }
 let ADMIN_SECRET = computeAdminSecret(ADMIN_USER, ADMIN_PASS);
+process.env.ADMIN_SECRET = ADMIN_SECRET;
+
+// HMAC-Signed Download Tickets (Allows secure, one-click or automated file fetches)
+function generateDownloadTicket(filePath) {
+  if (!filePath || typeof filePath !== 'string') return '';
+  const resolved = path.resolve(filePath.trim());
+  return crypto.createHmac('sha256', ADMIN_SECRET).update(`download:${resolved}`).digest('hex');
+}
+
+function verifyDownloadTicket(filePath, ticket) {
+  if (!filePath || !ticket || typeof ticket !== 'string') return false;
+  try {
+    const resolved = path.resolve(filePath.trim());
+    const expected = generateDownloadTicket(resolved);
+    return crypto.timingSafeEqual(Buffer.from(ticket), Buffer.from(expected));
+  } catch (e) {
+    return false;
+  }
+}
 
 // Data storage
 const DATA_DIR = path.join(__dirname, 'data');
@@ -141,7 +160,7 @@ function getAuthToken(req) {
   if (authHeader) {
     return authHeader.replace(/^Bearer\s+/i, '').trim();
   }
-  return req.body?.token || req.query?.token;
+  return req.headers['x-token'] || req.headers['x-api-key'] || req.body?.token || req.query?.token;
 }
 
 function requireAdmin(req, res, next) {
@@ -165,7 +184,8 @@ setupRemoteMcp(app, {
   saveSessions,
   appendSessionChatMessage,
   activeChatJobs,
-  activeChatProcesses
+  activeChatProcesses,
+  generateDownloadTicket
 });
 
 // Initialize VibzCode Channel Manager (Telegram & Bot Connectors)
@@ -792,19 +812,50 @@ function getWorkspaceMimeType(filePath) {
   return WORKSPACE_MIME_TYPES[ext] || 'application/octet-stream';
 }
 
+// Authenticate download or media stream requests (Supports HMAC tickets, admin secret, or session tokens via query, body, or headers)
+function authenticateDownloadRequest(req) {
+  const token = getAuthToken(req);
+  const requestedPath = req.query.path;
+  const ticket = req.query.ticket;
+
+  // 1. Ticket-based validation (HMAC signature for the specific file)
+  if (requestedPath && ticket && verifyDownloadTicket(requestedPath, ticket)) {
+    return {
+      isTicketAuth: true,
+      isAdmin: true,
+      session: { id: 'ticket_access', targetDir: '/root/wino', sandbox: false },
+      token: token || ADMIN_SECRET
+    };
+  }
+
+  // 2. Admin Secret validation
+  if (token && token === ADMIN_SECRET) {
+    const session = req.query.sessionId
+      ? (sessions.find(s => s.id === req.query.sessionId) || { id: req.query.sessionId, targetDir: req.query.dir || '/root/wino', sandbox: false })
+      : { id: 'admin', targetDir: req.query.dir || '/root/wino', sandbox: false };
+    return { isAdmin: true, session, token };
+  }
+
+  // 3. Session Token validation
+  if (token) {
+    const session = getSessionByToken(token);
+    if (session) {
+      return { isAdmin: false, session, token };
+    }
+  }
+
+  return null;
+}
+
 // Workspace Raw Media Stream API (Supports images, audio, video seeking, and documents)
 app.get('/api/session/workspace/raw', (req, res) => {
-  const token = getAuthToken(req);
-  const session = (token === ADMIN_SECRET)
-    ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
-    : getSessionByToken(token);
-
-  if (!session) return res.status(401).send('Unauthorized');
-  const targetDir = path.resolve(session.targetDir);
+  const auth = authenticateDownloadRequest(req);
+  if (!auth) return res.status(401).send('Unauthorized: Valid session or admin token required');
+  const targetDir = path.resolve(auth.session.targetDir || '/root/wino');
   const requestedPath = req.query.path;
   if (!requestedPath) return res.status(400).send('Path is required');
 
-  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, session, token);
+  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, auth.session, auth.token);
   if (!fullPath || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
     return res.status(404).send('File not found');
   }
@@ -841,18 +892,17 @@ app.get('/api/session/workspace/raw', (req, res) => {
 });
 
 // Workspace File Download API (Triggers browser download with Content-Disposition)
-app.get('/api/session/workspace/download', (req, res) => {
-  const token = getAuthToken(req);
-  const session = (token === ADMIN_SECRET)
-    ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
-    : getSessionByToken(token);
+const handleFileDownload = (req, res) => {
+  const auth = authenticateDownloadRequest(req);
+  if (!auth) {
+    return res.status(401).send('Unauthorized: Valid session or admin token required (passed via ?token=..., ?ticket=..., or Authorization header)');
+  }
 
-  if (!session) return res.status(401).send('Unauthorized: Valid session or admin token required');
-  const targetDir = path.resolve(session.targetDir || '/root/wino');
   const requestedPath = req.query.path;
   if (!requestedPath) return res.status(400).send('Path is required');
 
-  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, session, token);
+  const targetDir = path.resolve(auth.session.targetDir || '/root/wino');
+  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, auth.session, auth.token);
   if (!fullPath || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
     return res.status(404).send('File not found');
   }
@@ -861,30 +911,10 @@ app.get('/api/session/workspace/download', (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
   res.setHeader('Content-Type', getWorkspaceMimeType(fullPath));
   fs.createReadStream(fullPath).pipe(res);
-});
+};
 
-// Direct File Download API Alias (Protected by session token or admin token)
-app.get('/api/files/download', (req, res) => {
-  const token = getAuthToken(req);
-  const session = (token === ADMIN_SECRET)
-    ? (sessions.find(s => s.id === req.query.sessionId) || { targetDir: req.query.dir || '/root/wino/ferme' })
-    : getSessionByToken(token);
-
-  if (!session) return res.status(401).send('Unauthorized: Valid session or admin token required');
-  const targetDir = path.resolve(session.targetDir || '/root/wino');
-  const requestedPath = req.query.path;
-  if (!requestedPath) return res.status(400).send('Path is required');
-
-  const fullPath = resolveWorkspaceFilePath(targetDir, requestedPath, session, token);
-  if (!fullPath || !fs.existsSync(fullPath) || !fs.statSync(fullPath).isFile()) {
-    return res.status(404).send('File not found');
-  }
-
-  const filename = req.query.filename ? path.basename(String(req.query.filename)) : path.basename(fullPath);
-  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(filename)}"`);
-  res.setHeader('Content-Type', getWorkspaceMimeType(fullPath));
-  fs.createReadStream(fullPath).pipe(res);
-});
+app.get('/api/session/workspace/download', handleFileDownload);
+app.get('/api/files/download', handleFileDownload);
 
 // Workspace ZIP Download API (Supports single folder or multi-select items)
 app.all('/api/session/workspace/zip', (req, res) => {

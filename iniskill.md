@@ -262,11 +262,12 @@ https://vibz.10rg.com/mcp/orchestrator?token=<ADMIN_SECRET>
    - إلغاء وإيقاف فوري لأي مهمة خلفية جارية في حال تعطلها أو رغبة الوكيل في التراجع.
 
 ##### ب) تنزيل وجلب ملفات مساحة العمل (File Fetch & Download Links):
-6. **`generate_file_download_link(file_path, custom_filename)`** (أو **`download_file_link`**):
-   - توليد رابط تحميل آمن ومحمي بتوكن الجلسة لأي ملف تم إنشاؤه داخل مساحة العمل أو على السيرفر (يدعم المسارات النسبية وكذلك المسارات المطلقة مثل `/root/elevenlabs/video.mp4` أو `/root/wino/...`).
+6. **`generate_file_download_link(file_path, session_id, custom_filename)`** (أو **`download_file_link`**):
+   - توليد رابط تحميل آمن ومحمي بتوكن الجلسة أو تذكرة HMAC الرقمية الموقعة (`ticket`) لأي ملف تم إنشاؤه داخل مساحة العمل أو على السيرفر (يدعم المسارات المطلقة مثل `/root/elevenlabs/video.mp4` أو `/root/wino/...`).
+   - متوافق بالكامل مع وكلاء التنسيق الخارجيين (مثل الوكيل المستقل Miz) عبر Orchestrator MCP أو Session MCP بدون أي أخطاء 401، حيث يرفق الرابط كلاً من توكن المصادقة وتذكرة HMAC المشفرة.
    - يعيد كائن JSON يحتوي على رابط التنزيل المباشر `download_url`، ورابط الـ API `direct_api_url`، وأمر `curl` جاهز للنسخ، ورابط Markdown قابل للنقر.
 
-7. **`fetch_workspace_file(file_path, max_bytes)`**:
+7. **`fetch_workspace_file(file_path, session_id, max_bytes)`**:
    - قراءة محتوى أي ملف نصي أو كود من السيرفر مباشرة عبر MCP (حتى 1 ميغابايت) للتحقق السريع دون الحاجة لتشغيل أمر في التيرمنال.
 
 8. **`list_workspace_files(subpath)`**:
@@ -300,8 +301,8 @@ https://vibz.10rg.com/mcp/orchestrator?token=<ADMIN_SECRET>
 
 | المسار (Endpoint) | الطريقة | التوثيق (Auth) | الوصف |
 | :--- | :--- | :--- | :--- |
-| `/api/session/workspace/download` | `GET` | `?token=...` أو Header | تنزيل ملف من مساحة العمل أو مجلدات الميديا (مثل `/root/elevenlabs/`) مع هيدر التنزيل |
-| `/api/files/download` | `GET` | `?token=...` أو Header | مسار بديل مباشر لتنزيل الملفات بواسطة الوكلاء ومطوري المنصة |
+| `/api/session/workspace/download` | `GET` | `?token=...` أو `?ticket=...` أو Header | تنزيل ملف من مساحة العمل أو مجلدات السيرفر (مثل `/root/elevenlabs/`) مع هيدر التنزيل |
+| `/api/files/download` | `GET` | `?token=...` أو `?ticket=...` أو Header | مسار بديل مباشر لتنزيل الملفات بواسطة الوكلاء ومطوري المنصة |
 | `/api/session/job/progress/:jobId` | `GET` | `?token=...` أو Header | قراءة التقدم اللحظي للمهمة الجارية (الخطوة الحالية، الخطوات المنفذة، المخرجات الجزئية) |
 | `/api/session/chat/active/:sessionId`| `GET` | `?token=...` أو Header | فحص المهمة النشطة للجلسة الحالية وتغذية واجهة الدردشة بها |
 | `/api/session/messages/:sessionId` | `GET` | `?token=...` أو Header | استرجاع سجل رسائل الدردشة مع ترطيب تلقائي مباشر للمهام الموجهة خارجياً |
