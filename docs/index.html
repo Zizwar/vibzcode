@@ -1,41 +1,25 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl" class="dark scroll-smooth">
+<html lang="en" dir="ltr" class="scroll-smooth">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VibzCode (agyz) | منصة إدارة وتنسيق الوكلاء البرمجية المعزولة</title>
-  <meta name="description" content="منصة متطورة لإدارة وتنسيق مساحات عمل الوكلاء الأذكياء (AI Coding Agents)، تدعم Google Antigravity، وتوفر خادم Remote MCP موحد، ونظام تفرع الجلسات، ومعاينة الميديا التفاعلية.">
-  
-  <!-- Fonts: Cairo & JetBrains Mono -->
+  <title>VibzCode — Sovereign Multi-Engine AI Agent Orchestrator</title>
+  <meta name="description" content="VibzCode is a sovereign, self-hosted multi-engine AI agent orchestrator. One command — npx vibzcode — to configure, isolate, dispatch, and supervise agent sessions across agy, Claude Code, Codex, Vibe, and OpenCode, with shared MemoryZ memory.">
+
+  <!-- Fonts: Inter (EN) + Cairo (AR) + JetBrains Mono (code) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
-  
-  <!-- Tailwind CSS & DaisyUI 4 -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.7.2/dist/full.min.css" rel="stylesheet" type="text/css" />
-  
-  <!-- Font Awesome 6 Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Cairo:wght@400;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class',
       theme: {
         extend: {
-          fontFamily: {
-            sans: ['Cairo', 'sans-serif'],
-            mono: ['JetBrains Mono', 'monospace'],
-          },
           colors: {
-            brand: {
-              50: '#ecfeff',
-              100: '#cffafe',
-              400: '#22d3ee',
-              500: '#06b6d4',
-              600: '#0891b2',
-              900: '#164e63',
-            }
+            ink: '#030712',
+            panel: '#0f172a',
           }
         }
       }
@@ -43,751 +27,1099 @@
   </script>
 
   <style>
-    body {
-      font-family: 'Cairo', sans-serif;
-      background-color: #030712;
-      color: #f3f4f6;
-    }
+    html { scroll-behavior: smooth; }
+    body { background-color: #030712; color: #f3f4f6; overflow-x: hidden; }
+    html[lang="en"] body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    html[lang="ar"] body { font-family: 'Cairo', system-ui, sans-serif; }
+    code, pre, .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
     .gradient-text {
-      background: linear-gradient(135deg, #38bdf8 0%, #818cf8 50%, #c084fc 100%);
+      background: linear-gradient(120deg, #22d3ee 0%, #818cf8 50%, #c084fc 100%);
       -webkit-background-clip: text;
+      background-clip: text;
       -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+    .bg-grid {
+      background-image:
+        linear-gradient(rgba(148, 163, 184, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(148, 163, 184, 0.06) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, black 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 90% 60% at 50% 0%, black 30%, transparent 75%);
     }
     .hero-glow {
       position: absolute;
-      width: 600px;
-      height: 600px;
-      background: radial-gradient(circle, rgba(56, 189, 248, 0.15) 0%, rgba(99, 102, 241, 0.08) 50%, transparent 70%);
-      top: -100px;
+      width: min(680px, 120vw);
+      height: 420px;
+      background: radial-gradient(ellipse, rgba(56, 189, 248, 0.18) 0%, rgba(99, 102, 241, 0.10) 45%, transparent 70%);
+      top: -120px;
       left: 50%;
       transform: translateX(-50%);
       z-index: 0;
       pointer-events: none;
-      filter: blur(40px);
+      filter: blur(30px);
     }
     .glass-card {
-      background: rgba(15, 23, 42, 0.7);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(56, 189, 248, 0.15);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: rgba(15, 23, 42, 0.65);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
     }
     .glass-card:hover {
-      border-color: rgba(56, 189, 248, 0.4);
+      border-color: rgba(56, 189, 248, 0.45);
       transform: translateY(-3px);
-      box-shadow: 0 12px 30px -10px rgba(6, 182, 212, 0.2);
+      box-shadow: 0 14px 34px -12px rgba(6, 182, 212, 0.25);
     }
-    .tab-active-btn {
-      background: rgba(6, 182, 212, 0.2) !important;
+    .memory-spotlight {
+      background: linear-gradient(135deg, rgba(34, 211, 238, 0.10) 0%, rgba(129, 140, 248, 0.12) 45%, rgba(192, 132, 252, 0.10) 100%);
+      border: 1px solid rgba(129, 140, 248, 0.35);
+    }
+    .lang-btn { min-height: 44px; min-width: 44px; }
+    .nav-link { min-height: 44px; display: inline-flex; align-items: center; }
+    .tab-active {
+      background: rgba(6, 182, 212, 0.18) !important;
       border-color: #06b6d4 !important;
-      color: #38bdf8 !important;
+      color: #67e8f9 !important;
     }
+    .install-tab-active {
+      background: rgba(6, 182, 212, 0.20);
+      color: #67e8f9;
+      border-color: rgba(6, 182, 212, 0.45);
+    }
+    pre::-webkit-scrollbar, .code-scroll::-webkit-scrollbar { height: 6px; }
+    pre::-webkit-scrollbar-thumb, .code-scroll::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 3px; }
+    .step-line::after {
+      content: '';
+      position: absolute;
+      top: 2.25rem;
+      inset-inline-start: calc(50% + 2.5rem);
+      width: calc(100% - 5rem);
+      border-top: 2px dashed rgba(56, 189, 248, 0.25);
+    }
+    @media (max-width: 1023px) { .step-line::after { display: none; } }
   </style>
 </head>
-<body class="min-h-screen selection:bg-cyan-500 selection:text-slate-950">
+<body class="min-h-screen selection:bg-cyan-500 selection:text-slate-950 antialiased">
 
-  <!-- Ambient Glow -->
-  <div class="hero-glow"></div>
+  <!-- Background layers -->
+  <div class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div class="absolute inset-0 bg-grid"></div>
+    <div class="hero-glow"></div>
+  </div>
 
-  <!-- Navigation Bar -->
-  <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/80 border-b border-slate-800/80">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-      
-      <!-- Logo & Title -->
-      <div class="flex items-center gap-3">
+  <!-- ================= NAVBAR ================= -->
+  <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/85 border-b border-slate-800/80">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-[72px] flex items-center justify-between gap-2 sm:gap-3">
+      <!-- Logo -->
+      <a href="#top" class="flex items-center gap-3 shrink-0">
         <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-cyan-600 via-indigo-600 to-purple-600 p-0.5 flex items-center justify-center shadow-lg shadow-cyan-500/20">
           <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
-            <i class="fa-solid fa-microchip text-xl text-cyan-400"></i>
+            <span class="text-xl font-black text-cyan-400 font-mono">V</span>
           </div>
         </div>
-        <div>
-          <span class="text-xl font-black tracking-tight text-white flex items-center gap-2">
+        <div class="leading-tight">
+          <span class="text-lg sm:text-xl font-black tracking-tight text-white flex items-center gap-2">
             VibzCode
-            <span class="badge badge-sm badge-info font-mono text-[10px] uppercase font-bold tracking-wider">agyz v2.5</span>
+            <span class="hidden min-[420px]:inline-flex text-[10px] font-mono font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">v2.2.0</span>
           </span>
-          <p class="text-xs text-slate-400">بيئة إدارة وتنسيق مساحات عمل الوكلاء الأذكياء</p>
+          <p class="text-[11px] text-slate-400 hidden sm:block" data-i18n="nav.tagline">Multi-engine AI agent orchestrator</p>
         </div>
-      </div>
+      </a>
 
-      <!-- Quick Nav Links -->
-      <nav class="hidden md:flex items-center gap-6 text-sm font-semibold text-slate-300">
-        <a href="#showcase" class="hover:text-cyan-400 transition-colors">استعراض الواجهات</a>
-        <a href="#features" class="hover:text-cyan-400 transition-colors">المميزات الجوهرية</a>
-        <a href="#architecture" class="hover:text-cyan-400 transition-colors">المعمارية والربط</a>
-        <a href="#quickstart" class="hover:text-cyan-400 transition-colors">التشغيل السريع</a>
+      <!-- Desktop nav -->
+      <nav class="hidden lg:flex items-center gap-1 text-sm font-semibold text-slate-300">
+        <a href="#engines" class="nav-link px-3 rounded-lg hover:text-cyan-400 hover:bg-slate-800/60 transition-colors" data-i18n="nav.engines">Engines</a>
+        <a href="#features" class="nav-link px-3 rounded-lg hover:text-cyan-400 hover:bg-slate-800/60 transition-colors" data-i18n="nav.features">Features</a>
+        <a href="#memory" class="nav-link px-3 rounded-lg hover:text-cyan-400 hover:bg-slate-800/60 transition-colors" data-i18n="nav.memory">Memory</a>
+        <a href="#showcase" class="nav-link px-3 rounded-lg hover:text-cyan-400 hover:bg-slate-800/60 transition-colors" data-i18n="nav.showcase">Screenshots</a>
+        <a href="#install" class="nav-link px-3 rounded-lg hover:text-cyan-400 hover:bg-slate-800/60 transition-colors" data-i18n="nav.install">Install</a>
       </nav>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center gap-3">
+      <!-- Right side: language + GitHub + CTA + hamburger -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Language switcher -->
+        <div class="flex items-center rounded-full border border-slate-700 bg-slate-900/80 p-1" role="group" aria-label="Language">
+          <button type="button" id="lang-en" onclick="setLang('en')" class="lang-btn px-3 rounded-full text-sm font-bold transition-colors" aria-pressed="true">EN</button>
+          <button type="button" id="lang-ar" onclick="setLang('ar')" class="lang-btn px-3 rounded-full text-sm font-bold transition-colors" aria-pressed="false">عربي</button>
+        </div>
         <a href="https://github.com/Zizwar/vibzcode" target="_blank" rel="noopener noreferrer"
-           class="btn btn-sm btn-outline border-slate-700 hover:border-cyan-500 text-slate-200 gap-2">
-          <i class="fa-brands fa-github text-base"></i>
+           class="hidden sm:inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl border border-slate-700 hover:border-cyan-500 text-slate-200 text-sm font-semibold transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.53-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.67.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
           <span>GitHub</span>
         </a>
-        <a href="#quickstart" class="btn btn-sm bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-bold border-none shadow-md shadow-cyan-500/20">
-          <i class="fa-solid fa-play text-xs"></i>
-          <span>ابدأ الآن</span>
-        </a>
+        <a href="#install" class="hidden md:inline-flex items-center min-h-[44px] px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 text-sm font-bold shadow-md shadow-cyan-500/20 transition-all" data-i18n="nav.cta">Get started</a>
+        <!-- Hamburger -->
+        <button type="button" id="menu-btn" onclick="toggleMenu()" aria-label="Menu" aria-expanded="false"
+                class="lang-btn lg:hidden inline-flex items-center justify-center rounded-xl border border-slate-700 text-slate-200 hover:border-cyan-500 transition-colors">
+          <svg id="icon-open" class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+          <svg id="icon-close" class="w-6 h-6 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
       </div>
+    </div>
 
+    <!-- Mobile menu -->
+    <div id="mobile-menu" class="hidden lg:hidden border-t border-slate-800/80 bg-slate-950/95 backdrop-blur-xl">
+      <nav class="px-4 py-3 flex flex-col text-base font-semibold text-slate-200">
+        <a href="#engines" onclick="toggleMenu(true)" class="nav-link px-3 rounded-lg hover:bg-slate-800/60 hover:text-cyan-400" data-i18n="nav.engines">Engines</a>
+        <a href="#features" onclick="toggleMenu(true)" class="nav-link px-3 rounded-lg hover:bg-slate-800/60 hover:text-cyan-400" data-i18n="nav.features">Features</a>
+        <a href="#memory" onclick="toggleMenu(true)" class="nav-link px-3 rounded-lg hover:bg-slate-800/60 hover:text-cyan-400" data-i18n="nav.memory">Memory</a>
+        <a href="#showcase" onclick="toggleMenu(true)" class="nav-link px-3 rounded-lg hover:bg-slate-800/60 hover:text-cyan-400" data-i18n="nav.showcase">Screenshots</a>
+        <a href="#install" onclick="toggleMenu(true)" class="nav-link px-3 rounded-lg hover:bg-slate-800/60 hover:text-cyan-400" data-i18n="nav.install">Install</a>
+        <a href="https://github.com/Zizwar/vibzcode" target="_blank" rel="noopener noreferrer" class="nav-link px-3 rounded-lg hover:bg-slate-800/60 hover:text-cyan-400">GitHub</a>
+        <a href="#install" onclick="toggleMenu(true)" class="mt-2 inline-flex items-center justify-center min-h-[48px] px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 text-slate-950 font-bold" data-i18n="nav.cta">Get started</a>
+      </nav>
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="relative pt-20 pb-16 overflow-hidden">
+  <main id="top" class="relative z-10">
+
+  <!-- ================= HERO ================= -->
+  <section class="relative pt-14 sm:pt-20 pb-14 sm:pb-20 overflow-hidden">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-      
-      <!-- Top Pill -->
-      <div class="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-1.5 rounded-full bg-slate-900/90 border border-cyan-500/30 text-cyan-400 text-xs font-semibold mb-6 shadow-inner">
+
+      <!-- Badge pill -->
+      <div class="inline-flex flex-wrap items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-900/90 border border-cyan-500/30 text-cyan-300 text-xs font-semibold mb-6">
         <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-        <span>حزمة رسمية معتمدة على npm & npx & pnpm</span>
+        <span data-i18n="hero.badge">Official npm package · MIT license</span>
         <span class="text-slate-600">|</span>
-        <a href="https://www.npmjs.com/package/vibzcode" target="_blank" rel="noopener noreferrer" class="hover:text-white underline font-mono">
-          npm: vibzcode v2.0.1
-        </a>
+        <a href="https://www.npmjs.com/package/vibzcode" target="_blank" rel="noopener noreferrer" class="hover:text-white underline font-mono" dir="ltr">npm: vibzcode v2.2.0</a>
       </div>
 
-      <!-- Main Headline -->
-      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-tight max-w-5xl mx-auto mb-6">
-        تحكم كامل، ساندبوكس معزول،
+      <!-- Headline -->
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[1.1] max-w-5xl mx-auto mb-6">
+        <span data-i18n="hero.title1">Sovereign, self-hosted orchestration</span>
         <br>
-        <span class="gradient-text">وتنسيق فائق للوكلاء الأذكياء</span>
+        <span class="gradient-text" data-i18n="hero.title2">for AI coding agents</span>
       </h1>
 
       <!-- Subtitle -->
-      <p class="text-lg sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-8 font-normal">
-        منصة <strong>VibzCode</strong> توفر نظام إدارة مركزي متكامل للجلسات البرمجية المستقلة، تدعم محركات 
-        <span class="text-cyan-400 font-semibold font-mono">Google Antigravity (AGY)</span> و 
-        <span class="text-purple-400 font-semibold font-mono">Claude Code</span>، مع خادم 
-        <span class="text-emerald-400 font-semibold font-mono">Remote MCP</span> موحد للربط المباشر مع Cursor و Claude و ChatGPT.
+      <p class="text-base sm:text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed mb-8">
+        <span data-i18n="hero.subtitle">VibzCode is a multi-engine AI agent orchestrator and workspace platform. Configure, isolate, dispatch, and supervise autonomous agent sessions across five AI engines — from one command, on your own machine.</span>
       </p>
 
-      <!-- Instant One-Liner Install Box -->
-      <div class="max-w-xl mx-auto mb-10">
-        <div class="bg-slate-950/90 rounded-2xl border border-cyan-500/30 p-2 sm:p-3 shadow-xl shadow-cyan-950/30">
-          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-[11px] text-slate-400 px-2 font-mono" dir="ltr">
-            <div class="flex items-center gap-2">
-              <button onclick="setInstallCmd('npx')" id="btn-inst-npx" class="px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition-all">npx</button>
-              <button onclick="setInstallCmd('npm')" id="btn-inst-npm" class="px-2.5 py-1 rounded-md hover:bg-slate-800 text-slate-400 transition-all">npm -g</button>
-              <button onclick="setInstallCmd('pnpm')" id="btn-inst-pnpm" class="px-2.5 py-1 rounded-md hover:bg-slate-800 text-slate-400 transition-all">pnpm</button>
+      <!-- Install box -->
+      <div class="max-w-xl mx-auto mb-8 sm:mb-10">
+        <div class="bg-slate-950/90 rounded-2xl border border-cyan-500/30 p-2 sm:p-3 shadow-xl shadow-cyan-950/30 text-start">
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-800 text-xs text-slate-400 px-2 font-mono" dir="ltr">
+            <div class="flex items-center gap-2" role="tablist" aria-label="Install method">
+              <button type="button" onclick="setInstallCmd('npx')" id="btn-inst-npx" class="install-tab-active px-3 py-2 rounded-md border border-transparent font-bold transition-all">npx</button>
+              <button type="button" onclick="setInstallCmd('npm')" id="btn-inst-npm" class="px-3 py-2 rounded-md border border-transparent hover:bg-slate-800 text-slate-400 transition-all">npm -g</button>
+              <button type="button" onclick="setInstallCmd('pnpm')" id="btn-inst-pnpm" class="px-3 py-2 rounded-md border border-transparent hover:bg-slate-800 text-slate-400 transition-all">pnpm</button>
             </div>
-            <span class="text-slate-500 text-[10px]">بنقرة واحدة للتشغيل</span>
+            <span class="text-slate-500 text-[11px] hidden sm:block" data-i18n="hero.installNote">One command to run</span>
           </div>
           <div class="flex items-center justify-between gap-3 px-3 py-2 bg-slate-900 rounded-xl border border-slate-800" dir="ltr">
-            <div class="flex items-center gap-2.5 font-mono text-xs sm:text-sm text-cyan-300 overflow-x-auto">
+            <div class="flex items-center gap-2.5 font-mono text-sm sm:text-base text-cyan-300 overflow-x-auto code-scroll whitespace-nowrap">
               <span class="text-slate-500 select-none">$</span>
               <code id="install-cmd-text">npx vibzcode</code>
             </div>
-            <button onclick="copyInstallCmd()" id="btn-copy-install" class="btn btn-xs btn-ghost text-slate-400 hover:text-cyan-400 gap-1.5 transition-all">
-              <i class="fa-regular fa-copy text-xs"></i>
-              <span class="text-[10px]" id="copy-label">نسخ</span>
+            <button type="button" onclick="copyInstallCmd()" class="shrink-0 inline-flex items-center gap-1.5 min-h-[36px] px-3 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition-all">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="12" height="12" rx="2"/><path stroke-linecap="round" d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              <span class="text-xs font-semibold" id="copy-label" data-i18n="common.copy">Copy</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- CTA Buttons -->
-      <div class="flex flex-wrap items-center justify-center gap-4 mb-16">
-        <a href="#showcase" class="btn btn-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black border-none gap-2 shadow-xl shadow-cyan-500/25">
-          <i class="fa-solid fa-images"></i>
-          <span>استعراض لقطات حية</span>
-        </a>
-        <a href="#features" class="btn btn-lg btn-outline border-slate-700 hover:border-slate-500 text-white gap-2">
-          <i class="fa-solid fa-bolt-lightning text-amber-400"></i>
-          <span>المميزات المتقدمة</span>
-        </a>
+      <!-- CTA buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mb-12 sm:mb-16">
+        <a href="#showcase" class="inline-flex items-center justify-center min-h-[52px] px-6 sm:px-8 rounded-2xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-base font-black gap-2 shadow-xl shadow-cyan-500/25 transition-colors" data-i18n="hero.cta1">See it in action</a>
+        <a href="#features" class="inline-flex items-center justify-center min-h-[52px] px-6 sm:px-8 rounded-2xl border border-slate-700 hover:border-slate-500 text-white text-base font-bold gap-2 transition-colors" data-i18n="hero.cta2">Explore features</a>
       </div>
 
-      <!-- Quick Highlights Bar -->
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-5xl mx-auto">
-        <div class="glass-card p-4 rounded-2xl text-center">
-          <div class="text-2xl sm:text-3xl font-black text-cyan-400 font-mono">100%</div>
-          <div class="text-xs text-slate-400 mt-1">عزل ساندبوكس للمجلدات</div>
+      <!-- Stats row -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 max-w-5xl mx-auto">
+        <div class="glass-card p-4 sm:p-5 rounded-2xl text-center">
+          <div class="text-2xl sm:text-3xl font-black text-cyan-400 font-mono">5</div>
+          <div class="text-xs sm:text-sm text-slate-400 mt-1" data-i18n="stats.engines">AI engines, one bridge</div>
         </div>
-        <div class="glass-card p-4 rounded-2xl text-center">
-          <div class="text-2xl sm:text-3xl font-black text-purple-400 font-mono">One URL</div>
-          <div class="text-xs text-slate-400 mt-1">خادم Remote MCP موحد</div>
+        <div class="glass-card p-4 sm:p-5 rounded-2xl text-center">
+          <div class="text-2xl sm:text-3xl font-black text-purple-400 font-mono">35+</div>
+          <div class="text-xs sm:text-sm text-slate-400 mt-1" data-i18n="stats.mcp">Remote MCP tools</div>
         </div>
-        <div class="glass-card p-4 rounded-2xl text-center">
-          <div class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">Tree Forks</div>
-          <div class="text-xs text-slate-400 mt-1">تفرع شجري غير محدود للجلسات</div>
+        <div class="glass-card p-4 sm:p-5 rounded-2xl text-center">
+          <div class="text-2xl sm:text-3xl font-black text-emerald-400 font-mono">100%</div>
+          <div class="text-xs sm:text-sm text-slate-400 mt-1" data-i18n="stats.sandbox">Sandbox isolation</div>
         </div>
-        <div class="glass-card p-4 rounded-2xl text-center">
-          <div class="text-2xl sm:text-3xl font-black text-amber-400 font-mono">Instant</div>
-          <div class="text-xs text-slate-400 mt-1">معاينة وتنزيل وسائط وميديا</div>
+        <div class="glass-card p-4 sm:p-5 rounded-2xl text-center">
+          <div class="text-2xl sm:text-3xl font-black text-amber-400 font-mono">1</div>
+          <div class="text-xs sm:text-sm text-slate-400 mt-1" data-i18n="stats.command">Command to start</div>
         </div>
       </div>
 
     </div>
   </section>
 
-  <!-- Interactive Showcase & Screenshots Section -->
-  <section id="showcase" class="py-20 bg-slate-900/40 border-t border-b border-slate-800/80">
+  <!-- ================= ENGINES ================= -->
+  <section id="engines" class="py-16 sm:py-24 scroll-mt-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center max-w-3xl mx-auto mb-12">
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4">
-          واجهات مصممة باحترافية لتجربة عمل سلسة
-        </h2>
-        <p class="text-slate-400 text-base">
-          لقطات حقيقية من منصة VibzCode توضح كفاءة لوحة التحكم المركزية وبيئة عمل الوكيل الذكي.
-        </p>
+      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+        <span class="text-cyan-400 font-bold tracking-wider uppercase text-xs" data-i18n="engines.eyebrow">Multi-engine substrate</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 mb-4" data-i18n="engines.title">Five engines. One command bridge.</h2>
+        <p class="text-slate-400 text-base" data-i18n="engines.subtitle">Assign different projects and tasks to the specialized engine that fits best — each with its own permission boundaries.</p>
       </div>
 
-      <!-- Tab Buttons -->
-      <div class="flex flex-wrap items-center justify-center gap-2 mb-8">
-        <button onclick="switchTab('dashboard')" id="tab-btn-dashboard"
-                class="btn btn-sm glass-card border border-slate-700 text-slate-300 font-semibold gap-2 tab-active-btn">
-          <i class="fa-solid fa-table-cells text-cyan-400"></i>
-          <span>لوحة الجلسات (شبكي)</span>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div class="glass-card p-5 sm:p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl font-black font-mono mb-4">G</div>
+          <h3 class="text-base font-bold text-white mb-1">Google Antigravity</h3>
+          <code class="text-xs text-cyan-300 font-mono" dir="ltr">agy</code>
+          <p class="text-sm text-slate-400 leading-relaxed mt-2" data-i18n="engines.agy">Agentic coding with sandbox enforcement and directory scoping.</p>
+        </div>
+        <div class="glass-card p-5 sm:p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-center text-purple-400 text-xl font-black font-mono mb-4">C</div>
+          <h3 class="text-base font-bold text-white mb-1">Claude Code</h3>
+          <code class="text-xs text-purple-300 font-mono" dir="ltr">claude</code>
+          <p class="text-sm text-slate-400 leading-relaxed mt-2" data-i18n="engines.claude">Deep architectural refactoring, bash automation, terminal-native.</p>
+        </div>
+        <div class="glass-card p-5 sm:p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl font-black font-mono mb-4">X</div>
+          <h3 class="text-base font-bold text-white mb-1">OpenAI Codex</h3>
+          <code class="text-xs text-emerald-300 font-mono" dir="ltr">codex</code>
+          <p class="text-sm text-slate-400 leading-relaxed mt-2" data-i18n="engines.codex">Autonomous verification, unit testing, and script generation.</p>
+        </div>
+        <div class="glass-card p-5 sm:p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-amber-950/80 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl font-black font-mono mb-4">V</div>
+          <h3 class="text-base font-bold text-white mb-1">Mistral Vibe</h3>
+          <code class="text-xs text-amber-300 font-mono" dir="ltr">vibe</code>
+          <p class="text-sm text-slate-400 leading-relaxed mt-2" data-i18n="engines.vibe">Generative workspace manipulation and fast, lightweight coding.</p>
+        </div>
+        <div class="glass-card p-5 sm:p-6 rounded-2xl">
+          <div class="w-12 h-12 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400 text-xl font-black font-mono mb-4">O</div>
+          <h3 class="text-base font-bold text-white mb-1">OpenCode</h3>
+          <code class="text-xs text-pink-300 font-mono" dir="ltr">opencode</code>
+          <p class="text-sm text-slate-400 leading-relaxed mt-2" data-i18n="engines.opencode">Open-source multi-model engine with automated approvals.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FEATURES ================= -->
+  <section id="features" class="py-16 sm:py-24 bg-slate-900/40 border-y border-slate-800/80 scroll-mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+        <span class="text-cyan-400 font-bold tracking-wider uppercase text-xs" data-i18n="features.eyebrow">Complete capability set</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 mb-4" data-i18n="features.title">Everything you need to run agents at scale</h2>
+        <p class="text-slate-400 text-base" data-i18n="features.subtitle">Ten capabilities, one platform — built for teams that run autonomous agents in production.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+
+        <!-- 1. Sandbox -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat1.title">Per-session sandbox isolation</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat1.body">Every session gets its own isolated directory and access token. No agent can escape its workspace without explicit admin permission.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat1.tag">Workspace security</span>
+            <span class="text-cyan-400 font-semibold font-mono" dir="ltr">100% isolated</span>
+          </div>
+        </article>
+
+        <!-- 2. MCP -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-center text-purple-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8.25 21v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21m0 0h4.5V3.545M12.75 21h7.5a2.25 2.25 0 002.25-2.25v-8.25a2.25 2.25 0 00-.659-1.591L19.5 6.5M5.25 21H3.75A2.25 2.25 0 011.5 18.75V6.5L12 3l10.5 3.5v12.25a2.25 2.25 0 01-2.25 2.25h-1.5"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat2.title">Dual-plane Remote MCP — 35+ tools</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat2.body">Expose agents, files, and jobs to Claude Desktop, Cursor, ChatGPT, and Open WebUI over standard MCP Streamable HTTP and SSE — a session plane and an orchestrator master plane.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat2.tag">Standard protocol</span>
+            <span class="text-purple-400 font-semibold font-mono" dir="ltr">35+ tools</span>
+          </div>
+        </article>
+
+        <!-- 3. Live progress -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat3.title">Real-time job progress &amp; abort</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat3.body">Stream the active tool, elapsed time, and partial output of any long-running job — and abort a runaway task with a single call. New in v2.2.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat3.tag">Live supervision</span>
+            <span class="text-emerald-400 font-semibold font-mono" dir="ltr">v2.2</span>
+          </div>
+        </article>
+
+        <!-- 4. HMAC downloads -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-amber-950/80 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat4.title">HMAC-signed file downloads</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat4.body">Self-authorizing, tamper-proof download links. External agents pull videos, builds, and datasets with plain curl — no more 401 errors. New in v2.2.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat4.tag">Signed tickets</span>
+            <span class="text-amber-400 font-semibold font-mono" dir="ltr">HMAC-SHA256</span>
+          </div>
+        </article>
+
+        <!-- 5. Sender attribution -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-blue-950/80 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat5.title">Multi-agent sender attribution</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat5.body">External agents tag their dispatches with a sender name, and dispatched jobs appear instantly in the session web chat — no waiting for completion. New in v2.2.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat5.tag">Swarm coordination</span>
+            <span class="text-blue-400 font-semibold font-mono" dir="ltr">v2.2</span>
+          </div>
+        </article>
+
+        <!-- 6. Forking -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-rose-950/80 border border-rose-500/30 flex items-center justify-center text-rose-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21L3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat6.title">Unlimited session forking</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat6.body">Fork any session at any point to try a new idea without touching the original — with a hierarchical tree view showing every branch of every project.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat6.tag">Branching</span>
+            <span class="text-rose-400 font-semibold font-mono" dir="ltr">Tree view</span>
+          </div>
+        </article>
+
+        <!-- 7. Terminal -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-indigo-950/80 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat7.title">Live terminal in the browser</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat7.body">A real Bash session in the browser, confined to the session sandbox, with full bidirectional text support — including Arabic.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat7.tag">Web terminal</span>
+            <span class="text-indigo-400 font-semibold font-mono" dir="ltr">WebSocket PTY</span>
+          </div>
+        </article>
+
+        <!-- 8. Media preview -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-teal-950/80 border border-teal-500/30 flex items-center justify-center text-teal-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5a1.5 1.5 0 001.5-1.5V5.25a1.5 1.5 0 00-1.5-1.5H3.75a1.5 1.5 0 00-1.5 1.5v14.25a1.5 1.5 0 001.5 1.5zm4.5-8.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm3-1.5a.75.75 0 100-1.5.75.75 0 000 1.5z"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat8.title">Interactive media preview</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat8.body">Images, videos, audio, PDFs, and code the agent creates become interactive previews in chat — long-press to download instantly.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat8.tag">Rich chat</span>
+            <span class="text-teal-400 font-semibold font-mono" dir="ltr">Long-press DL</span>
+          </div>
+        </article>
+
+        <!-- 9. Setup wizard -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-orange-950/80 border border-orange-500/30 flex items-center justify-center text-orange-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.53 16.122a3 3 0 00-5.78 1.128 2.25 2.25 0 01-2.4 2.245 4.5 4.5 0 008.4-2.245c0-.399-.078-.78-.22-1.128zm0 0a15.998 15.998 0 003.388-1.62m-5.043-.025a15.994 15.994 0 011.622-3.395m3.42 3.42a15.995 15.995 0 004.764-4.648l3.876-5.814a1.151 1.151 0 00-1.597-1.597L14.146 6.32a15.996 15.996 0 00-4.648 4.764m3.42 3.42a6.776 6.776 0 00-3.42-3.42"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat9.title">Setup wizard &amp; key sensing</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat9.body">On first launch, VibzCode probes for your AI keys and guides you through a secure setup. Keys are written with strict 0o600 file permissions.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat9.tag">Zero-friction start</span>
+            <span class="text-orange-400 font-semibold font-mono" dir="ltr">0o600 keys</span>
+          </div>
+        </article>
+
+        <!-- 10. SDK -->
+        <article class="glass-card p-6 rounded-2xl flex flex-col">
+          <div class="w-12 h-12 rounded-xl bg-fuchsia-950/80 border border-fuchsia-500/30 flex items-center justify-center text-fuchsia-400 text-xl mb-4">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5"/></svg>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="feat10.title">JavaScript / TypeScript SDK</h3>
+          <p class="text-sm text-slate-400 leading-relaxed flex-1" data-i18n="feat10.body">Import VibzCode into any Node.js project: askAgent, multi-engine routing, and MemoryZ context injection — programmatic agent execution in a few lines.</p>
+          <div class="mt-4 pt-4 border-t border-slate-800/80 text-xs text-slate-500 flex items-center justify-between">
+            <span data-i18n="feat10.tag">For developers</span>
+            <span class="text-fuchsia-400 font-semibold font-mono" dir="ltr">askAgent()</span>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= MEMORY SPOTLIGHT ================= -->
+  <section id="memory" class="py-16 sm:py-24 scroll-mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="memory-spotlight rounded-3xl p-6 sm:p-10 lg:p-12 relative overflow-hidden">
+        <div class="absolute -top-24 -end-24 w-72 h-72 rounded-full bg-indigo-500/20 blur-3xl pointer-events-none"></div>
+        <div class="relative">
+          <div class="flex flex-col lg:flex-row lg:items-start gap-8 lg:gap-12">
+            <div class="lg:w-5/12">
+              <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-indigo-500/15 border border-indigo-400/30 text-indigo-300 text-xs font-bold tracking-wide uppercase">
+                <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+                <span data-i18n="memory.eyebrow">Headline feature</span>
+              </span>
+              <h2 class="text-3xl sm:text-4xl lg:text-[2.75rem] font-extrabold text-white leading-tight mt-4 mb-4" data-i18n="memory.title">Memory that follows your agents everywhere</h2>
+              <p class="text-base sm:text-lg text-slate-300 leading-relaxed mb-4" data-i18n="memory.lead">VibzCode connects with <strong class="text-white">any memory system</strong> — and is <strong class="text-white">natively compatible with MemoryZ</strong>, the sovereign live-memory substrate built for agents that must never forget.</p>
+              <p class="text-sm sm:text-base text-slate-400 leading-relaxed" data-i18n="memory.sub">No more context amnesia. Rules, decisions, credentials, and project history survive across sessions, machines, and engines.</p>
+              <a href="https://github.com/Zizwar/memoryz" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 min-h-[48px] mt-6 px-5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all">
+                <span data-i18n="memory.cta">Learn more about MemoryZ</span>
+                <span aria-hidden="true">→</span>
+              </a>
+            </div>
+            <div class="lg:w-7/12 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="rounded-2xl bg-slate-950/70 border border-slate-700/60 p-5">
+                <div class="text-indigo-300 font-bold text-sm mb-1.5" data-i18n="mem1.title">Shared sovereign memory substrate</div>
+                <p class="text-sm text-slate-400 leading-relaxed" data-i18n="mem1.body">MemoryZ v3 is the shared memory layer for every VibzCode session — one memory, every engine.</p>
+              </div>
+              <div class="rounded-2xl bg-slate-950/70 border border-slate-700/60 p-5">
+                <div class="text-indigo-300 font-bold text-sm mb-1.5" data-i18n="mem2.title">Semantic recall</div>
+                <p class="text-sm text-slate-400 leading-relaxed" data-i18n="mem2.body">Retrieve rules, decisions, and documentation by meaning — 768-dim vector recall, plus exact hash lookup.</p>
+              </div>
+              <div class="rounded-2xl bg-slate-950/70 border border-slate-700/60 p-5">
+                <div class="text-indigo-300 font-bold text-sm mb-1.5" data-i18n="mem3.title">Tasks &amp; atomic claiming</div>
+                <p class="text-sm text-slate-400 leading-relaxed" data-i18n="mem3.body">Hierarchical task trees with atomic claiming coordinate multi-agent swarms — no duplicate work.</p>
+              </div>
+              <div class="rounded-2xl bg-slate-950/70 border border-slate-700/60 p-5">
+                <div class="text-indigo-300 font-bold text-sm mb-1.5" data-i18n="mem4.title">Namespace isolation</div>
+                <p class="text-sm text-slate-400 leading-relaxed" data-i18n="mem4.body">State is segregated per project — default, vibzcode, enterprise — so nothing leaks between workspaces.</p>
+              </div>
+              <div class="rounded-2xl bg-slate-950/70 border border-slate-700/60 p-5 sm:col-span-2">
+                <div class="text-indigo-300 font-bold text-sm mb-1.5" data-i18n="mem5.title">Zero-knowledge encrypted vault</div>
+                <p class="text-sm text-slate-400 leading-relaxed" data-i18n="mem5.body">Credentials live in an encrypted vault — never in plain text, never in a memory. Memory-as-attachment injects stored context into session prompts transparently.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= HOW IT WORKS ================= -->
+  <section id="how" class="py-16 sm:py-24 bg-slate-900/40 border-y border-slate-800/80 scroll-mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+        <span class="text-indigo-400 font-bold tracking-wider uppercase text-xs" data-i18n="how.eyebrow">How it works</span>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 mb-4" data-i18n="how.title">Dashboard to done in four steps</h2>
+        <p class="text-slate-400 text-base" data-i18n="how.subtitle">From a single command to a supervised, memory-backed agent swarm.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="relative text-center">
+          <div class="step-line relative">
+            <div class="w-[4.5rem] h-[4.5rem] mx-auto rounded-2xl bg-cyan-500/15 border border-cyan-500/40 flex items-center justify-center text-2xl font-black text-cyan-300 font-mono">1</div>
+          </div>
+          <h3 class="text-base font-bold text-white mt-4 mb-1.5" data-i18n="step1.title">Open the dashboard</h3>
+          <p class="text-sm text-slate-400 leading-relaxed" data-i18n="step1.body">Launch with npx vibzcode and manage every session from the web admin.</p>
+        </div>
+        <div class="relative text-center">
+          <div class="step-line relative">
+            <div class="w-[4.5rem] h-[4.5rem] mx-auto rounded-2xl bg-purple-500/15 border border-purple-500/40 flex items-center justify-center text-2xl font-black text-purple-300 font-mono">2</div>
+          </div>
+          <h3 class="text-base font-bold text-white mt-4 mb-1.5" data-i18n="step2.title">Dispatch via the orchestrator</h3>
+          <p class="text-sm text-slate-400 leading-relaxed" data-i18n="step2.body">Send tasks to any engine over MCP, the SDK, an endpoint, or the dashboard.</p>
+        </div>
+        <div class="relative text-center">
+          <div class="step-line relative">
+            <div class="w-[4.5rem] h-[4.5rem] mx-auto rounded-2xl bg-emerald-500/15 border border-emerald-500/40 flex items-center justify-center text-2xl font-black text-emerald-300 font-mono">3</div>
+          </div>
+          <h3 class="text-base font-bold text-white mt-4 mb-1.5" data-i18n="step3.title">Engines do the work</h3>
+          <p class="text-sm text-slate-400 leading-relaxed" data-i18n="step3.body">Agents code in isolated sandboxes while you watch live progress streaming.</p>
+        </div>
+        <div class="relative text-center">
+          <div class="relative">
+            <div class="w-[4.5rem] h-[4.5rem] mx-auto rounded-2xl bg-amber-500/15 border border-amber-500/40 flex items-center justify-center text-2xl font-black text-amber-300 font-mono">4</div>
+          </div>
+          <h3 class="text-base font-bold text-white mt-4 mb-1.5" data-i18n="step4.title">Memory persists</h3>
+          <p class="text-sm text-slate-400 leading-relaxed" data-i18n="step4.body">Everything lands in shared memory — MemoryZ or your own system — ready for the next session.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SCREENSHOTS ================= -->
+  <section id="showcase" class="py-16 sm:py-24 scroll-mt-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-12">
+        <span class="text-cyan-400 font-bold tracking-wider uppercase text-xs" data-i18n="shots.eyebrow">Visual showcase</span>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-4" data-i18n="shots.title">Designed for real work</h2>
+        <p class="text-slate-400 text-base" data-i18n="shots.subtitle">Real screenshots from VibzCode — the central dashboard, the fork tree, the agent console, and the workspace explorer.</p>
+      </div>
+
+      <!-- Tab buttons -->
+      <div class="flex flex-wrap items-center justify-center gap-2 mb-6 sm:mb-8" role="tablist" aria-label="Screenshots">
+        <button type="button" onclick="switchTab('dashboard')" id="tab-btn-dashboard" class="tab-active inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl glass-card border border-slate-700 text-slate-300 text-sm font-semibold" role="tab" aria-selected="true">
+          <span data-i18n="tab.dashboard">Sessions dashboard</span>
         </button>
-        <button onclick="switchTab('tree')" id="tab-btn-tree"
-                class="btn btn-sm glass-card border border-slate-700 text-slate-300 font-semibold gap-2">
-          <i class="fa-solid fa-sitemap text-purple-400"></i>
-          <span>شجرة التفرع (Tree View)</span>
+        <button type="button" onclick="switchTab('tree')" id="tab-btn-tree" class="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl glass-card border border-slate-700 text-slate-300 text-sm font-semibold" role="tab" aria-selected="false">
+          <span data-i18n="tab.tree">Fork tree</span>
         </button>
-        <button onclick="switchTab('chat')" id="tab-btn-chat"
-                class="btn btn-sm glass-card border border-slate-700 text-slate-300 font-semibold gap-2">
-          <i class="fa-solid fa-comments text-emerald-400"></i>
-          <span>محادثة الوكيل وتفاعل الميديا</span>
+        <button type="button" onclick="switchTab('chat')" id="tab-btn-chat" class="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl glass-card border border-slate-700 text-slate-300 text-sm font-semibold" role="tab" aria-selected="false">
+          <span data-i18n="tab.chat">Agent chat</span>
         </button>
-        <button onclick="switchTab('workspace')" id="tab-btn-workspace"
-                class="btn btn-sm glass-card border border-slate-700 text-slate-300 font-semibold gap-2">
-          <i class="fa-solid fa-folder-tree text-amber-400"></i>
-          <span>مستكشف الملفات والساندبوكس</span>
+        <button type="button" onclick="switchTab('workspace')" id="tab-btn-workspace" class="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-xl glass-card border border-slate-700 text-slate-300 text-sm font-semibold" role="tab" aria-selected="false">
+          <span data-i18n="tab.workspace">Workspace explorer</span>
         </button>
       </div>
 
-      <!-- Screenshot Showcase Container -->
+      <!-- Screenshot frame -->
       <div class="relative glass-card rounded-2xl p-2 sm:p-4 overflow-hidden border border-slate-700/80 shadow-2xl">
-        
-        <!-- Mock Browser Chrome Header -->
-        <div class="flex items-center justify-between pb-3 px-2 border-b border-slate-800 mb-3 text-xs text-slate-400">
-          <div class="flex items-center gap-2">
+        <div class="flex items-center justify-between gap-2 pb-3 px-2 border-b border-slate-800 mb-3 text-xs text-slate-400">
+          <div class="flex items-center gap-2 shrink-0">
             <span class="w-3 h-3 rounded-full bg-rose-500/80 inline-block"></span>
             <span class="w-3 h-3 rounded-full bg-amber-500/80 inline-block"></span>
             <span class="w-3 h-3 rounded-full bg-emerald-500/80 inline-block"></span>
           </div>
-          <div id="mock-url" class="font-mono bg-slate-950/80 px-4 py-1 rounded-md text-[11px] text-slate-400 border border-slate-800">
-            https://vibzcode.local:3334/
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="badge badge-xs badge-success">Online</span>
-          </div>
+          <div id="mock-url" class="font-mono bg-slate-950/80 px-3 py-1 rounded-md text-[11px] text-slate-400 border border-slate-800 overflow-x-auto whitespace-nowrap code-scroll" dir="ltr">https://vibzcode.local:3334/</div>
+          <span class="shrink-0 text-[11px] font-semibold px-2 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30" data-i18n="shots.online">Online</span>
         </div>
 
-        <!-- Tab 1: Admin Dashboard -->
-        <div id="tab-view-dashboard" class="tab-view-content block">
-          <img src="assets/screenshots/admin-sessions-grid.png" alt="لوحة الجلسات العادية في VibzCode"
-               class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
-          <div class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 gap-2">
-            <div class="flex items-center gap-2">
-              <i class="fa-solid fa-circle-check text-cyan-400"></i>
-              <span><strong>لوحة الإدارة المركزية:</strong> فرز الجلسات حسب تاريخ الإنشاء أو النشاط، مفضلة، تثبيت بالقمة، وقائمة 3-dots للتحكم الكامل.</span>
-            </div>
-            <span class="badge badge-sm badge-info font-mono">35+ Sessions</span>
-          </div>
+        <div id="tab-view-dashboard" class="tab-view block">
+          <img src="assets/screenshots/admin-sessions-grid.png" alt="VibzCode sessions dashboard grid view" loading="lazy" class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
+          <p class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs sm:text-sm text-slate-300" data-i18n="cap.dashboard">Sessions dashboard — sort, pin, favorite, and control every session from one place.</p>
         </div>
-
-        <!-- Tab 2: Admin Tree View -->
-        <div id="tab-view-tree" class="tab-view-content hidden">
-          <img src="assets/screenshots/admin-sessions-tree.png" alt="شجرة تفرع الجلسات في VibzCode"
-               class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
-          <div class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 gap-2">
-            <div class="flex items-center gap-2">
-              <i class="fa-solid fa-sitemap text-purple-400"></i>
-              <span><strong>نظام التفرع الهرمي (Tree):</strong> عرض كل مشروع أصلي وأسفله كافة الفروع المتشعبة منه بنقرة زر مع إمكانية الطي والتوسيع.</span>
-            </div>
-            <span class="badge badge-sm badge-secondary font-mono">Forks Hierarchy</span>
-          </div>
+        <div id="tab-view-tree" class="tab-view hidden">
+          <img src="assets/screenshots/admin-sessions-tree.png" alt="VibzCode session fork tree view" loading="lazy" class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
+          <p class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs sm:text-sm text-slate-300" data-i18n="cap.tree">Fork tree — every project and its branches, collapsible at a click.</p>
         </div>
-
-        <!-- Tab 3: Agent Chat View -->
-        <div id="tab-view-chat" class="tab-view-content hidden">
-          <img src="assets/screenshots/agent-chat.png" alt="شاشة محادثة العضو مع الوكيل الذكي"
-               class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
-          <div class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 gap-2">
-            <div class="flex items-center gap-2">
-              <i class="fa-solid fa-wand-magic-sparkles text-emerald-400"></i>
-              <span><strong>بيئة المحادثة التفاعلية:</strong> دعم لغة عربية متقدم، تفاعل فوري مع روابط الوسائط والملفات المنشأة، ومعاينتها أو تحميلها بالضغط المطول.</span>
-            </div>
-            <span class="badge badge-sm badge-success font-mono">Interactive Chips</span>
-          </div>
+        <div id="tab-view-chat" class="tab-view hidden">
+          <img src="assets/screenshots/agent-chat.png" alt="VibzCode agent chat console" loading="lazy" class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
+          <p class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs sm:text-sm text-slate-300" data-i18n="cap.chat">Agent chat — live conversation with interactive media previews.</p>
         </div>
-
-        <!-- Tab 4: Agent Workspace -->
-        <div id="tab-view-workspace" class="tab-view-content hidden">
-          <img src="assets/screenshots/agent-workspace.png" alt="مستكشف الملفات وساندبوكس المشروع"
-               class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
-          <div class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-300 gap-2">
-            <div class="flex items-center gap-2">
-              <i class="fa-solid fa-folder-open text-amber-400"></i>
-              <span><strong>مستكشف مساحة العمل (Workspace):</strong> استعراض فوري لكامل ملفات ومجلدات الساندبوكس، تنزيل أرشيف ZIP، ومعاينة كود نظيفة.</span>
-            </div>
-            <span class="badge badge-sm badge-warning font-mono">ZIP & Direct Raw</span>
-          </div>
+        <div id="tab-view-workspace" class="tab-view hidden">
+          <img src="assets/screenshots/agent-workspace.png" alt="VibzCode workspace sandbox explorer" loading="lazy" class="rounded-xl w-full h-auto object-cover border border-slate-800 shadow-lg">
+          <p class="mt-4 p-3 bg-slate-950/60 rounded-xl border border-slate-800/80 text-xs sm:text-sm text-slate-300" data-i18n="cap.workspace">Workspace explorer — browse the sandbox, download ZIP archives, preview code.</p>
         </div>
-
       </div>
-
     </div>
   </section>
 
-  <!-- Core Features Grid -->
-  <section id="features" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center max-w-3xl mx-auto mb-16">
-      <span class="text-cyan-400 font-bold tracking-wider uppercase text-xs">قوة ومرونة لا تضاهى</span>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mt-2 mb-4">
-        المميزات الجوهرية لمنصة VibzCode
-      </h2>
-      <p class="text-slate-400 text-base">
-        صُممت المنصة لتلبي احتياجات الفرق البرمجية وتطوير الوكلاء المستقلين بأعلى درجات العزل والأمان.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-
-      <!-- Card 1 -->
-      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xl mb-4">
-            <i class="fa-solid fa-shield-halved"></i>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">عزل كامل بالساندبوكس (Per-Session Sandbox)</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            كل عضو وكل مشروع يمتلك مساراً معزولاً ورمز وصول خاص (<code class="text-cyan-300 font-mono">Token</code>)، ولا يمكن لأي وكيل تجاوز حدود المجلد المحدد له ما لم يمنحه المدير صلاحية صريحة.
-          </p>
-        </div>
-        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-          <span>أمان بيئات العمل</span>
-          <span class="text-cyan-400 font-semibold">Strict Path Check</span>
-        </div>
-      </div>
-
-      <!-- Card 2 -->
-      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-center text-purple-400 text-xl mb-4">
-            <i class="fa-solid fa-network-wired"></i>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">خادم Remote MCP برابط موحد</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            ربط فوري عبر البروتوكول الرسمي <code class="text-purple-300 font-mono">@modelcontextprotocol/sdk</code> يتيح تشغيل الجلسة داخل <strong>Claude Desktop</strong> و <strong>Cursor</strong> و <strong>ChatGPT Actions</strong> برابط واحد موحد ومحمي.
-          </p>
-        </div>
-        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-          <span>دعم SSE و JSON-RPC 2.0</span>
-          <span class="text-purple-400 font-semibold">Standard MCP</span>
-        </div>
-      </div>
-
-      <!-- Card 3 -->
-      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 text-xl mb-4">
-            <i class="fa-solid fa-code-fork"></i>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">تفرع الجلسات اللانهائي (Session Forking)</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            إمكانية نسخ أي جلسة أو تفريعها عند أي نقطة زمنية لتجربة فكرة برمجية جديدة دون التأثير على المسار الأصلي، مع عرض هرمي ذكي يوضح شجرة العائلة لكل فرع.
-          </p>
-        </div>
-        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-          <span>إدارة فروع المهام</span>
-          <span class="text-emerald-400 font-semibold">Hierarchical Tree</span>
-        </div>
-      </div>
-
-      <!-- Card 4 -->
-      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-amber-950/80 border border-amber-500/30 flex items-center justify-center text-amber-400 text-xl mb-4">
-            <i class="fa-solid fa-photo-film"></i>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">معاينة تفاعلية وتحميل بالضغط المطول</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            عند إنشاء الوكيل لأي ملف وسائط (صور، فيديو MP4، صوت، PDF، أكواد)، يتم تحويل الروابط فوراً لشرائح تفاعلية تُفتح بنافذة منبثقة، وتدعم التنزيل الفوري عند الضغط المطول.
-          </p>
-        </div>
-        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-          <span>تفاعل وسائط متقدم</span>
-          <span class="text-amber-400 font-semibold">Long-Press Download</span>
-        </div>
-      </div>
-
-      <!-- Card 5 -->
-      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-blue-950/80 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xl mb-4">
-            <i class="fa-solid fa-terminal"></i>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">طرفية تفاعلية حية (Live Terminal BiDi)</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            جلسة Bash حقيقية في المتصفح مبنية على <code class="text-blue-300 font-mono">node-pty</code> و <code class="text-blue-300 font-mono">xterm.js</code> تدعم تشكيل الحروف العربية والنصوص ثنائية الاتجاه، ومحصورة بالساندبوكس.
-          </p>
-        </div>
-        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-          <span>تيرمنال ويب حقيقي</span>
-          <span class="text-blue-400 font-semibold">WebSocket PTY</span>
-        </div>
-      </div>
-
-      <!-- Card 6 -->
-      <div class="glass-card p-6 rounded-2xl flex flex-col justify-between">
-        <div>
-          <div class="w-12 h-12 rounded-xl bg-pink-950/80 border border-pink-500/30 flex items-center justify-center text-pink-400 text-xl mb-4">
-            <i class="fa-solid fa-brain"></i>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">ذاكرة مشتركة مع MemoryZ و Jev AI</h3>
-          <p class="text-sm text-slate-400 leading-relaxed">
-            ربط الوكلاء مع منصة <code class="text-pink-300 font-mono">MemoryZ</code> لاسترجاع القواعد البرمجية والذكريات المشتركة دلالياً (Semantic Search)، وتحليل الأخطاء البرمجية ذاتياً عبر النماذج الذكية.
-          </p>
-        </div>
-        <div class="mt-4 pt-4 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-500">
-          <span>التعلم المستمر</span>
-          <span class="text-pink-400 font-semibold">Shared Substrate</span>
-        </div>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- System Architecture & Flow -->
-  <section id="architecture" class="py-20 bg-slate-950 border-t border-slate-800/80">
+  <!-- ================= INSTALL ================= -->
+  <section id="install" class="py-16 sm:py-24 bg-slate-900/40 border-t border-slate-800/80 scroll-mt-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      
-      <div class="text-center max-w-3xl mx-auto mb-16">
-        <span class="text-indigo-400 font-bold tracking-wider uppercase text-xs">بنية هندسية متينة</span>
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mt-2 mb-4">
-          كيف تعمل منظومة VibzCode تحت الغطاء؟
-        </h2>
-        <p class="text-slate-400 text-base">
-          تكامل سلس بين طبقة العرض الأمامية وخوادم التنسيق ومحركات الذكاء الاصطناعي الخارجية.
+      <div class="text-center max-w-3xl mx-auto mb-10 sm:mb-14">
+        <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-3">
+          <span class="font-mono" dir="ltr">npm</span>
+          <span data-i18n="install.badge">Officially published on the npm registry</span>
+        </div>
+        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-4" data-i18n="install.title">Install in seconds</h2>
+        <p class="text-slate-400 text-base" data-i18n="install.subtitle">Run it instantly with no install, add it globally to your machine, or self-host it from source.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 mb-8">
+        <!-- NPX -->
+        <div class="glass-card p-6 rounded-2xl border-cyan-500/30 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-11 h-11 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-black font-mono text-lg">⚡</div>
+            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30" data-i18n="install.npxTag">Fastest · Recommended</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="install.npxTitle">Run instantly with NPX</h3>
+          <p class="text-sm text-slate-400 mb-4 leading-relaxed" data-i18n="install.npxBody">No permanent install. Probes your environment, starts the server, and opens the dashboard automatically.</p>
+          <div class="mt-auto">
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 bg-slate-950 rounded-xl border border-slate-800" dir="ltr">
+              <code class="font-mono text-xs sm:text-sm text-cyan-300 overflow-x-auto code-scroll whitespace-nowrap">npx vibzcode</code>
+              <button type="button" onclick="copyText('npx vibzcode', this)" class="shrink-0 min-h-[36px] min-w-[44px] px-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-800 text-xs font-semibold transition-all" data-copy-label data-i18n="common.copy">Copy</button>
+            </div>
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 mt-2 bg-slate-950 rounded-xl border border-slate-800" dir="ltr">
+              <code class="font-mono text-xs sm:text-sm text-cyan-300 overflow-x-auto code-scroll whitespace-nowrap">npx vibzcode --port 3334</code>
+              <button type="button" onclick="copyText('npx vibzcode --port 3334', this)" class="shrink-0 min-h-[36px] min-w-[44px] px-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-800 text-xs font-semibold transition-all" data-copy-label data-i18n="common.copy">Copy</button>
+            </div>
+          </div>
+          <p class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500" data-i18n="install.npxFoot">Works on Linux, macOS, and Windows</p>
+        </div>
+
+        <!-- Global -->
+        <div class="glass-card p-6 rounded-2xl border-purple-500/30 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-11 h-11 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-center text-purple-400 font-black font-mono text-lg">⬇</div>
+            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-purple-500/15 text-purple-300 border border-purple-500/30">Global CLI</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="install.globalTitle">Install globally</h3>
+          <p class="text-sm text-slate-400 mb-4 leading-relaxed" data-i18n="install.globalBody">Install once as a system command, then run it anywhere with a single word.</p>
+          <div class="mt-auto">
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 bg-slate-950 rounded-xl border border-slate-800" dir="ltr">
+              <code class="font-mono text-xs sm:text-sm text-purple-300 overflow-x-auto code-scroll whitespace-nowrap">npm install -g vibzcode</code>
+              <button type="button" onclick="copyText('npm install -g vibzcode', this)" class="shrink-0 min-h-[36px] min-w-[44px] px-2 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-slate-800 text-xs font-semibold transition-all" data-copy-label data-i18n="common.copy">Copy</button>
+            </div>
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 mt-2 bg-slate-950 rounded-xl border border-slate-800" dir="ltr">
+              <code class="font-mono text-xs sm:text-sm text-purple-300 overflow-x-auto code-scroll whitespace-nowrap">pnpm add -g vibzcode</code>
+              <button type="button" onclick="copyText('pnpm add -g vibzcode', this)" class="shrink-0 min-h-[36px] min-w-[44px] px-2 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-slate-800 text-xs font-semibold transition-all" data-copy-label data-i18n="common.copy">Copy</button>
+            </div>
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 mt-2 bg-slate-950 rounded-xl border border-slate-800" dir="ltr">
+              <code class="font-mono text-xs sm:text-sm text-purple-300 overflow-x-auto code-scroll whitespace-nowrap">vibzcode</code>
+              <button type="button" onclick="copyText('vibzcode', this)" class="shrink-0 min-h-[36px] min-w-[44px] px-2 rounded-lg text-slate-400 hover:text-purple-400 hover:bg-slate-800 text-xs font-semibold transition-all" data-copy-label data-i18n="common.copy">Copy</button>
+            </div>
+          </div>
+          <p class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500" data-i18n="install.globalFoot">Lightweight, official npm package</p>
+        </div>
+
+        <!-- Source / PM2 -->
+        <div class="glass-card p-6 rounded-2xl border-emerald-500/30 flex flex-col">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-11 h-11 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-black font-mono text-lg">&lt;/&gt;</div>
+            <span class="text-[11px] font-bold px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">Self-Hosted</span>
+          </div>
+          <h3 class="text-lg font-bold text-white mb-2" data-i18n="install.srcTitle">From source &amp; PM2</h3>
+          <p class="text-sm text-slate-400 mb-4 leading-relaxed" data-i18n="install.srcBody">For production servers and advanced development, with persistent process management.</p>
+          <div class="mt-auto">
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 bg-slate-950 rounded-xl border border-slate-800" dir="ltr">
+              <code class="font-mono text-xs sm:text-sm text-emerald-300 overflow-x-auto code-scroll whitespace-nowrap">git clone https://github.com/Zizwar/vibzcode.git</code>
+              <button type="button" onclick="copyText('git clone https://github.com/Zizwar/vibzcode.git', this)" class="shrink-0 min-h-[36px] min-w-[44px] px-2 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 text-xs font-semibold transition-all" data-copy-label data-i18n="common.copy">Copy</button>
+            </div>
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 mt-2 bg-slate-950 rounded-xl border border-slate-800" dir="ltr">
+              <code class="font-mono text-xs sm:text-sm text-emerald-300 overflow-x-auto code-scroll whitespace-nowrap">npm install &amp;&amp; npm start</code>
+              <button type="button" onclick="copyText('npm install && npm start', this)" class="shrink-0 min-h-[36px] min-w-[44px] px-2 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 text-xs font-semibold transition-all" data-copy-label data-i18n="common.copy">Copy</button>
+            </div>
+            <div class="flex items-center justify-between gap-2 px-3 py-2.5 mt-2 bg-slate-950 rounded-xl border border-slate-800" dir="ltr">
+              <code class="font-mono text-xs sm:text-sm text-emerald-300 overflow-x-auto code-scroll whitespace-nowrap">pm2 start ecosystem.config.cjs</code>
+              <button type="button" onclick="copyText('pm2 start ecosystem.config.cjs', this)" class="shrink-0 min-h-[36px] min-w-[44px] px-2 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 text-xs font-semibold transition-all" data-copy-label data-i18n="common.copy">Copy</button>
+            </div>
+          </div>
+          <p class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500" data-i18n="install.srcFoot">Full control over code and services</p>
+        </div>
+      </div>
+
+      <!-- CLI flags -->
+      <div class="glass-card rounded-2xl p-6 border border-slate-800">
+        <h3 class="text-base font-bold text-white mb-4" data-i18n="flags.title">Command-line options</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800">
+            <code class="text-cyan-400 font-bold text-sm" dir="ltr">--port &lt;num&gt;</code>
+            <p class="text-slate-400 text-xs mt-1.5 leading-relaxed" data-i18n="flags.port">Set the server port (default: 3333, or $PORT).</p>
+          </div>
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800">
+            <code class="text-purple-400 font-bold text-sm" dir="ltr">--status</code>
+            <p class="text-slate-400 text-xs mt-1.5 leading-relaxed" data-i18n="flags.status">Check AI key readiness and configuration without starting the server.</p>
+          </div>
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800">
+            <code class="text-emerald-400 font-bold text-sm" dir="ltr">--no-open</code>
+            <p class="text-slate-400 text-xs mt-1.5 leading-relaxed" data-i18n="flags.noopen">Disable auto-opening the browser (useful on remote servers).</p>
+          </div>
+          <div class="p-4 bg-slate-950/80 rounded-xl border border-slate-800">
+            <code class="text-amber-400 font-bold text-sm" dir="ltr">--host &lt;ip&gt;</code>
+            <p class="text-slate-400 text-xs mt-1.5 leading-relaxed" data-i18n="flags.host">Set the network bind host (default: 0.0.0.0).</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Dashboard note + links -->
+      <div class="mt-8 text-center">
+        <p class="text-xs sm:text-sm text-slate-400 max-w-2xl mx-auto">
+          <span data-i18n="install.note">The dashboard opens automatically at</span>
+          <code class="text-cyan-400 font-mono" dir="ltr">http://localhost:3333</code>
         </p>
-      </div>
-
-      <div class="glass-card rounded-2xl p-6 sm:p-10 border border-slate-800">
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center">
-          
-          <!-- Column 1: Clients -->
-          <div class="space-y-4">
-            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-desktop text-cyan-400"></i>
-              <span>واجهات الاستخدام والعملاء</span>
-            </h4>
-            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
-              <div class="font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-user-shield text-cyan-400"></i>
-                <span>Admin Portal</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">إدارة الجلسات، التواريخ، التوكنات، والمفضلة</p>
-            </div>
-            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
-              <div class="font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-laptop-code text-emerald-400"></i>
-                <span>Member Agent Console</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">محادثة حية، معاينة وسائط، وتيرمنال تفاعلي</p>
-            </div>
-            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
-              <div class="font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-plug text-purple-400"></i>
-                <span>Claude Desktop & Cursor</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">اتصال MCP مباشر بالساندبوكس عبر SSE</p>
-            </div>
-          </div>
-
-          <!-- Column 2: Core Server -->
-          <div class="p-6 bg-slate-900/90 rounded-2xl border-2 border-cyan-500/30 text-center space-y-4 relative">
-            <div class="badge badge-info badge-outline font-mono text-[11px] mb-2">VibzCode Core (Node.js)</div>
-            <h3 class="text-xl font-bold text-white">Express Gateway & Orchestrator</h3>
-            <ul class="text-xs text-slate-300 space-y-2 text-right">
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-cyan-400"></i>
-                <span>فحص ومصادقة الرموز (Token Verification)</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-cyan-400"></i>
-                <span>عزل مسارات الساندبوكس (Chroot-like Jail)</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-cyan-400"></i>
-                <span>مواصفات OpenAPI 3.1 لـ ChatGPT Actions</span>
-              </li>
-              <li class="flex items-center gap-2">
-                <i class="fa-solid fa-check text-cyan-400"></i>
-                <span>خدمة بث الملفات والوسائط وضغط ZIP</span>
-              </li>
-            </ul>
-            <div class="pt-2">
-              <span class="text-[11px] font-mono text-cyan-400 bg-cyan-950/60 px-3 py-1 rounded-full border border-cyan-800">
-                Port 3333 / 3334
-              </span>
-            </div>
-          </div>
-
-          <!-- Column 3: Engines & Substrates -->
-          <div class="space-y-4">
-            <h4 class="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-              <i class="fa-solid fa-gears text-indigo-400"></i>
-              <span>المحركات والخدمات الخلفية</span>
-            </h4>
-            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
-              <div class="font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-robot text-cyan-400"></i>
-                <span>Google Antigravity (AGY)</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">تنفيذ الأوامر البرمجية وبناء المشاريع تلقائياً</p>
-            </div>
-            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
-              <div class="font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-database text-pink-400"></i>
-                <span>MemoryZ Substrate</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">الذاكرة المشتركة، خزن البيانات، والبحث الدلالي</p>
-            </div>
-            <div class="p-3 bg-slate-900/90 rounded-xl border border-slate-800 text-sm">
-              <div class="font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-bolt text-amber-400"></i>
-                <span>Gemini 3 Flash & Jev AI</span>
-              </div>
-              <p class="text-xs text-slate-400 mt-1">توليد التلخيصات واستخلاص المهارات البرمجية</p>
-            </div>
-          </div>
-
+        <div class="flex flex-wrap items-center justify-center gap-3 mt-6">
+          <a href="https://github.com/Zizwar/vibzcode" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 min-h-[48px] px-5 rounded-xl border border-slate-700 hover:border-cyan-500 text-slate-200 text-sm font-semibold transition-colors">
+            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55 0-.27-.01-1.17-.02-2.12-3.2.7-3.88-1.36-3.88-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.53-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.78 0c2.2-1.49 3.17-1.18 3.17-1.18.63 1.59.23 2.76.11 3.05.74.81 1.19 1.83 1.19 3.09 0 4.42-2.7 5.39-5.26 5.68.41.36.78 1.06.78 2.14 0 1.55-.01 2.79-.01 3.17 0 .31.21.67.8.55A11.51 11.51 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+            GitHub
+          </a>
+          <a href="https://www.npmjs.com/package/vibzcode" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 min-h-[48px] px-5 rounded-xl border border-slate-700 hover:border-cyan-500 text-slate-200 text-sm font-semibold transition-colors">
+            <span class="font-mono font-bold text-rose-400" dir="ltr">npm</span>
+            <span>vibzcode</span>
+          </a>
+          <a href="https://app.vibzcode.com" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 min-h-[48px] px-5 rounded-xl border border-slate-700 hover:border-cyan-500 text-slate-200 text-sm font-semibold transition-colors">
+            <span dir="ltr">app.vibzcode.com</span>
+            <span class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30" data-i18n="links.comingSoon">Coming soon</span>
+          </a>
         </div>
       </div>
-
     </div>
   </section>
 
-  <!-- Quick Start & Deployment Guide -->
-  <section id="quickstart" class="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="text-center max-w-3xl mx-auto mb-16">
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-3">
-        <i class="fa-brands fa-npm text-lg"></i>
-        <span>معتمد رسمياً في سجل حزم npm</span>
-      </div>
-      <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-4">
-        خيارات التنصيب والتشغيل السريع
-      </h2>
-      <p class="text-slate-400 text-base">
-        سواء أردت تجربة فورية بدون تثبيت، أو تنصيب الأداة عالمياً عبر npm/pnpm، أو استنساخ الكود للمطورين.
-      </p>
-    </div>
+  </main>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-
-      <!-- Method 1: NPX (Recommended) -->
-      <div class="glass-card p-6 rounded-2xl border-cyan-500/30 relative flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-xl bg-cyan-950/80 border border-cyan-500/30 flex items-center justify-center text-cyan-400 font-bold text-lg font-mono">
-              <i class="fa-solid fa-bolt"></i>
-            </div>
-            <span class="badge badge-sm badge-info font-mono">الأسرع (Instant)</span>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">1. تشغيل فوري عبر NPX</h3>
-          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-            تشغيل مباشر دون تنزيل دائم؛ يقوم بفحص البيئة، وتشغيل المنصة، وفتح لوحة التحكم تلقائياً:
-          </p>
-          <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-cyan-300 overflow-x-auto text-left" dir="ltr"><code># تشغيل مباشر وفوري
-npx vibzcode
-
-# أو تحديد منفذ مخصص
-npx vibzcode --port 3334</code></pre>
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500">
-          يعمل على Linux و macOS و Windows
-        </div>
-      </div>
-
-      <!-- Method 2: Global Install (npm / pnpm) -->
-      <div class="glass-card p-6 rounded-2xl border-purple-500/30 relative flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-xl bg-purple-950/80 border border-purple-500/30 flex items-center justify-center text-purple-400 font-bold text-lg font-mono">
-              <i class="fa-brands fa-npm"></i>
-            </div>
-            <span class="badge badge-sm badge-secondary font-mono">Global CLI</span>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">2. تثبيت عام (NPM / PNPM)</h3>
-          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-            تثبيت الأداة كأمر نظام دائم في جهازك أو خادمك، لتشغيله في أي وقت بكلمة واحدة:
-          </p>
-          <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-purple-300 overflow-x-auto text-left" dir="ltr"><code># عبر npm:
-npm install -g vibzcode
-
-# أو عبر pnpm:
-pnpm add -g vibzcode
-
-# ثم التشغيل في أي وقت:
-vibzcode</code></pre>
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500">
-          حزمة npm معتمدة وخفيفة الوزن
-        </div>
-      </div>
-
-      <!-- Method 3: GitHub Self-Hosted & PM2 -->
-      <div class="glass-card p-6 rounded-2xl border-emerald-500/30 relative flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-500/30 flex items-center justify-center text-emerald-400 font-bold text-lg font-mono">
-              <i class="fa-brands fa-github"></i>
-            </div>
-            <span class="badge badge-sm badge-success font-mono">Self-Hosted</span>
-          </div>
-          <h3 class="text-lg font-bold text-white mb-2">3. استنساخ المطورين (Git & PM2)</h3>
-          <p class="text-xs text-slate-400 mb-4 leading-relaxed">
-            للسيرفرات الإنتاجية والتطوير المتقدم، مع إدارة العمليات المستمرة عبر PM2:
-          </p>
-          <pre class="bg-slate-950 p-3 rounded-xl border border-slate-800 text-xs font-mono text-emerald-300 overflow-x-auto text-left" dir="ltr"><code>git clone https://github.com/Zizwar/vibzcode.git
-cd vibzcode && npm install
-cp .env.example .env
-
-# تشغيل كخدمة مستمرة:
-pm2 start ecosystem.config.cjs</code></pre>
-        </div>
-        <div class="mt-4 pt-3 border-t border-slate-800/80 text-[11px] text-slate-500">
-          تحكم كامل بملفات الكود والخدمات
-        </div>
-      </div>
-
-    </div>
-
-    <!-- CLI Flags & Commands Reference Card -->
-    <div class="glass-card rounded-2xl p-6 border border-slate-800">
-      <div class="flex items-center gap-3 mb-4">
-        <i class="fa-solid fa-terminal text-cyan-400 text-lg"></i>
-        <h3 class="text-base font-bold text-white">خيارات سطر الأوامر (CLI Flags)</h3>
-      </div>
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-xs font-mono" dir="ltr">
-        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-          <div class="text-cyan-400 font-bold mb-1">-p, --port &lt;num&gt;</div>
-          <div class="text-slate-400 text-[11px]" dir="rtl">تحديد منفذ الخادم (الافتراضي: 3333 أو متغير $PORT)</div>
-        </div>
-        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-          <div class="text-purple-400 font-bold mb-1">--status</div>
-          <div class="text-slate-400 text-[11px]" dir="rtl">فحص جاهزية وتكوين مفاتيح الذكاء الاصطناعي دون تشغيل السيرفر</div>
-        </div>
-        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-          <div class="text-emerald-400 font-bold mb-1">--no-open</div>
-          <div class="text-slate-400 text-[11px]" dir="rtl">تعطيل الفتح التلقائي للمتصفح (مفيد للسيرفرات البعيدة)</div>
-        </div>
-        <div class="p-3 bg-slate-950/80 rounded-xl border border-slate-800">
-          <div class="text-amber-400 font-bold mb-1">--host &lt;ip&gt;</div>
-          <div class="text-slate-400 text-[11px]" dir="rtl">تحديد الـ Host للربط الشبكي (الافتراضي: 0.0.0.0)</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="mt-8 p-4 bg-slate-950/70 border border-slate-800 rounded-2xl text-center text-xs text-slate-400 max-w-2xl mx-auto">
-      💡 <strong>ملاحظة:</strong> لوحة التحكم تفتح تلقائياً على الرابط <code class="text-cyan-400 font-mono">http://localhost:3333</code> أو <code class="text-cyan-400 font-mono">http://localhost:3334</code> بحسب المنفذ المحدد.
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="border-t border-slate-800 bg-slate-950 py-12 text-slate-400 text-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-      
+  <!-- ================= FOOTER ================= -->
+  <footer class="relative z-10 border-t border-slate-800 bg-slate-950 py-10 sm:py-12 text-slate-400 text-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center gap-6 text-center">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-slate-950 font-black text-sm">
-          V
-        </div>
-        <div>
-          <span class="font-bold text-white">VibzCode (agyz)</span>
-          <p class="text-xs text-slate-500">تم البناء والتطوير لإدارة مساحات عمل الوكلاء البرمجية بأعلى كفاءة</p>
+        <div class="w-9 h-9 rounded-lg bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-slate-950 font-black text-base font-mono">V</div>
+        <div class="text-start">
+          <span class="font-bold text-white">VibzCode <span class="text-slate-500 font-mono text-xs">v2.2.0</span></span>
+          <p class="text-xs text-slate-500" data-i18n="footer.tagline">Sovereign, self-hosted multi-engine AI agent orchestration.</p>
         </div>
       </div>
-
-      <div class="flex items-center gap-6 text-xs font-semibold">
-        <a href="#showcase" class="hover:text-cyan-400 transition-colors">استعراض الواجهات</a>
-        <a href="#features" class="hover:text-cyan-400 transition-colors">المميزات</a>
-        <a href="#quickstart" class="hover:text-cyan-400 transition-colors">دليل التشغيل</a>
-        <a href="https://github.com/Zizwar/vibzcode" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition-colors flex items-center gap-1.5">
-          <i class="fa-brands fa-github text-sm"></i>
-          <span>GitHub</span>
-        </a>
-      </div>
-
+      <nav class="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold">
+        <a href="#engines" class="hover:text-cyan-400 transition-colors" data-i18n="nav.engines">Engines</a>
+        <a href="#features" class="hover:text-cyan-400 transition-colors" data-i18n="nav.features">Features</a>
+        <a href="#memory" class="hover:text-cyan-400 transition-colors" data-i18n="nav.memory">Memory</a>
+        <a href="#showcase" class="hover:text-cyan-400 transition-colors" data-i18n="nav.showcase">Screenshots</a>
+        <a href="#install" class="hover:text-cyan-400 transition-colors" data-i18n="nav.install">Install</a>
+        <a href="https://github.com/Zizwar/vibzcode" target="_blank" rel="noopener noreferrer" class="hover:text-cyan-400 transition-colors">GitHub</a>
+      </nav>
+      <p class="text-xs text-slate-500">
+        <span data-i18n="footer.built">Built by Ibrahim Bidi</span>
+        <span class="text-slate-700 mx-2">·</span>
+        <span>MIT License</span>
+      </p>
     </div>
   </footer>
 
-  <!-- Simple Tab & Install Switcher Script -->
+  <!-- ================= SCRIPTS ================= -->
   <script>
+    /* ---------- i18n ---------- */
+    const I18N = {
+      en: {
+        'meta.title': 'VibzCode — Sovereign Multi-Engine AI Agent Orchestrator',
+        'nav.tagline': 'Multi-engine AI agent orchestrator',
+        'nav.engines': 'Engines', 'nav.features': 'Features', 'nav.memory': 'Memory',
+        'nav.showcase': 'Screenshots', 'nav.install': 'Install', 'nav.cta': 'Get started',
+        'hero.badge': 'Official npm package · MIT license',
+        'hero.title1': 'Sovereign, self-hosted orchestration',
+        'hero.title2': 'for AI coding agents',
+        'hero.subtitle': 'VibzCode is a multi-engine AI agent orchestrator and workspace platform. Configure, isolate, dispatch, and supervise autonomous agent sessions across five AI engines — from one command, on your own machine.',
+        'hero.installNote': 'One command to run',
+        'hero.cta1': 'See it in action', 'hero.cta2': 'Explore features',
+        'common.copy': 'Copy', 'common.copied': 'Copied!',
+        'stats.engines': 'AI engines, one bridge', 'stats.mcp': 'Remote MCP tools',
+        'stats.sandbox': 'Sandbox isolation', 'stats.command': 'Command to start',
+        'engines.eyebrow': 'Multi-engine substrate',
+        'engines.title': 'Five engines. One command bridge.',
+        'engines.subtitle': 'Assign different projects and tasks to the specialized engine that fits best — each with its own permission boundaries.',
+        'engines.agy': 'Agentic coding with sandbox enforcement and directory scoping.',
+        'engines.claude': 'Deep architectural refactoring, bash automation, terminal-native.',
+        'engines.codex': 'Autonomous verification, unit testing, and script generation.',
+        'engines.vibe': 'Generative workspace manipulation and fast, lightweight coding.',
+        'engines.opencode': 'Open-source multi-model engine with automated approvals.',
+        'features.eyebrow': 'Complete capability set',
+        'features.title': 'Everything you need to run agents at scale',
+        'features.subtitle': 'Ten capabilities, one platform — built for teams that run autonomous agents in production.',
+        'feat1.title': 'Per-session sandbox isolation',
+        'feat1.body': 'Every session gets its own isolated directory and access token. No agent can escape its workspace without explicit admin permission.',
+        'feat1.tag': 'Workspace security',
+        'feat2.title': 'Dual-plane Remote MCP — 35+ tools',
+        'feat2.body': 'Expose agents, files, and jobs to Claude Desktop, Cursor, ChatGPT, and Open WebUI over standard MCP Streamable HTTP and SSE — a session plane and an orchestrator master plane.',
+        'feat2.tag': 'Standard protocol',
+        'feat3.title': 'Real-time job progress & abort',
+        'feat3.body': 'Stream the active tool, elapsed time, and partial output of any long-running job — and abort a runaway task with a single call. New in v2.2.',
+        'feat3.tag': 'Live supervision',
+        'feat4.title': 'HMAC-signed file downloads',
+        'feat4.body': 'Self-authorizing, tamper-proof download links. External agents pull videos, builds, and datasets with plain curl — no more 401 errors. New in v2.2.',
+        'feat4.tag': 'Signed tickets',
+        'feat5.title': 'Multi-agent sender attribution',
+        'feat5.body': 'External agents tag their dispatches with a sender name, and dispatched jobs appear instantly in the session web chat — no waiting for completion. New in v2.2.',
+        'feat5.tag': 'Swarm coordination',
+        'feat6.title': 'Unlimited session forking',
+        'feat6.body': 'Fork any session at any point to try a new idea without touching the original — with a hierarchical tree view showing every branch of every project.',
+        'feat6.tag': 'Branching',
+        'feat7.title': 'Live terminal in the browser',
+        'feat7.body': 'A real Bash session in the browser, confined to the session sandbox, with full bidirectional text support — including Arabic.',
+        'feat7.tag': 'Web terminal',
+        'feat8.title': 'Interactive media preview',
+        'feat8.body': 'Images, videos, audio, PDFs, and code the agent creates become interactive previews in chat — long-press to download instantly.',
+        'feat8.tag': 'Rich chat',
+        'feat9.title': 'Setup wizard & key sensing',
+        'feat9.body': 'On first launch, VibzCode probes for your AI keys and guides you through a secure setup. Keys are written with strict 0o600 file permissions.',
+        'feat9.tag': 'Zero-friction start',
+        'feat10.title': 'JavaScript / TypeScript SDK',
+        'feat10.body': 'Import VibzCode into any Node.js project: askAgent, multi-engine routing, and MemoryZ context injection — programmatic agent execution in a few lines.',
+        'feat10.tag': 'For developers',
+        'memory.eyebrow': 'Headline feature',
+        'memory.title': 'Memory that follows your agents everywhere',
+        'memory.lead': 'VibzCode connects with <strong class="text-white">any memory system</strong> — and is <strong class="text-white">natively compatible with MemoryZ</strong>, the sovereign live-memory substrate built for agents that must never forget.',
+        'memory.sub': 'No more context amnesia. Rules, decisions, credentials, and project history survive across sessions, machines, and engines.',
+        'memory.cta': 'Learn more about MemoryZ',
+        'mem1.title': 'Shared sovereign memory substrate',
+        'mem1.body': 'MemoryZ v3 is the shared memory layer for every VibzCode session — one memory, every engine.',
+        'mem2.title': 'Semantic recall',
+        'mem2.body': 'Retrieve rules, decisions, and documentation by meaning — 768-dim vector recall, plus exact hash lookup.',
+        'mem3.title': 'Tasks & atomic claiming',
+        'mem3.body': 'Hierarchical task trees with atomic claiming coordinate multi-agent swarms — no duplicate work.',
+        'mem4.title': 'Namespace isolation',
+        'mem4.body': 'State is segregated per project — default, vibzcode, enterprise — so nothing leaks between workspaces.',
+        'mem5.title': 'Zero-knowledge encrypted vault',
+        'mem5.body': 'Credentials live in an encrypted vault — never in plain text, never in a memory. Memory-as-attachment injects stored context into session prompts transparently.',
+        'how.eyebrow': 'How it works',
+        'how.title': 'Dashboard to done in four steps',
+        'how.subtitle': 'From a single command to a supervised, memory-backed agent swarm.',
+        'step1.title': 'Open the dashboard',
+        'step1.body': 'Launch with npx vibzcode and manage every session from the web admin.',
+        'step2.title': 'Dispatch via the orchestrator',
+        'step2.body': 'Send tasks to any engine over MCP, the SDK, an endpoint, or the dashboard.',
+        'step3.title': 'Engines do the work',
+        'step3.body': 'Agents code in isolated sandboxes while you watch live progress streaming.',
+        'step4.title': 'Memory persists',
+        'step4.body': 'Everything lands in shared memory — MemoryZ or your own system — ready for the next session.',
+        'shots.eyebrow': 'Visual showcase',
+        'shots.title': 'Designed for real work',
+        'shots.subtitle': 'Real screenshots from VibzCode — the central dashboard, the fork tree, the agent console, and the workspace explorer.',
+        'shots.online': 'Online',
+        'tab.dashboard': 'Sessions dashboard', 'tab.tree': 'Fork tree',
+        'tab.chat': 'Agent chat', 'tab.workspace': 'Workspace explorer',
+        'cap.dashboard': 'Sessions dashboard — sort, pin, favorite, and control every session from one place.',
+        'cap.tree': 'Fork tree — every project and its branches, collapsible at a click.',
+        'cap.chat': 'Agent chat — live conversation with interactive media previews.',
+        'cap.workspace': 'Workspace explorer — browse the sandbox, download ZIP archives, preview code.',
+        'install.badge': 'Officially published on the npm registry',
+        'install.title': 'Install in seconds',
+        'install.subtitle': 'Run it instantly with no install, add it globally to your machine, or self-host it from source.',
+        'install.npxTag': 'Fastest · Recommended',
+        'install.npxTitle': 'Run instantly with NPX',
+        'install.npxBody': 'No permanent install. Probes your environment, starts the server, and opens the dashboard automatically.',
+        'install.npxFoot': 'Works on Linux, macOS, and Windows',
+        'install.globalTitle': 'Install globally',
+        'install.globalBody': 'Install once as a system command, then run it anywhere with a single word.',
+        'install.globalFoot': 'Lightweight, official npm package',
+        'install.srcTitle': 'From source & PM2',
+        'install.srcBody': 'For production servers and advanced development, with persistent process management.',
+        'install.srcFoot': 'Full control over code and services',
+        'install.note': 'The dashboard opens automatically at',
+        'flags.title': 'Command-line options',
+        'flags.port': 'Set the server port (default: 3333, or $PORT).',
+        'flags.status': 'Check AI key readiness and configuration without starting the server.',
+        'flags.noopen': 'Disable auto-opening the browser (useful on remote servers).',
+        'flags.host': 'Set the network bind host (default: 0.0.0.0).',
+        'links.comingSoon': 'Coming soon',
+        'footer.tagline': 'Sovereign, self-hosted multi-engine AI agent orchestration.',
+        'footer.built': 'Built by Ibrahim Bidi'
+      },
+      ar: {
+        'meta.title': 'VibzCode — منصة تنسيق سيادية لوكلاء الذكاء الاصطناعي متعددي المحركات',
+        'nav.tagline': 'منصة تنسيق وكلاء ذكاء اصطناعي متعددة المحركات',
+        'nav.engines': 'المحركات', 'nav.features': 'المميزات', 'nav.memory': 'الذاكرة',
+        'nav.showcase': 'لقطات الشاشة', 'nav.install': 'التثبيت', 'nav.cta': 'ابدأ الآن',
+        'hero.badge': 'حزمة رسمية على npm · رخصة MIT',
+        'hero.title1': 'تنسيق سيادي ومستضاف ذاتياً',
+        'hero.title2': 'لوكلاء البرمجة الأذكياء',
+        'hero.subtitle': 'VibzCode منصة تنسيق ومساحات عمل لوكلاء الذكاء الاصطناعي متعددة المحركات. كوّن واعزل وأرسل وأشرف على جلسات الوكلاء المستقلة عبر خمسة محركات ذكاء اصطناعي — بأمر واحد، على جهازك الخاص.',
+        'hero.installNote': 'أمر واحد للتشغيل',
+        'hero.cta1': 'شاهدها تعمل', 'hero.cta2': 'استكشف المميزات',
+        'common.copy': 'نسخ', 'common.copied': 'تم النسخ!',
+        'stats.engines': 'محركات ذكاء اصطناعي، جسر واحد', 'stats.mcp': 'أداة MCP عن بُعد',
+        'stats.sandbox': 'عزل كامل للساندبوكس', 'stats.command': 'أمر واحد للبدء',
+        'engines.eyebrow': 'بنية متعددة المحركات',
+        'engines.title': 'خمسة محركات. جسر أوامر واحد.',
+        'engines.subtitle': 'أسند المشاريع والمهام المختلفة إلى المحرك المتخصص الأنسب — ولكل محرك حدود صلاحياته الخاصة.',
+        'engines.agy': 'برمجة وكيلة مع فرض الساندبوكس وتحديد نطاق المجلدات.',
+        'engines.claude': 'إعادة هيكلة معمارية عميقة، أتمتة Bash، وطرفية أصلية.',
+        'engines.codex': 'تحقق مستقل، اختبارات وحدة، وتوليد سكربتات.',
+        'engines.vibe': 'معالجة توليدية لمساحة العمل وبرمجة خفيفة وسريعة.',
+        'engines.opencode': 'محرك مفتوح المصدر متعدد النماذج مع موافقات تلقائية.',
+        'features.eyebrow': 'مجموعة قدرات كاملة',
+        'features.title': 'كل ما تحتاجه لتشغيل الوكلاء على نطاق واسع',
+        'features.subtitle': 'عشر قدرات في منصة واحدة — صُممت للفرق التي تشغّل وكلاء مستقلين في الإنتاج.',
+        'feat1.title': 'عزل ساندبوكس لكل جلسة',
+        'feat1.body': 'كل جلسة تحصل على مجلد معزول ورمز وصول خاص بها. لا يمكن لأي وكيل تجاوز مساحة عمله دون إذن صريح من المدير.',
+        'feat1.tag': 'أمان مساحات العمل',
+        'feat2.title': 'MCP عن بُعد ثنائي المستوى — +35 أداة',
+        'feat2.body': 'اعرض الوكلاء والملفات والمهام على Claude Desktop وCursor وChatGPT وOpen WebUI عبر بروتوكول MCP القياسي (Streamable HTTP وSSE) — مستوى جلسة ومستوى منسّق رئيسي.',
+        'feat2.tag': 'بروتوكول قياسي',
+        'feat3.title': 'تقدّم المهام لحظياً والإيقاف',
+        'feat3.body': 'تابع الأداة النشطة والوقت المنقضي والمخرجات الجزئية لأي مهمة طويلة — وأوقف أي مهمة شاردة بنقرة واحدة. جديد في v2.2.',
+        'feat3.tag': 'إشراف مباشر',
+        'feat4.title': 'تنزيلات موقّعة بـ HMAC',
+        'feat4.body': 'روابط تنزيل ذاتية التفويض ومقاومة للعبث. الوكلاء الخارجيون يسحبون الفيديوهات والبناءات والبيانات بأمر curl عادي — بلا أخطاء 401. جديد في v2.2.',
+        'feat4.tag': 'تذاكر موقّعة',
+        'feat5.title': 'نسب المرسل للوكلاء المتعددين',
+        'feat5.body': 'الوكلاء الخارجيون يوسمون إرسالاتهم باسم المرسل، والمهام المُرسلة تظهر فوراً في محادثة الجلسة — دون انتظار اكتمالها. جديد في v2.2.',
+        'feat5.tag': 'تنسيق الأسراب',
+        'feat6.title': 'تفرع جلسات غير محدود',
+        'feat6.body': 'فرّع أي جلسة عند أي نقطة لتجربة فكرة جديدة دون المساس بالأصل — مع عرض شجري هرمي يوضح كل فروع كل مشروع.',
+        'feat6.tag': 'التفرع',
+        'feat7.title': 'طرفية حية في المتصفح',
+        'feat7.body': 'جلسة Bash حقيقية في المتصفح، محصورة في ساندبوكس الجلسة، مع دعم كامل للنصوص ثنائية الاتجاه — بما فيها العربية.',
+        'feat7.tag': 'طرفية ويب',
+        'feat8.title': 'معاينة وسائط تفاعلية',
+        'feat8.body': 'الصور والفيديوهات والصوتيات وملفات PDF والأكواد التي ينشئها الوكيل تتحول إلى معاينات تفاعلية في المحادثة — اضغط مطولاً للتنزيل فوراً.',
+        'feat8.tag': 'محادثة غنية',
+        'feat9.title': 'معالج إعداد واستشعار المفاتيح',
+        'feat9.body': 'عند التشغيل الأول، تستكشف VibzCode مفاتيح الذكاء الاصطناعي لديك وترشدك خلال إعداد آمن. تُكتب المفاتيح بصلاحيات ملف صارمة 0o600.',
+        'feat9.tag': 'بداية بلا احتكاك',
+        'feat10.title': 'حزمة تطوير JavaScript / TypeScript',
+        'feat10.body': 'استورد VibzCode في أي مشروع Node.js: ‏askAgent‏ وتوجيه متعدد المحركات وحقن سياق MemoryZ — تنفيذ برمجي للوكلاء في أسطر قليلة.',
+        'feat10.tag': 'للمطورين',
+        'memory.eyebrow': 'ميزة رئيسية',
+        'memory.title': 'ذاكرة تتبع وكلاءك أينما ذهبوا',
+        'memory.lead': 'تتصل VibzCode <strong class="text-white">بأي نظام ذاكرة</strong> — وهي <strong class="text-white">متوافقة أصلياً مع MemoryZ</strong>، طبقة الذاكرة الحية السيادية المصممة للوكلاء الذين يجب ألا ينسوا أبداً.',
+        'memory.sub': 'لا مزيد من فقدان السياق. القواعد والقرارات وبيانات الاعتماد وتاريخ المشاريع تبقى عبر الجلسات والأجهزة والمحركات.',
+        'memory.cta': 'تعرّف أكثر على MemoryZ',
+        'mem1.title': 'طبقة ذاكرة سيادية مشتركة',
+        'mem1.body': 'MemoryZ v3 هي طبقة الذاكرة المشتركة لكل جلسات VibzCode — ذاكرة واحدة، كل المحركات.',
+        'mem2.title': 'استرجاع دلالي',
+        'mem2.body': 'استرجع القواعد والقرارات والوثائق بالمعنى — استرجاع متجهي بـ 768 بُعداً، إضافة إلى البحث الدقيق بالبصمة.',
+        'mem3.title': 'مهام ومطالبة ذرّية',
+        'mem3.body': 'أشجار مهام هرمية بمطالبة ذرّية تنسّق أسراب الوكلاء المتعددين — بلا عمل مكرر.',
+        'mem4.title': 'عزل النطاقات',
+        'mem4.body': 'الحالة مفصولة حسب المشروع — default وvibzcode وenterprise — فلا يتسرب شيء بين مساحات العمل.',
+        'mem5.title': 'خزنة مشفّرة بمعرفة صفرية',
+        'mem5.body': 'بيانات الاعتماد تعيش في خزنة مشفّرة — أبداً كنص صريح، وأبداً داخل ذاكرة. وحقن «الذاكرة كمرفق» يضيف السياق المخزّن إلى مطالبات الجلسة بشفافية.',
+        'how.eyebrow': 'كيف تعمل',
+        'how.title': 'من لوحة التحكم إلى الإنجاز في أربع خطوات',
+        'how.subtitle': 'من أمر واحد إلى سرب وكلاء خاضع للإشراف ومدعوم بالذاكرة.',
+        'step1.title': 'افتح لوحة التحكم',
+        'step1.body': 'شغّل npx vibzcode وأدر كل الجلسات من لوحة الإدارة.',
+        'step2.title': 'أرسل عبر المنسّق',
+        'step2.body': 'أرسل المهام إلى أي محرك عبر MCP أو حزمة التطوير أو نقطة نهاية أو لوحة التحكم.',
+        'step3.title': 'المحركات تنفّذ العمل',
+        'step3.body': 'الوكلاء يبرمجون في ساندبوكسات معزولة وأنت تتابع التقدّم لحظياً.',
+        'step4.title': 'الذاكرة تستمر',
+        'step4.body': 'كل شيء يستقر في الذاكرة المشتركة — MemoryZ أو نظامك الخاص — جاهزاً للجلسة التالية.',
+        'shots.eyebrow': 'عرض بصري',
+        'shots.title': 'مصممة للعمل الحقيقي',
+        'shots.subtitle': 'لقطات حقيقية من VibzCode — لوحة التحكم المركزية، شجرة التفرع، وحدة تحكم الوكيل، ومستكشف مساحة العمل.',
+        'shots.online': 'متصل',
+        'tab.dashboard': 'لوحة الجلسات', 'tab.tree': 'شجرة التفرع',
+        'tab.chat': 'محادثة الوكيل', 'tab.workspace': 'مستكشف مساحة العمل',
+        'cap.dashboard': 'لوحة الجلسات — رتّب وثبّت وفضّل وتحكّم في كل جلسة من مكان واحد.',
+        'cap.tree': 'شجرة التفرع — كل مشروع وفروعه، قابلة للطي والتوسيع بنقرة.',
+        'cap.chat': 'محادثة الوكيل — حوار مباشر مع معاينات وسائط تفاعلية.',
+        'cap.workspace': 'مستكشف مساحة العمل — تصفّح الساندبوكس، نزّل أرشيفات ZIP، وعاين الأكواد.',
+        'install.badge': 'منشورة رسمياً في سجل حزم npm',
+        'install.title': 'التثبيت في ثوانٍ',
+        'install.subtitle': 'شغّلها فوراً دون تثبيت، أو أضفها عالمياً إلى جهازك، أو استضفها بنفسك من المصدر.',
+        'install.npxTag': 'الأسرع · موصى به',
+        'install.npxTitle': 'تشغيل فوري عبر NPX',
+        'install.npxBody': 'بلا تثبيت دائم. يستكشف بيئتك، يشغّل الخادم، ويفتح لوحة التحكم تلقائياً.',
+        'install.npxFoot': 'يعمل على Linux وmacOS وWindows',
+        'install.globalTitle': 'تثبيت عام',
+        'install.globalBody': 'ثبّتها مرة واحدة كأمر نظام، ثم شغّلها في أي مكان بكلمة واحدة.',
+        'install.globalFoot': 'حزمة npm رسمية وخفيفة',
+        'install.srcTitle': 'من المصدر و PM2',
+        'install.srcBody': 'لخوادم الإنتاج والتطوير المتقدم، مع إدارة عمليات مستمرة.',
+        'install.srcFoot': 'تحكم كامل بالكود والخدمات',
+        'install.note': 'لوحة التحكم تفتح تلقائياً على',
+        'flags.title': 'خيارات سطر الأوامر',
+        'flags.port': 'تحديد منفذ الخادم (الافتراضي: 3333، أو ‎$PORT).',
+        'flags.status': 'فحص جاهزية مفاتيح الذكاء الاصطناعي وإعداداتها دون تشغيل الخادم.',
+        'flags.noopen': 'تعطيل الفتح التلقائي للمتصفح (مفيد على الخوادم البعيدة).',
+        'flags.host': 'تحديد مضيف الربط الشبكي (الافتراضي: 0.0.0.0).',
+        'links.comingSoon': 'قريباً',
+        'footer.tagline': 'تنسيق سيادي ومستضاف ذاتياً لوكلاء الذكاء الاصطناعي متعددي المحركات.',
+        'footer.built': 'بناء إبراهيم بيدي'
+      }
+    };
+
+    let currentLang = 'en';
+
+    function setLang(lang) {
+      if (!I18N[lang]) lang = 'en';
+      currentLang = lang;
+      const dict = I18N[lang];
+      document.querySelectorAll('[data-i18n]').forEach((el) => {
+        const key = el.getAttribute('data-i18n');
+        if (dict[key] !== undefined) el.innerHTML = dict[key];
+      });
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      document.title = dict['meta.title'] || document.title;
+      try { localStorage.setItem('vibzcode-lang', lang); } catch (e) { /* private mode */ }
+      // Toggle button states
+      const btnEn = document.getElementById('lang-en');
+      const btnAr = document.getElementById('lang-ar');
+      if (btnEn && btnAr) {
+        const active = 'bg-cyan-500 text-slate-950';
+        const inactive = 'text-slate-300 hover:text-white';
+        btnEn.className = 'lang-btn px-3 rounded-full text-sm font-bold transition-colors ' + (lang === 'en' ? active : inactive);
+        btnAr.className = 'lang-btn px-3 rounded-full text-sm font-bold transition-colors ' + (lang === 'ar' ? active : inactive);
+        btnEn.setAttribute('aria-pressed', lang === 'en' ? 'true' : 'false');
+        btnAr.setAttribute('aria-pressed', lang === 'ar' ? 'true' : 'false');
+      }
+    }
+
+    function initLang() {
+      let lang = 'en';
+      try { lang = localStorage.getItem('vibzcode-lang') || ''; } catch (e) { /* ignore */ }
+      if (!lang) {
+        const nav = (navigator.language || 'en').toLowerCase();
+        lang = nav.indexOf('ar') === 0 ? 'ar' : 'en';
+      }
+      setLang(lang);
+    }
+
+    /* ---------- Mobile menu ---------- */
+    function toggleMenu(forceClose) {
+      const menu = document.getElementById('mobile-menu');
+      const btn = document.getElementById('menu-btn');
+      const open = document.getElementById('icon-open');
+      const close = document.getElementById('icon-close');
+      const isOpen = !menu.classList.contains('hidden');
+      const willOpen = forceClose === true ? false : !isOpen;
+      menu.classList.toggle('hidden', !willOpen);
+      open.classList.toggle('hidden', willOpen);
+      close.classList.toggle('hidden', !willOpen);
+      if (btn) btn.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    }
+
+    /* ---------- Hero install tabs ---------- */
     const INSTALL_COMMANDS = {
       npx: 'npx vibzcode',
       npm: 'npm install -g vibzcode',
       pnpm: 'pnpm dlx vibzcode'
     };
-
     let currentInstallTool = 'npx';
 
     function setInstallCmd(tool) {
       currentInstallTool = tool;
       const cmdText = document.getElementById('install-cmd-text');
       if (cmdText) cmdText.textContent = INSTALL_COMMANDS[tool] || 'npx vibzcode';
-
-      // Reset button styles
-      ['npx', 'npm', 'pnpm'].forEach(t => {
+      ['npx', 'npm', 'pnpm'].forEach((t) => {
         const btn = document.getElementById('btn-inst-' + t);
-        if (btn) {
-          if (t === tool) {
-            btn.className = 'px-2.5 py-1 rounded-md bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-bold transition-all';
-          } else {
-            btn.className = 'px-2.5 py-1 rounded-md hover:bg-slate-800 text-slate-400 transition-all';
-          }
+        if (!btn) return;
+        if (t === tool) {
+          btn.classList.add('install-tab-active');
+        } else {
+          btn.classList.remove('install-tab-active');
         }
       });
     }
 
     function copyInstallCmd() {
       const text = INSTALL_COMMANDS[currentInstallTool] || 'npx vibzcode';
-      navigator.clipboard.writeText(text).then(() => {
-        const copyLabel = document.getElementById('copy-label');
-        if (copyLabel) {
-          copyLabel.textContent = 'تم النسخ!';
-          setTimeout(() => { copyLabel.textContent = 'نسخ'; }, 2000);
-        }
-      });
+      copyText(text, document.getElementById('btn-copy-install'));
+      const label = document.getElementById('copy-label');
+      if (label) {
+        label.textContent = I18N[currentLang]['common.copied'] || 'Copied!';
+        setTimeout(() => { label.textContent = I18N[currentLang]['common.copy'] || 'Copy'; }, 2000);
+      }
     }
 
+    /* ---------- Generic copy ---------- */
+    function copyText(text, btn) {
+      const done = () => {
+        if (!btn) return;
+        const orig = btn.textContent;
+        btn.textContent = I18N[currentLang]['common.copied'] || 'Copied!';
+        btn.classList.add('text-cyan-400');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('text-cyan-400'); }, 2000);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+      } else {
+        fallbackCopy(text, done);
+      }
+    }
+    function fallbackCopy(text, done) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); } catch (e) { /* ignore */ }
+      document.body.removeChild(ta);
+      done();
+    }
+
+    /* ---------- Screenshot tabs ---------- */
     function switchTab(tabId) {
-      // Hide all tabs
-      document.querySelectorAll('.tab-view-content').forEach(el => {
+      document.querySelectorAll('.tab-view').forEach((el) => {
         el.classList.add('hidden');
         el.classList.remove('block');
       });
-
-      // Remove active state on buttons
-      document.querySelectorAll('#showcase button').forEach(btn => {
-        btn.classList.remove('tab-active-btn');
+      document.querySelectorAll('[id^="tab-btn-"]').forEach((btn) => {
+        btn.classList.remove('tab-active');
+        btn.setAttribute('aria-selected', 'false');
       });
-
-      // Show selected tab
-      const selectedView = document.getElementById('tab-view-' + tabId);
-      if (selectedView) {
-        selectedView.classList.remove('hidden');
-        selectedView.classList.add('block');
-      }
-
-      // Activate clicked button
-      const activeBtn = document.getElementById('tab-btn-' + tabId);
-      if (activeBtn) {
-        activeBtn.classList.add('tab-active-btn');
-      }
-
-      // Update mock URL
+      const view = document.getElementById('tab-view-' + tabId);
+      if (view) { view.classList.remove('hidden'); view.classList.add('block'); }
+      const btn = document.getElementById('tab-btn-' + tabId);
+      if (btn) { btn.classList.add('tab-active'); btn.setAttribute('aria-selected', 'true'); }
       const mockUrl = document.getElementById('mock-url');
       if (mockUrl) {
-        if (tabId === 'dashboard') mockUrl.textContent = 'https://vibzcode.local:3334/ (Grid View)';
-        else if (tabId === 'tree') mockUrl.textContent = 'https://vibzcode.local:3334/ (Forks Tree View)';
-        else if (tabId === 'chat') mockUrl.textContent = 'https://vibzcode.local:3334/agent.html?token=vibz_... (Chat)';
-        else if (tabId === 'workspace') mockUrl.textContent = 'https://vibzcode.local:3334/agent.html?token=vibz_... (Workspace)';
+        const urls = {
+          dashboard: 'https://vibzcode.local:3334/ (Grid View)',
+          tree: 'https://vibzcode.local:3334/ (Forks Tree View)',
+          chat: 'https://vibzcode.local:3334/agent.html?token=vibz_... (Chat)',
+          workspace: 'https://vibzcode.local:3334/agent.html?token=vibz_... (Workspace)'
+        };
+        mockUrl.textContent = urls[tabId] || urls.dashboard;
       }
     }
+
+    initLang();
   </script>
 
 </body>
