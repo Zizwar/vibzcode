@@ -94,7 +94,7 @@
             <i class="fa-solid fa-cubes-stacked text-2xl"></i>
           </div>
           <h2 class="text-2xl font-black tracking-tight text-white font-sans">VibzCode Platform</h2>
-          <p class="text-xs text-slate-400">بوابة الأوركسترا المركزية وتنسيق وكلاء الذكاء الاصطناعي والساندبوكس</p>
+          <p class="text-xs text-slate-400" x-text="t('adminLoginDesc')"></p>
         </div>
 
         <!-- Error Alert -->
@@ -107,7 +107,7 @@
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div class="form-control">
             <label class="label pb-1">
-              <span class="label-text text-xs font-semibold text-slate-300">اسم المستخدم (Username)</span>
+              <span class="label-text text-xs font-semibold text-slate-300" x-text="t('usernameLabel')"></span>
             </label>
             <div class="relative flex items-center">
               <input type="text" x-model="username" placeholder="admin" required
@@ -118,7 +118,7 @@
 
           <div class="form-control">
             <label class="label pb-1">
-              <span class="label-text text-xs font-semibold text-slate-300">كلمة المرور الرئيسية (Master Password)</span>
+              <span class="label-text text-xs font-semibold text-slate-300" x-text="t('masterPasswordLabel')"></span>
             </label>
             <div class="relative flex items-center">
               <input type="password" x-model="password" placeholder="••••••••" required
@@ -131,7 +131,7 @@
                   class="btn btn-primary w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white font-bold shadow-lg shadow-cyan-500/20 text-sm mt-2">
             <span x-show="authLoading" class="loading loading-spinner loading-xs"></span>
             <i x-show="!authLoading" class="fa-solid fa-shield-halved"></i>
-            <span>تسجيل الدخول كمسؤول</span>
+            <span x-text="t('loginAsAdmin')"></span>
           </button>
         </form>
 
@@ -139,9 +139,9 @@
         <div class="pt-3 border-t border-slate-800/80 flex flex-col items-center gap-2">
           <button type="button" @click="keysModalOpen = true" class="btn btn-sm btn-ghost w-full border border-slate-800 text-xs text-slate-300 hover:text-white flex items-center justify-center gap-2">
             <i class="fa-solid fa-key" :class="keysStatus?.isReady ? 'text-emerald-400' : 'text-amber-400 animate-pulse'"></i>
-            <span>إعداد مفاتيح النظام و .env (Setup Keys)</span>
+            <span x-text="t('setupKeysBtn')"></span>
             <span class="badge badge-xs font-mono text-[9px]" :class="keysStatus?.isReady ? 'bg-emerald-950 text-emerald-300 border-emerald-800/50' : 'bg-amber-950 text-amber-300 border-amber-800/50'">
-              <span x-text="keysStatus?.isReady ? 'جاهز' : 'مفاتيح ناقصة'"></span>
+              <span x-text="keysStatus?.isReady ? (currentLang === 'ar' ? 'جاهز' : 'Ready') : (currentLang === 'ar' ? 'مفاتيح ناقصة' : 'Keys Missing')"></span>
             </span>
           </button>
           <span class="text-[11px] text-slate-500 font-mono">VibzCode Sovereign Orchestrator v2.0</span>
@@ -171,9 +171,9 @@
         </button>
 
         <!-- Master Orchestrator Quick Toggle Button -->
-        <button @click="toggleMasterBar()" class="btn btn-sm bg-gradient-to-r from-amber-500/20 to-purple-600/20 hover:from-amber-500/30 hover:to-purple-600/30 border border-amber-500/40 text-amber-300 shadow-md shadow-amber-500/10 gap-1.5 px-3 tooltip tooltip-bottom" data-tip="الوكيل العام السيادي (Ctrl+K)">
+        <button @click="toggleMasterBar()" class="btn btn-sm bg-gradient-to-r from-amber-500/20 to-purple-600/20 hover:from-amber-500/30 hover:to-purple-600/30 border border-amber-500/40 text-amber-300 shadow-md shadow-amber-500/10 gap-1.5 px-3 tooltip tooltip-bottom" :data-tip="t('masterAgentTip')">
           <i class="fa-solid fa-crown text-xs text-amber-400"></i>
-          <span class="text-xs font-bold hidden sm:inline">الوكيل العام</span>
+          <span class="text-xs font-bold hidden sm:inline" x-text="t('masterAgentTitle')">الوكيل العام</span>
           <kbd class="kbd kbd-xs bg-slate-950/80 text-amber-300/90 border-amber-500/30 hidden md:inline-flex font-mono text-[10px]">Ctrl+K</kbd>
         </button>
 
@@ -234,12 +234,12 @@
               <!-- Close button right at top-right of the drawer -->
               <button @click="showSideDrawer = false" 
                       class="btn btn-sm btn-circle bg-slate-800 hover:bg-rose-950/80 border border-slate-700 hover:border-rose-500/50 text-slate-300 hover:text-rose-400 shadow transition-all"
-                      title="إغلاق القائمة">
+                      :title="t('closeMenu')">
                 <i class="fa-solid fa-xmark text-base"></i>
               </button>
               <div>
                 <h3 class="font-extrabold text-sm text-white font-sans flex items-center gap-2">
-                  <span>لوحة الإعدادات</span>
+                  <span x-text="t('settingsPanel')"></span>
                   <span class="badge badge-xs bg-cyan-950 text-cyan-400 border-cyan-800/40">BigMac</span>
                 </h3>
                 <p class="text-[10px] text-slate-400 font-mono">VibzCode Sovereign OS</p>
@@ -249,7 +249,7 @@
             <!-- Additional text button to close on the left as well -->
             <button @click="showSideDrawer = false" 
                     class="btn btn-xs btn-ghost text-slate-400 hover:text-white border border-slate-800 hover:border-slate-700 px-2 py-0.5 text-[11px] gap-1">
-              <span>إغلاق</span>
+              <span x-text="t('close')"></span>
               <i class="fa-solid fa-xmark text-[10px]"></i>
             </button>
           </div>
@@ -257,7 +257,22 @@
           <!-- Drawer Menu Body -->
           <div class="flex-1 overflow-y-auto p-4 space-y-3 no-scrollbar text-xs">
             
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2">الأدوات والمحركات</div>
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2" x-text="t('toolsAndEngines')"></div>
+
+            <!-- Item: Agent Skill Guide -->
+            <a href="/vibzcode.skill.md" target="_blank"
+               class="w-full flex items-center justify-between p-3 rounded-xl bg-amber-950/40 hover:bg-amber-900/60 border border-amber-600/30 hover:border-amber-500/50 transition-all text-right group">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shrink-0">
+                  <i class="fa-solid fa-book-sparkles text-xs"></i>
+                </div>
+                <div>
+                  <div class="font-bold text-amber-200 group-hover:text-white" x-text="t('agentSkillTitle')">دليل مهارة الوكيل (Agent Skill)</div>
+                  <div class="text-[10px] text-amber-300/70" x-text="t('agentSkillDesc')">تعليمات وقدرات الوكلاء ونماذج الذكاء الاصطناعي</div>
+                </div>
+              </div>
+              <span class="badge badge-xs bg-amber-950 text-amber-300 border-amber-600/50 text-[9px] py-1 px-1.5" x-text="t('skillBadge')">Skill.md</span>
+            </a>
 
             <!-- Item 1: System Keys & .env -->
             <button @click="showSideDrawer = false; keysModalOpen = true;"
@@ -267,13 +282,13 @@
                   <i class="fa-solid fa-key text-xs"></i>
                 </div>
                 <div>
-                  <div class="font-bold text-slate-200 group-hover:text-white">مفاتيح النظام والبيئة (.env)</div>
-                  <div class="text-[10px] text-slate-400">ضبط مفاتيح Gemini، MemoryZ، والتشفير</div>
+                  <div class="font-bold text-slate-200 group-hover:text-white" x-text="t('systemKeys')"></div>
+                  <div class="text-[10px] text-slate-400" x-text="t('systemKeysDesc')"></div>
                 </div>
               </div>
               <span class="badge badge-xs text-[9px] py-1 px-1.5 shrink-0"
                     :class="keysStatus?.isReady ? 'bg-emerald-950 text-emerald-300 border-emerald-500/30' : 'bg-amber-950 text-amber-300 border-amber-500/30 animate-pulse'"
-                    x-text="keysStatus?.isReady ? 'جاهز' : 'تنبيه'"></span>
+                    x-text="keysStatus?.isReady ? (currentLang === 'ar' ? 'جاهز' : 'Ready') : (currentLang === 'ar' ? 'تنبيه' : 'Alert')"></span>
             </button>
 
             <!-- Item 2: Jev AI Toggle & Engine -->
@@ -285,16 +300,16 @@
                     <i class="fa-solid fa-bolt-lightning"></i>
                   </div>
                   <div>
-                    <div class="font-bold text-slate-200">محرك Jev AI الذكي</div>
-                    <div class="text-[10px] text-slate-400">فرز المهام والذاكرة وتقييم المهارات</div>
+                    <div class="font-bold text-slate-200" x-text="t('jevAi')"></div>
+                    <div class="text-[10px] text-slate-400" x-text="t('jevAiDesc')"></div>
                   </div>
                 </div>
                 <input type="checkbox" :checked="jevEnabled" @change="toggleJevAI()" class="toggle toggle-warning toggle-sm">
               </div>
               <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
-                <span class="text-slate-400">حالة الاستهلاك:</span>
+                <span class="text-slate-400" x-text="t('consumptionStatus')"></span>
                 <span class="font-mono font-semibold" :class="jevEnabled ? 'text-amber-400' : 'text-slate-400'"
-                      x-text="jevEnabled ? 'مفعّل (يستهلك توكنز)' : 'معطّل (حفظ الرصيد)'"></span>
+                      x-text="jevEnabled ? t('jevActive') : t('jevDisabled')"></span>
               </div>
             </div>
 
@@ -306,8 +321,8 @@
                   <i class="fa-solid fa-plug text-xs"></i>
                 </div>
                 <div>
-                  <div class="font-bold text-slate-200 group-hover:text-white">خادم الأوركسترا (Orchestrator MCP)</div>
-                  <div class="text-[10px] text-slate-400">ربط الوكلاء بالذكاء الخارجي والأدوات</div>
+                  <div class="font-bold text-slate-200 group-hover:text-white" x-text="t('orchestratorMcp')"></div>
+                  <div class="text-[10px] text-slate-400" x-text="t('orchestratorMcpDesc')"></div>
                 </div>
               </div>
               <i class="fa-solid fa-chevron-left text-slate-500 text-xs group-hover:text-slate-300"></i>
@@ -321,31 +336,31 @@
                   <i class="fa-brands fa-telegram text-sm"></i>
                 </div>
                 <div>
-                  <div class="font-bold text-slate-200 group-hover:text-white">قنوات التواصل (Telegram & Bots)</div>
-                  <div class="text-[10px] text-slate-400">إدارة البوتات وتفعيل استقبال الرسائل والملفات</div>
+                  <div class="font-bold text-slate-200 group-hover:text-white" x-text="t('telegramBots')"></div>
+                  <div class="text-[10px] text-slate-400" x-text="t('telegramBotsDesc')"></div>
                 </div>
               </div>
-              <span class="badge badge-xs bg-sky-950 text-sky-300 border-sky-700/50 text-[9px] py-1 px-1.5" x-text="telegramConfigs.length + ' بوت'"></span>
+              <span class="badge badge-xs bg-sky-950 text-sky-300 border-sky-700/50 text-[9px] py-1 px-1.5" x-text="telegramConfigs.length + ' ' + (currentLang === 'ar' ? 'بوت' : 'bots')"></span>
             </button>
 
             <!-- Item 4: Refresh Sessions Data -->
-            <button @click="loadSessions(); showToast('تم تحديث بيانات الجلسات بنجاح', 'success');"
+            <button @click="loadSessions(); showToast(t('reloadSessionsSuccess'), 'success');"
                     class="w-full flex items-center justify-between p-3 rounded-xl bg-slate-950/70 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 transition-all text-right group">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
                   <i class="fa-solid fa-arrows-rotate text-xs" :class="loadingSessions ? 'animate-spin' : ''"></i>
                 </div>
                 <div>
-                  <div class="font-bold text-slate-200 group-hover:text-white">تحديث ومزامنة البيانات</div>
-                  <div class="text-[10px] text-slate-400">إعادة تحميل الجلسات والعمليات النشطة</div>
+                  <div class="font-bold text-slate-200 group-hover:text-white" x-text="t('reloadSessions')"></div>
+                  <div class="text-[10px] text-slate-400" x-text="t('reloadSessionsTip')"></div>
                 </div>
               </div>
-              <span class="badge badge-neutral badge-xs font-mono text-[9px]" x-text="sessions.length + ' جلسة'"></span>
+              <span class="badge badge-neutral badge-xs font-mono text-[9px]" x-text="sessions.length + ' ' + t('sessionCountSuffix')"></span>
             </button>
 
             <div class="h-px bg-slate-800/80 my-2"></div>
 
-            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2">المظهر والتحكم</div>
+            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider px-2" x-text="t('appearanceAndControl')"></div>
 
             <!-- Item: Language Switcher -->
             <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/70 border border-slate-800">
@@ -370,12 +385,12 @@
                   <i class="fa-solid" :class="theme === 'dark' ? 'fa-moon text-indigo-400' : 'fa-sun text-amber-400'"></i>
                 </div>
                 <div>
-                  <div class="font-bold text-slate-200">وضع المظهر (Theme)</div>
-                  <div class="text-[10px] text-slate-400" x-text="theme === 'dark' ? 'الوضع الليلي (Dark Mode)' : 'الوضع النهاري (Light Mode)'"></div>
+                  <div class="font-bold text-slate-200" x-text="t('themeMode')"></div>
+                  <div class="text-[10px] text-slate-400" x-text="theme === 'dark' ? t('themeModeDarkDesc') : t('themeModeLightDesc')"></div>
                 </div>
               </div>
               <button @click="toggleTheme()" class="btn btn-xs btn-outline btn-neutral gap-1">
-                <span x-text="theme === 'dark' ? 'نهاري' : 'ليلي'"></span>
+                <span x-text="theme === 'dark' ? t('themeBtnLight') : t('themeBtnDark')"></span>
               </button>
             </div>
 
@@ -386,7 +401,7 @@
             <button @click="handleLogout()"
                     class="btn btn-sm w-full bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 text-rose-300 hover:text-white flex items-center justify-center gap-2 text-xs">
               <i class="fa-solid fa-right-from-bracket"></i>
-              <span>تسجيل الخروج من لوحة التحكم</span>
+              <span x-text="t('logout')"></span>
             </button>
             <div class="text-[10px] text-center text-slate-500 font-mono">
               VibzCode Sovereign Agent OS v2.4
@@ -408,7 +423,7 @@
             <i class="fa-solid fa-users-gear"></i>
           </div>
           <div>
-            <div class="text-xs text-slate-400">إجمالي الجلسات</div>
+            <div class="text-xs text-slate-400" x-text="t('totalSessions')"></div>
             <div class="text-2xl font-black text-white font-mono" x-text="sessions.length"></div>
           </div>
         </div>
@@ -418,7 +433,7 @@
             <i class="fa-solid fa-circle-play"></i>
           </div>
           <div>
-            <div class="text-xs text-slate-400">الجلسات النشطة</div>
+            <div class="text-xs text-slate-400" x-text="t('active')"></div>
             <div class="text-2xl font-black text-emerald-400 font-mono" x-text="sessions.filter(s => s.status === 'active').length"></div>
           </div>
         </div>
@@ -428,7 +443,7 @@
             <i class="fa-solid fa-shield-halved"></i>
           </div>
           <div>
-            <div class="text-xs text-slate-400">الساندبوكس المفعّل</div>
+            <div class="text-xs text-slate-400" x-text="t('sandboxTitle')"></div>
             <div class="text-2xl font-black text-blue-400 font-mono" x-text="sessions.filter(s => s.sandbox).length"></div>
           </div>
         </div>
@@ -438,7 +453,7 @@
             <i class="fa-solid fa-comments"></i>
           </div>
           <div>
-            <div class="text-xs text-slate-400">إجمالي الأوامر المنفذة</div>
+            <div class="text-xs text-slate-400" x-text="t('promptsCount')"></div>
             <div class="text-2xl font-black text-purple-400 font-mono" x-text="sessions.reduce((acc, s) => acc + (s.stats?.messagesCount || 0), 0)"></div>
           </div>
         </div>
@@ -450,15 +465,15 @@
         <div>
           <h2 class="text-lg font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-list-check text-cyan-400"></i>
-            <span>جلسات الوكلاء والمشاريع المخصصة</span>
+            <span x-text="currentLang === 'ar' ? 'جلسات الوكلاء والمشاريع المخصصة' : 'Agent Sessions & Workspaces'"></span>
           </h2>
-          <p class="text-xs text-slate-400">إدارة الجلسات المعزولة، التفرعات (Forks)، وفرز المشاريع حسب النشاط والمفضلة</p>
+          <p class="text-xs text-slate-400" x-text="currentLang === 'ar' ? 'إدارة الجلسات المعزولة، التفرعات (Forks)، وفرز المشاريع حسب النشاط والمفضلة' : 'Manage isolated sessions, forks, and filter projects by activity & favorites'"></p>
         </div>
 
         <div class="flex items-center gap-2">
           <button @click="showCreateModal = true" class="btn btn-sm bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white border-none shadow-md shadow-cyan-600/20 text-xs px-3.5 gap-1.5">
             <i class="fa-solid fa-plus text-xs"></i>
-            <span>إنشاء جلسة جديدة</span>
+            <span x-text="t('newSession')"></span>
           </button>
         </div>
       </div>
@@ -473,35 +488,35 @@
             <button @click="setTypeFilter('all')" class="btn btn-xs rounded-lg transition-all"
                     :class="typeFilter === 'all' ? 'btn-primary bg-cyan-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
               <i class="fa-solid fa-layer-group text-[10px]"></i>
-              <span>الكل</span>
+              <span x-text="t('all')"></span>
               <span class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'all' ? 'bg-cyan-800 text-cyan-100' : 'badge-ghost text-slate-400'" x-text="sessions.length"></span>
             </button>
 
             <button @click="setTypeFilter('favorites')" class="btn btn-xs rounded-lg transition-all"
                     :class="typeFilter === 'favorites' ? 'btn-warning bg-amber-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
               <i class="fa-solid fa-star text-[10px] text-amber-400"></i>
-              <span>المفضلة</span>
+              <span x-text="t('favorites')"></span>
               <span x-show="favoritesCount > 0" class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'favorites' ? 'bg-amber-800 text-amber-100' : 'bg-amber-950 text-amber-400 border border-amber-800/40'" x-text="favoritesCount"></span>
             </button>
 
             <button @click="setTypeFilter('pinned')" class="btn btn-xs rounded-lg transition-all"
                     :class="typeFilter === 'pinned' ? 'btn-info bg-blue-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
               <i class="fa-solid fa-thumbtack text-[10px] text-cyan-400 rotate-45"></i>
-              <span>المثبتة</span>
+              <span x-text="t('pinned')"></span>
               <span x-show="pinnedCount > 0" class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'pinned' ? 'bg-blue-800 text-blue-100' : 'bg-cyan-950 text-cyan-400 border border-cyan-800/40'" x-text="pinnedCount"></span>
             </button>
 
             <button @click="setTypeFilter('roots')" class="btn btn-xs rounded-lg transition-all"
                     :class="typeFilter === 'roots' ? 'btn-neutral bg-slate-800 text-cyan-300 border border-cyan-500/30' : 'btn-ghost text-slate-400 hover:text-white'">
               <i class="fa-solid fa-cube text-[10px]"></i>
-              <span>الأصلية (الجذور)</span>
+              <span x-text="t('roots')"></span>
               <span class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'roots' ? 'bg-slate-700 text-cyan-200' : 'badge-ghost text-slate-400'" x-text="rootsCount"></span>
             </button>
 
             <button @click="setTypeFilter('forks')" class="btn btn-xs rounded-lg transition-all"
-                    :class="typeFilter === 'forks' ? 'bg-purple-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
+                    :class="typeFilter === 'forks' ? 'btn-purple bg-purple-600 text-white border-none shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'">
               <i class="fa-solid fa-code-fork text-[10px] text-purple-400"></i>
-              <span>التفرعات (Forks)</span>
+              <span x-text="t('forks')"></span>
               <span x-show="forksCount > 0" class="badge badge-xs font-mono ml-0.5" :class="typeFilter === 'forks' ? 'bg-purple-800 text-purple-100' : 'bg-purple-950 text-purple-300 border border-purple-800/40'" x-text="forksCount"></span>
             </button>
           </div>
@@ -510,15 +525,15 @@
           <div class="join border border-slate-800 bg-slate-950/80 p-0.5 rounded-xl">
             <button @click="setViewMode('grid')" class="btn btn-xs join-item border-none gap-1.5 transition-all"
                     :class="viewMode === 'grid' ? 'bg-cyan-600 text-white shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'"
-                    title="عرض عادي (شبكة بطاقات)">
+                    :title="t('gridView')">
               <i class="fa-solid fa-table-cells text-xs"></i>
-              <span>عرض شبكي</span>
+              <span x-text="t('gridView')"></span>
             </button>
             <button @click="setViewMode('tree')" class="btn btn-xs join-item border-none gap-1.5 transition-all"
                     :class="viewMode === 'tree' ? 'bg-purple-600 text-white shadow-sm' : 'btn-ghost text-slate-400 hover:text-white'"
-                    title="عرض شجرة التفرع (كل مشروع رئيسي وأسفله تفرعاته)">
+                    :title="t('treeView')">
               <i class="fa-solid fa-sitemap text-xs"></i>
-              <span>شجرة التفرع (Tree)</span>
+              <span x-text="t('treeView')"></span>
             </button>
           </div>
 
@@ -530,7 +545,7 @@
           <div class="flex items-center gap-2 flex-wrap flex-1">
             <!-- Search Input -->
             <div class="relative min-w-[210px] flex-1 max-w-xs">
-              <input type="text" x-model="searchQuery" placeholder="بحث بالاسم، المسار، العضو..."
+              <input type="text" x-model="searchQuery" :placeholder="t('searchSessions')"
                      class="input input-xs input-bordered bg-slate-950 border-slate-800 text-slate-200 w-full pl-7 pr-7 focus:border-cyan-500 rounded-lg">
               <i class="fa-solid fa-magnifying-glass absolute left-2 top-2 text-slate-500 text-[10px]"></i>
               <button x-show="searchQuery" @click="searchQuery = ''" class="absolute right-2 top-1.5 text-slate-500 hover:text-white text-xs">✕</button>
@@ -539,14 +554,14 @@
             <!-- Sort Dropdown -->
             <div class="flex items-center gap-1 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-0.5">
               <i class="fa-solid fa-arrow-down-wide-short text-slate-400 text-xs"></i>
-              <span class="text-[11px] text-slate-400 shrink-0">ترتيب:</span>
+              <span class="text-[11px] text-slate-400 shrink-0" x-text="t('sortBy')"></span>
               <select :value="sortBy" @change="setSort($event.target.value)" class="select select-ghost select-xs bg-transparent text-slate-200 text-xs focus:bg-slate-900 border-none font-medium pr-1">
-                <option value="createdAt_desc" class="bg-slate-900">📅 الأحدث إنشاءً</option>
-                <option value="createdAt_asc" class="bg-slate-900">📅 الأقدم إنشاءً</option>
-                <option value="lastActive_desc" class="bg-slate-900">⚡ الأنشط مؤخراً</option>
-                <option value="lastActive_asc" class="bg-slate-900">⏳ الأقل نشاطاً</option>
-                <option value="messages_desc" class="bg-slate-900">💬 الأكثر أوامر ورسائل</option>
-                <option value="name_asc" class="bg-slate-900">🔤 الاسم (أ - ي)</option>
+                <option value="createdAt_desc" class="bg-slate-900" x-text="'📅 ' + t('sortLatest')"></option>
+                <option value="createdAt_asc" class="bg-slate-900" x-text="'📅 ' + t('sortOldest')"></option>
+                <option value="lastActive_desc" class="bg-slate-900" x-text="currentLang === 'ar' ? '⚡ الأنشط مؤخراً' : '⚡ Most Active'"></option>
+                <option value="lastActive_asc" class="bg-slate-900" x-text="currentLang === 'ar' ? '⏳ الأقل نشاطاً' : '⏳ Least Active'"></option>
+                <option value="messages_desc" class="bg-slate-900" x-text="currentLang === 'ar' ? '💬 الأكثر أوامر ورسائل' : '💬 Most Messages'"></option>
+                <option value="name_asc" class="bg-slate-900" x-text="'🔤 ' + t('sortName')"></option>
               </select>
             </div>
 
@@ -554,9 +569,9 @@
             <div class="flex items-center gap-1 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-0.5">
               <i class="fa-solid fa-circle-dot text-slate-400 text-xs"></i>
               <select x-model="statusFilter" class="select select-ghost select-xs bg-transparent text-slate-200 text-xs focus:bg-slate-900 border-none font-medium pr-1">
-                <option value="all" class="bg-slate-900">الحالة: الكل</option>
-                <option value="active" class="bg-slate-900">🟢 نشط فقط</option>
-                <option value="paused" class="bg-slate-900">🟡 موقوف مؤقتاً</option>
+                <option value="all" class="bg-slate-900" x-text="t('allStatus')"></option>
+                <option value="active" class="bg-slate-900" x-text="'🟢 ' + t('active')"></option>
+                <option value="paused" class="bg-slate-900" x-text="'🟡 ' + t('paused')"></option>
               </select>
             </div>
 
@@ -564,7 +579,7 @@
             <div class="flex items-center gap-1 bg-slate-950/70 border border-slate-800 rounded-lg px-2 py-0.5">
               <i class="fa-solid fa-microchip text-slate-400 text-xs"></i>
               <select x-model="engineFilter" class="select select-ghost select-xs bg-transparent text-slate-200 text-xs focus:bg-slate-900 border-none font-medium pr-1">
-                <option value="all" class="bg-slate-900">المحرك: الكل</option>
+                <option value="all" class="bg-slate-900" x-text="t('allEngines')"></option>
                 <option value="agy" class="bg-slate-900">AGY Engine</option>
                 <option value="claude" class="bg-slate-900">Claude Code</option>
                 <option value="codex" class="bg-slate-900">Codex</option>
@@ -576,9 +591,9 @@
 
           <!-- Matching Sessions Counter -->
           <div class="text-slate-400 text-[11px] font-mono flex items-center gap-1 shrink-0">
-            <span>عرض:</span>
+            <span x-text="t('viewPrefix')">عرض:</span>
             <span class="text-cyan-400 font-bold" x-text="filteredSessions.length"></span>
-            <span>من أصل</span>
+            <span x-text="t('viewOf')">من أصل</span>
             <span class="text-slate-300 font-bold" x-text="sessions.length"></span>
           </div>
 
@@ -602,27 +617,27 @@
                     <!-- Pinned Badge -->
                     <span x-show="sess.isPinned" class="badge bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 text-[10px] font-semibold py-0.5 px-2 gap-1 shadow-sm">
                       <i class="fa-solid fa-thumbtack text-[8px] rotate-45 text-cyan-400"></i>
-                      <span>مثبتة</span>
+                      <span x-text="t('pinned')"></span>
                     </span>
 
                     <!-- Favorite Badge -->
                     <span x-show="sess.isFavorite" class="badge bg-amber-950/90 text-amber-300 border border-amber-500/50 text-[10px] font-semibold py-0.5 px-2 gap-1 shadow-sm">
                       <i class="fa-solid fa-star text-[8px] text-amber-400"></i>
-                      <span>مفضلة</span>
+                      <span x-text="t('favorites')"></span>
                     </span>
 
                     <!-- Forked Session Badge -->
                     <span x-show="sess.forkedFrom || sess.parentId" class="badge bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] font-semibold py-0.5 px-2 gap-1 tooltip tooltip-bottom"
-                          :data-tip="'جلسة متفرعة من: ' + (sess.forkedFrom?.sessionName || '')">
+                          :data-tip="t('forkedFromLabel') + ' ' + (sess.forkedFrom?.sessionName || '')">
                       <i class="fa-solid fa-code-fork text-[9px] text-purple-400"></i>
-                      <span>فرع</span>
+                      <span x-text="t('branchBadge')"></span>
                     </span>
 
                     <!-- Direct Descendant Forks Count Badge -->
                     <span x-show="getForksCount(sess.id) > 0" class="badge bg-indigo-950/80 text-indigo-300 border border-indigo-500/40 text-[10px] font-mono py-0.5 px-1.5 gap-1 tooltip tooltip-bottom"
-                          :data-tip="getForksCount(sess.id) + ' جلسة متفرعة من هذا المشروع'">
+                          :data-tip="getForksCount(sess.id) + ' ' + t('branchesBadge')">
                       <i class="fa-solid fa-sitemap text-[8px] text-indigo-400"></i>
-                      <span x-text="getForksCount(sess.id) + ' فروع'"></span>
+                      <span x-text="getForksCount(sess.id) + ' ' + t('branchesBadge')"></span>
                     </span>
 
                     <!-- Status Badge -->
@@ -632,54 +647,54 @@
                             'badge-warning bg-amber-950 border-amber-500/40 text-amber-400': sess.status === 'paused',
                             'badge-error bg-rose-950 border-rose-500/40 text-rose-400': sess.status === 'closed'
                           }"
-                          x-text="sess.status === 'active' ? 'نشط' : (sess.status === 'paused' ? 'موقوف مؤقتاً' : 'مغلق')">
+                          x-text="sess.status === 'active' ? t('active') : (sess.status === 'paused' ? t('paused') : t('close'))">
                     </span>
                   </div>
                 </div>
 
                 <!-- 3-Dots Dropdown Action Menu (Replaces crowded icons) -->
                 <div class="dropdown dropdown-end shrink-0">
-                  <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" title="خيارات وإجراءات الجلسة">
+                  <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" :title="t('actions')">
                     <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                   </button>
                   <ul tabindex="0" class="dropdown-content z-[30] menu p-1.5 shadow-2xl bg-slate-950 border border-slate-800 rounded-xl w-48 text-xs space-y-0.5 text-slate-200">
                     <li>
                       <button @click="toggleFavorite(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800">
                         <i :class="sess.isFavorite ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-400'" class="w-4 text-center"></i>
-                        <span x-text="sess.isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'"></span>
+                        <span x-text="sess.isFavorite ? (currentLang === 'ar' ? 'إزالة من المفضلة' : 'Remove Favorite') : (currentLang === 'ar' ? 'إضافة إلى المفضلة' : 'Add to Favorites')"></span>
                       </button>
                     </li>
                     <li>
                       <button @click="togglePin(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800">
                         <i class="fa-solid fa-thumbtack w-4 text-center" :class="sess.isPinned ? 'rotate-45 text-cyan-400' : 'text-slate-400'"></i>
-                        <span x-text="sess.isPinned ? 'إلغاء التثبيت' : 'تثبيت في المقدمة'"></span>
+                        <span x-text="sess.isPinned ? (currentLang === 'ar' ? 'إلغاء التثبيت' : 'Unpin') : (currentLang === 'ar' ? 'تثبيت في المقدمة' : 'Pin to Top')"></span>
                       </button>
                     </li>
                     <li>
                       <button @click="toggleSessionStatus(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800"
                               :class="sess.status === 'active' ? 'text-amber-400' : 'text-emerald-400'">
                         <i :class="sess.status === 'active' ? 'fa-solid fa-pause' : 'fa-solid fa-play'" class="w-4 text-center"></i>
-                        <span x-text="sess.status === 'active' ? 'إيقاف الجلسة مؤقتاً' : 'تنشيط الجلسة'"></span>
+                        <span x-text="sess.status === 'active' ? (currentLang === 'ar' ? 'إيقاف مؤقت' : 'Pause Session') : (currentLang === 'ar' ? 'استئناف' : 'Resume Session')"></span>
                       </button>
                     </li>
                     <div class="h-px bg-slate-800 my-1"></div>
                     <li>
                       <button @click="openEditModal(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800 text-slate-300">
                         <i class="fa-solid fa-sliders w-4 text-center text-slate-400"></i>
-                        <span>تعديل الصلاحيات</span>
+                        <span x-text="t('editSession')"></span>
                       </button>
                     </li>
                     <li>
                       <button @click="openRemoteMcpModal(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800 text-purple-300">
                         <i class="fa-solid fa-satellite-dish w-4 text-center text-purple-400"></i>
-                        <span>ربط Remote MCP</span>
+                        <span>Remote MCP</span>
                       </button>
                     </li>
                     <div class="h-px bg-slate-800 my-1"></div>
                     <li>
                       <button @click="deleteSession(sess)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-rose-950/60 text-rose-400">
                         <i class="fa-solid fa-trash-can w-4 text-center"></i>
-                        <span>حذف الجلسة</span>
+                        <span x-text="t('delete')"></span>
                       </button>
                     </li>
                   </ul>
@@ -690,20 +705,20 @@
               <div class="flex items-center justify-between gap-3 text-xs text-slate-400 border-t border-slate-800/60 pt-2.5 flex-wrap">
                 <div class="flex items-center gap-2">
                   <i class="fa-solid fa-user-circle text-slate-500 text-sm"></i>
-                  <span>العضو:</span>
-                  <span class="text-slate-200 font-semibold" x-text="sess.assignee || 'عام للفريق'"></span>
+                  <span x-text="t('assignee')"></span>
+                  <span class="text-slate-200 font-semibold" x-text="sess.assignee || (currentLang === 'ar' ? 'عام للفريق' : 'General / Team')"></span>
                 </div>
 
                 <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-                  <span class="flex items-center gap-1.5" :title="'تاريخ الإنشاء: ' + new Date(sess.createdAt).toLocaleString('ar-EG')">
+                  <span class="flex items-center gap-1.5" :title="t('date') + ': ' + new Date(sess.createdAt).toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US')">
                     <i class="fa-regular fa-calendar-plus text-slate-500"></i>
-                    <span>إنشاء:</span>
-                    <span class="text-slate-300 font-semibold" x-text="new Date(sess.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' })"></span>
+                    <span x-text="t('create') + ':'"></span>
+                    <span class="text-slate-300 font-semibold" x-text="new Date(sess.createdAt).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })"></span>
                   </span>
-                  <span class="flex items-center gap-1.5" :title="'آخر نشاط: ' + new Date(sess.lastActive || sess.createdAt).toLocaleString('ar-EG')">
+                  <span class="flex items-center gap-1.5" :title="t('time') + ': ' + new Date(sess.lastActive || sess.createdAt).toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US')">
                     <i class="fa-solid fa-bolt text-amber-400"></i>
-                    <span>نشاط:</span>
-                    <span class="text-slate-300 font-semibold" x-text="new Date(sess.lastActive || sess.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
+                    <span x-text="t('active') + ':'"></span>
+                    <span class="text-slate-300 font-semibold" x-text="new Date(sess.lastActive || sess.createdAt).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
                   </span>
                 </div>
               </div>
@@ -713,7 +728,7 @@
                 <div class="flex items-center justify-between text-xs">
                   <span class="text-slate-400 flex items-center gap-1.5">
                     <i class="fa-solid fa-folder-tree text-amber-400"></i>
-                    <span>مجلد الساندبوكس (Workspace):</span>
+                    <span x-text="t('targetDir')"></span>
                   </span>
                   <span class="font-mono text-cyan-300 text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800 truncate max-w-[280px]" x-text="sess.targetDir" :title="sess.targetDir"></span>
                 </div>
@@ -750,19 +765,19 @@
                   </span>
                   <span class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 text-[10px]">
                     <i class="fa-solid fa-desktop"></i>
-                    <span x-text="sess.allowedModes === 'both' ? 'دردشة وترمنال' : (sess.allowedModes === 'chat' ? 'دردشة فقط' : 'ترمنال فقط')"></span>
+                    <span x-text="sess.allowedModes === 'both' ? (currentLang === 'ar' ? 'دردشة وترمنال' : 'Chat & Terminal') : (sess.allowedModes === 'chat' ? (currentLang === 'ar' ? 'دردشة فقط' : 'Chat Only') : (currentLang === 'ar' ? 'ترمنال فقط' : 'Terminal Only'))"></span>
                   </span>
-                  <span x-show="sess.enableMcp !== false" class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="بروتوكول الذاكرة السحابية MCP مفعّل">
+                  <span x-show="sess.enableMcp !== false" class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" :title="t('mcpActiveTip')">
                     <i class="fa-solid fa-brain text-purple-400"></i> MemoryZ MCP
                   </span>
-                  <span x-show="sess.telegram && sess.telegram.enabled" class="badge badge-xs bg-sky-950 text-sky-300 border-sky-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="بوت تيليغرام مفعّل لهذه الجلسة">
+                  <span x-show="sess.telegram && sess.telegram.enabled" class="badge badge-xs bg-sky-950 text-sky-300 border-sky-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" :title="t('telegramActiveTip')">
                     <i class="fa-brands fa-telegram text-sky-400"></i> Telegram
                   </span>
                   <span class="badge badge-xs bg-slate-900 border-slate-700 py-1.5 px-2 gap-1 font-mono text-[10px]"
                         :class="sess.timeout ? 'text-amber-300 border-amber-800/40' : 'text-emerald-300 border-emerald-800/40'"
-                        :title="sess.timeout ? 'مهلة التنفيذ المحددة: ' + sess.timeout + ' دقيقة' : 'مهلة التنفيذ غير محدودة (مفتوحة)'">
+                        :title="sess.timeout ? (currentLang === 'ar' ? 'مهلة التنفيذ: ' + sess.timeout + ' دقيقة' : 'Timeout: ' + sess.timeout + ' min') : (currentLang === 'ar' ? 'مهلة مفتوحة' : 'Unlimited timeout')">
                     <i class="fa-solid fa-stopwatch" :class="sess.timeout ? 'text-amber-400' : 'text-emerald-400'"></i>
-                    <span x-text="sess.timeout ? sess.timeout + 'د مهلة' : 'مهلة مفتوحة ⚡'"></span>
+                    <span x-text="sess.timeout ? sess.timeout + (currentLang === 'ar' ? 'د مهلة' : 'm') : (currentLang === 'ar' ? 'مهلة مفتوحة ⚡' : 'Unlimited ⚡')"></span>
                   </span>
                 </div>
               </div>
@@ -772,31 +787,31 @@
                 <div class="flex items-center gap-2 flex-wrap">
                   <div class="text-slate-400 text-[11px] font-mono flex items-center gap-1">
                     <i class="fa-solid fa-message text-slate-500 text-[10px]"></i>
-                    <span>رسائل:</span>
+                    <span x-text="t('promptsCount') + ':'"></span>
                     <span class="font-bold text-slate-200" x-text="sess.stats?.messagesCount || 0"></span>
                   </div>
 
                   <!-- Quick Copy Token button (Without bulky text box) -->
-                  <button @click="copyToken(sess.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" title="نسخ رمز الوصول Token">
+                  <button @click="copyToken(sess.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" :title="t('copyToken')">
                     <i class="fa-solid fa-key text-[10px] text-amber-400"></i>
-                    <span>نسخ الرمز</span>
+                    <span x-text="t('copyToken')"></span>
                   </button>
 
                   <!-- Quick Copy Direct Link button -->
-                  <button @click="copyDirectLink(sess.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" title="نسخ الرابط المباشر">
+                  <button @click="copyDirectLink(sess.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" :title="t('copyDirectLink')">
                     <i class="fa-solid fa-share-nodes text-[10px] text-cyan-400"></i>
-                    <span>نسخ الرابط</span>
+                    <span x-text="t('copyDirectLink')"></span>
                   </button>
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <button @click="openRemoteMcpModal(sess)" class="btn btn-xs bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 gap-1.5" title="ربط الجلسة مع Claude أو ChatGPT عبر Remote MCP">
+                  <button @click="openRemoteMcpModal(sess)" class="btn btn-xs bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 gap-1.5" title="Remote MCP">
                     <i class="fa-solid fa-satellite-dish text-[11px] text-purple-400"></i>
                     <span>Remote MCP</span>
                   </button>
                   <a :href="`/agent.html?token=${sess.token}`" target="_blank"
                      class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1.5 text-xs shadow-md shadow-cyan-600/20">
-                    <span>فتح الجلسة</span>
+                    <span x-text="t('open')"></span>
                     <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                   </a>
                 </div>
@@ -828,25 +843,25 @@
                       <!-- Root indicator -->
                       <span x-show="!root.parentId" class="badge bg-slate-800 text-cyan-300 border border-cyan-500/30 text-[10px] font-semibold py-0.5 px-2 gap-1">
                         <i class="fa-solid fa-cube text-[8px] text-cyan-400"></i>
-                        <span>مشروع رئيسي</span>
+                        <span x-text="currentLang === 'ar' ? 'مشروع رئيسي' : 'Root Project'"></span>
                       </span>
 
                       <!-- Pinned Badge -->
                       <span x-show="root.isPinned" class="badge bg-cyan-950/90 text-cyan-300 border border-cyan-500/50 text-[10px] font-semibold py-0.5 px-2 gap-1 shadow-sm">
                         <i class="fa-solid fa-thumbtack text-[8px] rotate-45 text-cyan-400"></i>
-                        <span>مثبتة</span>
+                        <span x-text="t('pinned')"></span>
                       </span>
 
                       <!-- Favorite Badge -->
                       <span x-show="root.isFavorite" class="badge bg-amber-950/90 text-amber-300 border border-amber-500/50 text-[10px] font-semibold py-0.5 px-2 gap-1 shadow-sm">
                         <i class="fa-solid fa-star text-[8px] text-amber-400"></i>
-                        <span>مفضلة</span>
+                        <span x-text="t('favorites')"></span>
                       </span>
 
                       <!-- Direct Descendant Forks Count Badge -->
                       <span x-show="root.children && root.children.length > 0" class="badge bg-purple-950 text-purple-300 border border-purple-500/50 text-[10px] font-mono py-0.5 px-2 gap-1">
                         <i class="fa-solid fa-sitemap text-[8px] text-purple-400"></i>
-                        <span x-text="root.children.length + ' فروع متفرعة'"></span>
+                        <span x-text="root.children.length + ' ' + t('branchesBadge')"></span>
                       </span>
 
                       <!-- Status Badge -->
@@ -856,54 +871,54 @@
                               'badge-warning bg-amber-950 border-amber-500/40 text-amber-400': root.status === 'paused',
                               'badge-error bg-rose-950 border-rose-500/40 text-rose-400': root.status === 'closed'
                             }"
-                            x-text="root.status === 'active' ? 'نشط' : (root.status === 'paused' ? 'موقوف مؤقتاً' : 'مغلق')">
+                            x-text="root.status === 'active' ? t('active') : (root.status === 'paused' ? t('paused') : t('close'))">
                       </span>
                     </div>
                   </div>
 
                   <!-- Root Actions 3-Dots Dropdown Menu -->
                   <div class="dropdown dropdown-end shrink-0">
-                    <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" title="خيارات وإجراءات الجلسة">
+                    <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" :title="t('actions')">
                       <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
                     </button>
                     <ul tabindex="0" class="dropdown-content z-[30] menu p-1.5 shadow-2xl bg-slate-950 border border-slate-800 rounded-xl w-48 text-xs space-y-0.5 text-slate-200">
                       <li>
                         <button @click="toggleFavorite(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800">
                           <i :class="root.isFavorite ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-400'" class="w-4 text-center"></i>
-                          <span x-text="root.isFavorite ? 'إزالة من المفضلة' : 'إضافة إلى المفضلة'"></span>
+                          <span x-text="root.isFavorite ? (currentLang === 'ar' ? 'إزالة من المفضلة' : 'Remove Favorite') : (currentLang === 'ar' ? 'إضافة إلى المفضلة' : 'Add to Favorites')"></span>
                         </button>
                       </li>
                       <li>
                         <button @click="togglePin(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800">
                           <i class="fa-solid fa-thumbtack w-4 text-center" :class="root.isPinned ? 'rotate-45 text-cyan-400' : 'text-slate-400'"></i>
-                          <span x-text="root.isPinned ? 'إلغاء التثبيت' : 'تثبيت في المقدمة'"></span>
+                          <span x-text="root.isPinned ? (currentLang === 'ar' ? 'إلغاء التثبيت' : 'Unpin') : (currentLang === 'ar' ? 'تثبيت في المقدمة' : 'Pin to Top')"></span>
                         </button>
                       </li>
                       <li>
                         <button @click="toggleSessionStatus(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800"
                                 :class="root.status === 'active' ? 'text-amber-400' : 'text-emerald-400'">
                           <i :class="root.status === 'active' ? 'fa-solid fa-pause' : 'fa-solid fa-play'" class="w-4 text-center"></i>
-                          <span x-text="root.status === 'active' ? 'إيقاف الجلسة مؤقتاً' : 'تنشيط الجلسة'"></span>
+                          <span x-text="root.status === 'active' ? (currentLang === 'ar' ? 'إيقاف مؤقت' : 'Pause Session') : (currentLang === 'ar' ? 'استئناف' : 'Resume Session')"></span>
                         </button>
                       </li>
                       <div class="h-px bg-slate-800 my-1"></div>
                       <li>
                         <button @click="openEditModal(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800 text-slate-300">
                           <i class="fa-solid fa-sliders w-4 text-center text-slate-400"></i>
-                          <span>تعديل الصلاحيات</span>
+                          <span x-text="t('editSession')"></span>
                         </button>
                       </li>
                       <li>
                         <button @click="openRemoteMcpModal(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-slate-800 text-purple-300">
                           <i class="fa-solid fa-satellite-dish w-4 text-center text-purple-400"></i>
-                          <span>ربط Remote MCP</span>
+                          <span>Remote MCP</span>
                         </button>
                       </li>
                       <div class="h-px bg-slate-800 my-1"></div>
                       <li>
                         <button @click="deleteSession(root)" class="flex items-center gap-2 py-1.5 px-2.5 rounded-lg hover:bg-rose-950/60 text-rose-400">
                           <i class="fa-solid fa-trash-can w-4 text-center"></i>
-                          <span>حذف الجلسة</span>
+                          <span x-text="t('delete')"></span>
                         </button>
                       </li>
                     </ul>
@@ -914,20 +929,20 @@
                 <div class="flex items-center justify-between gap-3 text-xs text-slate-400 border-t border-slate-800/60 pt-2.5 flex-wrap">
                   <div class="flex items-center gap-2">
                     <i class="fa-solid fa-user-circle text-slate-500 text-sm"></i>
-                    <span>العضو:</span>
-                    <span class="text-slate-200 font-semibold" x-text="root.assignee || 'عام للفريق'"></span>
+                    <span x-text="t('assignee')"></span>
+                    <span class="text-slate-200 font-semibold" x-text="root.assignee || (currentLang === 'ar' ? 'عام للفريق' : 'General / Team')"></span>
                   </div>
 
                   <div class="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-                    <span class="flex items-center gap-1.5" :title="'تاريخ الإنشاء: ' + new Date(root.createdAt).toLocaleString('ar-EG')">
+                    <span class="flex items-center gap-1.5" :title="t('date') + ': ' + new Date(root.createdAt).toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US')">
                       <i class="fa-regular fa-calendar-plus text-slate-500"></i>
-                      <span>إنشاء:</span>
-                      <span class="text-slate-300 font-semibold" x-text="new Date(root.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', year: 'numeric' })"></span>
+                      <span x-text="t('create') + ':'"></span>
+                      <span class="text-slate-300 font-semibold" x-text="new Date(root.createdAt).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', year: 'numeric' })"></span>
                     </span>
-                    <span class="flex items-center gap-1.5" :title="'آخر نشاط: ' + new Date(root.lastActive || root.createdAt).toLocaleString('ar-EG')">
+                    <span class="flex items-center gap-1.5" :title="t('time') + ': ' + new Date(root.lastActive || root.createdAt).toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US')">
                       <i class="fa-solid fa-bolt text-amber-400"></i>
-                      <span>نشاط:</span>
-                      <span class="text-slate-300 font-semibold" x-text="new Date(root.lastActive || root.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
+                      <span x-text="t('active') + ':'"></span>
+                      <span class="text-slate-300 font-semibold" x-text="new Date(root.lastActive || root.createdAt).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
                     </span>
                   </div>
                 </div>
@@ -937,7 +952,7 @@
                   <div class="flex items-center justify-between text-xs">
                     <span class="text-slate-400 flex items-center gap-1.5">
                       <i class="fa-solid fa-folder-tree text-amber-400"></i>
-                      <span>مجلد الساندبوكس (Workspace):</span>
+                      <span x-text="t('targetDir')"></span>
                     </span>
                     <span class="font-mono text-cyan-300 text-[11px] bg-slate-900 px-2 py-0.5 rounded border border-slate-800 truncate max-w-[280px]" x-text="root.targetDir" :title="root.targetDir"></span>
                   </div>
@@ -973,12 +988,12 @@
                     </span>
                     <span class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 text-[10px]">
                       <i class="fa-solid fa-desktop"></i>
-                      <span x-text="root.allowedModes === 'both' ? 'دردشة وترمنال' : (root.allowedModes === 'chat' ? 'دردشة فقط' : 'ترمنال فقط')"></span>
+                      <span x-text="root.allowedModes === 'both' ? (currentLang === 'ar' ? 'دردشة وترمنال' : 'Chat & Terminal') : (root.allowedModes === 'chat' ? (currentLang === 'ar' ? 'دردشة فقط' : 'Chat Only') : (currentLang === 'ar' ? 'ترمنال فقط' : 'Terminal Only'))"></span>
                     </span>
                     <span x-show="root.enableMcp !== false" class="badge badge-xs bg-purple-950 text-purple-300 border-purple-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]">
                       <i class="fa-solid fa-brain text-purple-400"></i> MemoryZ MCP
                     </span>
-                    <span x-show="root.telegram && root.telegram.enabled" class="badge badge-xs bg-sky-950 text-sky-300 border-sky-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="بوت تيليغرام مفعّل">
+                    <span x-show="root.telegram && root.telegram.enabled" class="badge badge-xs bg-sky-950 text-sky-300 border-sky-800/40 py-1.5 px-2 gap-1 font-mono text-[10px]" title="Telegram">
                       <i class="fa-brands fa-telegram text-sky-400"></i> Telegram
                     </span>
                   </div>
@@ -989,20 +1004,20 @@
                   <div class="flex items-center gap-2 flex-wrap">
                     <div class="text-slate-400 text-[11px] font-mono flex items-center gap-1">
                       <i class="fa-solid fa-message text-slate-500 text-[10px]"></i>
-                      <span>رسائل:</span>
+                      <span x-text="t('promptsCount') + ':'"></span>
                       <span class="font-bold text-slate-200" x-text="root.stats?.messagesCount || 0"></span>
                     </div>
 
                     <!-- Quick Copy Token button -->
-                    <button @click="copyToken(root.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" title="نسخ رمز الوصول Token">
+                    <button @click="copyToken(root.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" :title="t('copyToken')">
                       <i class="fa-solid fa-key text-[10px] text-amber-400"></i>
-                      <span>نسخ الرمز</span>
+                      <span x-text="t('copyToken')"></span>
                     </button>
 
                     <!-- Quick Copy Direct Link button -->
-                    <button @click="copyDirectLink(root.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" title="نسخ الرابط المباشر">
+                    <button @click="copyDirectLink(root.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 hover:bg-slate-800 text-slate-300 hover:text-white gap-1 text-[11px]" :title="t('copyDirectLink')">
                       <i class="fa-solid fa-share-nodes text-[10px] text-cyan-400"></i>
-                      <span>نسخ الرابط</span>
+                      <span x-text="t('copyDirectLink')"></span>
                     </button>
                   </div>
 
@@ -1013,7 +1028,7 @@
                     </button>
                     <a :href="`/agent.html?token=${root.token}`" target="_blank"
                        class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1.5 text-xs shadow-md shadow-cyan-600/20">
-                      <span>فتح الجلسة</span>
+                      <span x-text="t('open')"></span>
                       <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
                     </a>
                   </div>
@@ -1030,10 +1045,10 @@
                    @click="toggleBranchCollapse(root.id)">
                 <div class="flex items-center gap-2 text-xs text-purple-300 font-semibold">
                   <i class="fa-solid fa-code-fork text-purple-400"></i>
-                  <span>الفروع المتفرعة من "<span x-text="root.name"></span>" (<span x-text="root.children.length"></span>)</span>
+                  <span><span x-text="currentLang === 'ar' ? 'الفروع المتفرعة من' : 'Branches forked from'"></span> "<span x-text="root.name"></span>" (<span x-text="root.children.length"></span>)</span>
                 </div>
                 <div class="flex items-center gap-1.5 text-[11px] text-purple-400 font-medium">
-                  <span x-text="isBranchCollapsed(root.id) ? 'إظهار الفروع' : 'طي الفروع'"></span>
+                  <span x-text="isBranchCollapsed(root.id) ? (currentLang === 'ar' ? 'إظهار الفروع' : 'Show Branches') : (currentLang === 'ar' ? 'طي الفروع' : 'Collapse')"></span>
                   <i class="fa-solid fa-chevron-down text-[10px] transition-transform duration-200"
                      :class="isBranchCollapsed(root.id) ? '-rotate-90' : 'rotate-0'"></i>
                 </div>
@@ -1056,48 +1071,48 @@
                               <span class="font-bold text-sm text-white break-words" x-text="child.name"></span>
                               
                               <span class="badge bg-purple-950 text-purple-300 border border-purple-500/40 text-[9px] font-semibold py-0.5 px-1.5 gap-1">
-                                <span x-text="'متفرع عند #' + (child.forkedFrom?.atIndex !== undefined ? child.forkedFrom.atIndex + 1 : '1')"></span>
+                                <span x-text="(currentLang === 'ar' ? 'متفرع عند #' : 'Forked at #') + (child.forkedFrom?.atIndex !== undefined ? child.forkedFrom.atIndex + 1 : '1')"></span>
                               </span>
 
                               <span x-show="child.isPinned" class="badge bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[9px] py-0.5 px-1.5 gap-1">
-                                <i class="fa-solid fa-thumbtack text-[8px] rotate-45"></i> مثبتة
+                                <i class="fa-solid fa-thumbtack text-[8px] rotate-45"></i> <span x-text="t('pinned')"></span>
                               </span>
 
                               <span x-show="child.isFavorite" class="badge bg-amber-950 text-amber-300 border border-amber-500/40 text-[9px] py-0.5 px-1.5 gap-1">
-                                <i class="fa-solid fa-star text-[8px]"></i> مفضلة
+                                <i class="fa-solid fa-star text-[8px]"></i> <span x-text="t('favorites')"></span>
                               </span>
                             </div>
                           </div>
 
                           <!-- Child Actions Dropdown -->
                           <div class="dropdown dropdown-end shrink-0">
-                            <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" title="خيارات">
+                            <button tabindex="0" role="button" class="btn btn-xs btn-ghost btn-circle text-slate-400 hover:text-white hover:bg-slate-800" :title="t('actions')">
                               <i class="fa-solid fa-ellipsis-vertical text-xs"></i>
                             </button>
                             <ul tabindex="0" class="dropdown-content z-[30] menu p-1 shadow-xl bg-slate-950 border border-slate-800 rounded-xl w-40 text-xs space-y-0.5 text-slate-200">
                               <li>
                                 <button @click="toggleFavorite(child)" class="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-800">
                                   <i :class="child.isFavorite ? 'fa-solid fa-star text-amber-400' : 'fa-regular fa-star text-slate-400'"></i>
-                                  <span x-text="child.isFavorite ? 'إزالة المفضلة' : 'تفضيل'"></span>
+                                  <span x-text="child.isFavorite ? (currentLang === 'ar' ? 'إزالة المفضلة' : 'Remove Favorite') : (currentLang === 'ar' ? 'تفضيل' : 'Add Favorite')"></span>
                                 </button>
                               </li>
                               <li>
                                 <button @click="togglePin(child)" class="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-800">
                                   <i class="fa-solid fa-thumbtack" :class="child.isPinned ? 'rotate-45 text-cyan-400' : 'text-slate-400'"></i>
-                                  <span x-text="child.isPinned ? 'إلغاء التثبيت' : 'تثبيت'"></span>
+                                  <span x-text="child.isPinned ? (currentLang === 'ar' ? 'إلغاء التثبيت' : 'Unpin') : (currentLang === 'ar' ? 'تثبيت' : 'Pin')"></span>
                                 </button>
                               </li>
                               <div class="h-px bg-slate-800 my-0.5"></div>
                               <li>
                                 <button @click="openEditModal(child)" class="flex items-center gap-2 py-1 px-2 rounded hover:bg-slate-800">
                                   <i class="fa-solid fa-sliders text-slate-400"></i>
-                                  <span>تعديل</span>
+                                  <span x-text="t('edit')"></span>
                                 </button>
                               </li>
                               <li>
                                 <button @click="deleteSession(child)" class="flex items-center gap-2 py-1 px-2 rounded hover:bg-rose-950/60 text-rose-400">
                                   <i class="fa-solid fa-trash-can"></i>
-                                  <span>حذف</span>
+                                  <span x-text="t('delete')"></span>
                                 </button>
                               </li>
                             </ul>
@@ -1108,26 +1123,26 @@
                         <div class="text-[11px] text-slate-400 flex items-center justify-between gap-2 flex-wrap border-t border-slate-800/50 pt-2">
                           <span class="font-mono text-cyan-300 bg-slate-950 px-2 py-0.5 rounded text-[10px] truncate max-w-[200px]" x-text="child.targetDir" :title="child.targetDir"></span>
                           <div class="flex items-center gap-3 font-mono text-[10px] text-slate-400">
-                            <span class="text-slate-400" x-text="'تفرع: ' + new Date(child.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric' })"></span>
-                            <span class="text-slate-300" x-text="'نشاط: ' + new Date(child.lastActive || child.createdAt).toLocaleDateString('ar-EG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
+                            <span class="text-slate-400" x-text="(currentLang === 'ar' ? 'تفرع: ' : 'Fork: ') + new Date(child.createdAt).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric' })"></span>
+                            <span class="text-slate-300" x-text="(currentLang === 'ar' ? 'نشاط: ' : 'Active: ') + new Date(child.lastActive || child.createdAt).toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })"></span>
                           </div>
                         </div>
 
                         <!-- Child Footer -->
                         <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs flex-wrap gap-2">
                           <div class="flex items-center gap-1.5">
-                            <button @click="copyToken(child.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 text-slate-300 hover:text-white gap-1 text-[10px]" title="نسخ الرمز">
+                            <button @click="copyToken(child.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 text-slate-300 hover:text-white gap-1 text-[10px]" :title="t('copyToken')">
                               <i class="fa-solid fa-key text-[9px] text-amber-400"></i>
-                              <span>الرمز</span>
+                              <span x-text="t('copyToken')"></span>
                             </button>
-                            <button @click="copyDirectLink(child.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 text-slate-300 hover:text-white gap-1 text-[10px]" title="نسخ الرابط">
+                            <button @click="copyDirectLink(child.token)" class="btn btn-xs btn-ghost border border-slate-800 bg-slate-950/80 text-slate-300 hover:text-white gap-1 text-[10px]" :title="t('copyDirectLink')">
                               <i class="fa-solid fa-share-nodes text-[9px] text-cyan-400"></i>
-                              <span>الرابط</span>
+                              <span x-text="t('copyDirectLink')"></span>
                             </button>
                           </div>
                           <a :href="`/agent.html?token=${child.token}`" target="_blank"
                              class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1 text-[11px] px-2.5">
-                            <span>فتح</span>
+                            <span x-text="t('open')"></span>
                             <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                           </a>
                         </div>
@@ -1142,14 +1157,14 @@
                           <div class="flex items-center gap-2 truncate">
                             <i class="fa-solid fa-code-fork text-purple-400 text-xs"></i>
                             <span class="font-bold text-white truncate" x-text="subChild.name"></span>
-                            <span class="badge badge-xs badge-ghost text-[9px] font-mono" x-text="(subChild.stats?.messagesCount || 0) + ' رسائل'"></span>
+                            <span class="badge badge-xs badge-ghost text-[9px] font-mono" x-text="(subChild.stats?.messagesCount || 0) + ' ' + t('messagesCountSuffix')"></span>
                           </div>
                           <div class="flex items-center gap-2">
-                            <button @click="copyToken(subChild.token)" class="btn btn-xs btn-ghost text-slate-400 hover:text-white text-[10px]" title="نسخ الرمز">
+                            <button @click="copyToken(subChild.token)" class="btn btn-xs btn-ghost text-slate-400 hover:text-white text-[10px]" :title="t('copyToken')">
                               <i class="fa-solid fa-key text-[9px] text-amber-400"></i>
                             </button>
                             <a :href="`/agent.html?token=${subChild.token}`" target="_blank" class="btn btn-xs btn-ghost text-cyan-400 hover:text-cyan-300">
-                              <span>فتح</span>
+                              <span x-text="t('open')"></span>
                               <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
                             </a>
                           </div>
@@ -1173,12 +1188,12 @@
         <div class="w-16 h-16 rounded-2xl bg-slate-800/80 border border-slate-700/60 mx-auto flex items-center justify-center text-slate-400 text-2xl shadow-inner">
           <i class="fa-solid fa-filter-circle-xmark"></i>
         </div>
-        <h3 class="text-base font-bold text-white">لا توجد جلسات تطابق خيارات الفلترة المحددة</h3>
-        <p class="text-xs text-slate-400 max-w-md mx-auto">جرب تغيير كلمات البحث، أو تصفية نوع الجلسات، أو إعادة ضبط الفلاتر لعرض الجلسات المتاحة.</p>
+        <h3 class="text-base font-bold text-white" x-text="t('noSessionsFound')"></h3>
+        <p class="text-xs text-slate-400 max-w-md mx-auto" x-text="currentLang === 'ar' ? 'جرب تغيير كلمات البحث، أو تصفية نوع الجلسات، أو إعادة ضبط الفلاتر لعرض الجلسات المتاحة.' : 'Try changing search keywords or resetting filters to view available sessions.'"></p>
         <div class="pt-2">
           <button @click="searchQuery = ''; setTypeFilter('all'); statusFilter = 'all'; engineFilter = 'all'" class="btn btn-sm btn-outline btn-info gap-1.5 text-xs">
             <i class="fa-solid fa-rotate-left text-xs"></i>
-            <span>إعادة ضبط جميع الفلاتر</span>
+            <span x-text="currentLang === 'ar' ? 'إعادة ضبط جميع الفلاتر' : 'Reset All Filters'"></span>
           </button>
         </div>
       </div>
@@ -1193,7 +1208,7 @@
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="font-bold text-base text-cyan-400 flex items-center gap-2">
           <i class="fa-solid fa-circle-plus"></i>
-          <span>إنشاء جلسة ساندبوكس جديدة لعضو الفريق</span>
+          <span x-text="t('createSessionTitle')"></span>
         </h3>
         <button @click="showCreateModal = false" class="btn btn-xs btn-circle btn-ghost">✕</button>
       </div>
@@ -1202,15 +1217,15 @@
         
         <!-- Session Name -->
         <div class="form-control">
-          <label class="label pb-1 font-semibold text-slate-300">اسم الوكيل أو الجلسة:</label>
-          <input type="text" x-model="newSession.name" required placeholder="مثال: وكيل تطوير الواجهة، فحص كود بايثون..."
+          <label class="label pb-1 font-semibold text-slate-300" x-text="currentLang === 'ar' ? 'اسم الوكيل أو الجلسة:' : 'Session / Agent Name:'"></label>
+          <input type="text" x-model="newSession.name" required :placeholder="t('sessionNamePlaceholder')"
                  class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 focus:border-cyan-500">
         </div>
 
         <!-- Assignee Name -->
         <div class="form-control">
-          <label class="label pb-1 font-semibold text-slate-300">اسم العضو المخصص له (Member):</label>
-          <input type="text" x-model="newSession.assignee" placeholder="مثال: أحمد، سارة، المطور الخارجي..."
+          <label class="label pb-1 font-semibold text-slate-300" x-text="t('assignee')"></label>
+          <input type="text" x-model="newSession.assignee" :placeholder="currentLang === 'ar' ? 'مثال: أحمد، سارة، المطور...' : 'e.g. Alice, Bob, External Dev...'"
                  class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 focus:border-cyan-500">
         </div>
 
@@ -1220,11 +1235,11 @@
             <label class="label pb-1 font-semibold text-slate-300">
               <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-microchip text-cyan-400"></i>
-                <span>محرك الوكيل (CLI Engine):</span>
+                <span x-text="t('engine')"></span>
               </span>
             </label>
             <select x-model="newSession.engine" class="select select-sm select-bordered bg-slate-900 border-slate-700 text-slate-100">
-              <option value="master">👑 الوكيل العام السيادي (Master Orchestrator - Gemini Flash)</option>
+              <option value="master">👑 Master Orchestrator (Gemini Flash)</option>
               <option value="agy">Google Antigravity (agy)</option>
               <option value="opencode">OpenCode CLI (opencode)</option>
               <option value="codex">OpenAI Codex CLI (codex)</option>
@@ -1237,11 +1252,11 @@
             <label class="label pb-1 font-semibold text-slate-300">
               <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-cube text-purple-400"></i>
-                <span>النموذج (Model - اختياري):</span>
+                <span x-text="t('model')"></span>
               </span>
             </label>
             <input type="text" x-model="newSession.model"
-                   :placeholder="newSession.engine === 'codex' ? 'مثال: gpt-5.6-luna' : (newSession.engine === 'claude' ? 'مثال: claude-sonnet-4-6' : (newSession.engine === 'opencode' ? 'مثال: opencode/big-pickle' : 'تلقائي (Default)'))"
+                   :placeholder="newSession.engine === 'codex' ? 'gpt-5.6-luna' : (newSession.engine === 'claude' ? 'claude-sonnet-4-6' : (newSession.engine === 'opencode' ? 'opencode/big-pickle' : 'Default'))"
                    class="input input-sm input-bordered bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 font-mono text-xs">
           </div>
         </div>
@@ -1249,7 +1264,7 @@
         <!-- Target Workspace Folder with Elegant Tree Picker -->
         <div class="form-control space-y-2">
           <div class="flex items-center justify-between">
-            <label class="label p-0 font-semibold text-slate-300">مجلد ساندبوكس المشروع (Workspace Folder):</label>
+            <label class="label p-0 font-semibold text-slate-300" x-text="t('chooseFolder')"></label>
             <span class="text-[10px] text-cyan-400 font-mono" x-text="newSession.targetDir"></span>
           </div>
 
@@ -1257,14 +1272,14 @@
           <div class="bg-slate-950 border border-slate-700/80 rounded-xl p-2.5 flex items-center justify-between gap-2 shadow-inner">
             <div class="flex items-center gap-2 min-w-0">
               <i class="fa-solid fa-folder-open text-amber-400 text-sm shrink-0"></i>
-              <span class="font-mono text-xs text-white truncate" x-text="newSession.targetDir || 'لم يتم اختيار مجلد'"></span>
+              <span class="font-mono text-xs text-white truncate" x-text="newSession.targetDir || (currentLang === 'ar' ? 'لم يتم اختيار مجلد' : 'No folder selected')"></span>
             </div>
-            <span class="badge badge-xs badge-info font-mono text-[9px] py-1 px-1.5 shrink-0">محدد</span>
+            <span class="badge badge-xs badge-info font-mono text-[9px] py-1 px-1.5 shrink-0" x-text="t('selectedCount')"></span>
           </div>
 
           <!-- Tree Search Input -->
           <div class="relative">
-            <input type="text" x-model="adminFolderSearch" placeholder="بحث وتصفية شجرة المجلدات..."
+            <input type="text" x-model="adminFolderSearch" :placeholder="currentLang === 'ar' ? 'بحث وتصفية شجرة المجلدات...' : 'Search folder tree...'"
                    class="input input-xs input-bordered w-full bg-slate-950 border-slate-700 text-slate-200 placeholder-slate-500 pl-2 pr-7 text-xs font-arabic">
             <i class="fa-solid fa-search text-[10px] absolute right-2.5 top-2 text-slate-500"></i>
           </div>
@@ -1274,7 +1289,7 @@
             <template x-if="loadingFolderTree">
               <div class="text-center py-6 text-slate-400 space-y-1.5">
                 <span class="loading loading-spinner loading-xs text-cyan-400"></span>
-                <p class="text-[11px]">جاري قراءة شجرة المجلدات...</p>
+                <p class="text-[11px]" x-text="t('scanningProjectFolder')"></p>
               </div>
             </template>
             <div x-show="!loadingFolderTree" x-html="renderAdminFolderTree(folderTree)"></div>
@@ -1282,33 +1297,32 @@
 
           <!-- Custom Path Option -->
           <details class="collapse collapse-arrow bg-slate-950 border border-slate-800 rounded-xl">
-            <summary class="collapse-title text-[11px] font-semibold py-1.5 px-3 min-h-0 text-slate-400 hover:text-white">
-              <i class="fa-solid fa-terminal text-[10px] ml-1"></i> كتابة مسار مخصص يدوياً...
+            <summary class="collapse-title text-[11px] font-semibold py-1.5 px-3 min-h-0 text-slate-400 hover:text-white" x-text="t('customDirOption')">
             </summary>
             <div class="collapse-content px-3 pb-2 pt-1 space-y-1.5">
               <input type="text" x-model="newSession.customTargetDir" @input="if (newSession.customTargetDir.trim()) newSession.targetDir = newSession.customTargetDir.trim()"
-                     placeholder="/root/path/to/custom-project"
+                     :placeholder="t('customTargetDirPlaceholder')"
                      class="input input-xs input-bordered w-full bg-slate-900 border-slate-700 text-slate-100 font-mono text-xs">
-              <p class="text-[10px] text-slate-500">سيتم إنشاء المجلد تلقائياً في حال لم يكن موجوداً.</p>
+              <p class="text-[10px] text-slate-500" x-text="currentLang === 'ar' ? 'سيتم إنشاء المجلد تلقائياً في حال لم يكن موجوداً.' : 'Directory will be created automatically if not found.'"></p>
             </div>
           </details>
 
           <span class="text-[11px] text-slate-400">
             <i class="fa-solid fa-lock text-cyan-400 text-[10px]"></i>
-            لن يتمكن الوكيل في هذه الجلسة من تجاوز هذا المجلد عند تفعيل الساندبوكس.
+            <span x-text="currentLang === 'ar' ? 'لن يتمكن الوكيل في هذه الجلسة من تجاوز هذا المجلد عند تفعيل الساندبوكس.' : 'The agent will not be able to escape this workspace folder when sandbox is active.'"></span>
           </span>
         </div>
 
         <!-- Permissions Toggles -->
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2.5">
-          <div class="font-semibold text-slate-300 text-xs mb-1">صلاحيات الجلسة والأمان:</div>
+          <div class="font-semibold text-slate-300 text-xs mb-1" x-text="currentLang === 'ar' ? 'صلاحيات الجلسة والأمان:' : 'Session Security & Permissions:'"></div>
 
           <!-- Sandbox -->
           <label class="label cursor-pointer p-0 justify-start gap-3">
             <input type="checkbox" x-model="newSession.sandbox" class="checkbox checkbox-sm checkbox-primary">
             <div>
-              <div class="text-xs font-semibold text-slate-200">تفعيل ساندبوكس الأمان (--sandbox)</div>
-              <div class="text-[11px] text-slate-400">حصر الوكيل في المجلد ومنع أي وصول لمجلدات النظام الأخرى</div>
+              <div class="text-xs font-semibold text-slate-200" x-text="t('sandboxTitle')"></div>
+              <div class="text-[11px] text-slate-400" x-text="t('sandboxDesc')"></div>
             </div>
           </label>
 
@@ -1316,8 +1330,8 @@
           <label class="label cursor-pointer p-0 justify-start gap-3">
             <input type="checkbox" x-model="newSession.autoApprove" class="checkbox checkbox-sm checkbox-accent">
             <div>
-              <div class="text-xs font-semibold text-slate-200">موافقة تلقائية على الأدوات (--dangerously-skip-permissions)</div>
-              <div class="text-[11px] text-slate-400">السماح بتعديل الملفات مباشرة دون انتظار موافقة يدوية</div>
+              <div class="text-xs font-semibold text-slate-200" x-text="t('autoApproveTitle')"></div>
+              <div class="text-[11px] text-slate-400" x-text="t('autoApproveDesc')"></div>
             </div>
           </label>
 
@@ -1325,8 +1339,8 @@
           <label class="label cursor-pointer p-0 justify-start gap-3">
             <input type="checkbox" x-model="newSession.continueSession" class="checkbox checkbox-sm checkbox-info">
             <div>
-              <div class="text-xs font-semibold text-slate-200">متابعة سياق المحادثة (--continue)</div>
-              <div class="text-[11px] text-slate-400">تذكر الأوامر والرسائل السابقة ضمن نفس الجلسة</div>
+              <div class="text-xs font-semibold text-slate-200" x-text="t('continueSessionTitle')"></div>
+              <div class="text-[11px] text-slate-400" x-text="t('continueSessionDesc')"></div>
             </div>
           </label>
 
@@ -1336,9 +1350,9 @@
             <div>
               <div class="text-xs font-semibold text-purple-300 flex items-center gap-1.5">
                 <i class="fa-solid fa-brain text-xs"></i>
-                <span>ربط بروتوكول الذاكرة السحابية (MemoryZ MCP)</span>
+                <span x-text="t('enableMcpTitle')"></span>
               </div>
-              <div class="text-[11px] text-slate-400">تمكين الوكيل من استرجاع وحفظ الذكريات والمعرفة الدلالية عبر MCP</div>
+              <div class="text-[11px] text-slate-400" x-text="currentLang === 'ar' ? 'تمكين الوكيل من استرجاع وحفظ الذكريات والمعرفة الدلالية عبر MCP' : 'Allow agent to store and recall semantic knowledge memories via MCP'"></div>
             </div>
           </label>
         </div>
@@ -1349,8 +1363,8 @@
             <div class="flex items-center gap-2">
               <i class="fa-brands fa-telegram text-sky-400 text-base"></i>
               <div>
-                <div class="text-xs font-bold text-sky-200">ربط بوت تيليغرام (Telegram Bot)</div>
-                <div class="text-[10px] text-slate-400">تواصل عبر التلغرام مع الوكيل واستقبال الملفات والردود</div>
+                <div class="text-xs font-bold text-sky-200" x-text="t('telegramBots')"></div>
+                <div class="text-[10px] text-slate-400" x-text="t('telegramBotsDesc')"></div>
               </div>
             </div>
             <input type="checkbox" x-model="newSession.telegram.enabled" class="checkbox checkbox-sm checkbox-info">
@@ -1360,17 +1374,17 @@
             <div class="flex items-center gap-4 text-xs">
               <label class="cursor-pointer flex items-center gap-1.5 text-slate-300">
                 <input type="radio" :value="false" x-model="newSession.telegram.custom" class="radio radio-xs radio-info">
-                <span>اختيار من البوتات المحفوظة</span>
+                <span x-text="currentLang === 'ar' ? 'اختيار من البوتات المحفوظة' : 'Choose from saved bots'"></span>
               </label>
               <label class="cursor-pointer flex items-center gap-1.5 text-slate-300">
                 <input type="radio" :value="true" x-model="newSession.telegram.custom" class="radio radio-xs radio-info">
-                <span>إدخال بوت مخصص للجلسة</span>
+                <span x-text="currentLang === 'ar' ? 'إدخال بوت مخصص للجلسة' : 'Custom bot for session'"></span>
               </label>
             </div>
 
             <!-- Saved Bots Dropdown -->
             <div x-show="!newSession.telegram.custom">
-              <label class="label pb-1 text-[11px] text-slate-400">اختر حساب التيليغرام:</label>
+              <label class="label pb-1 text-[11px] text-slate-400" x-text="t('selectTelegramBot')"></label>
               <template x-if="telegramConfigs.length > 0">
                 <select x-model="newSession.telegram.savedConfigId" class="select select-sm select-bordered w-full bg-slate-900 border-slate-700 text-slate-200 text-xs">
                   <template x-for="cfg in telegramConfigs" :key="cfg.id">
@@ -1378,8 +1392,7 @@
                   </template>
                 </select>
               </template>
-              <div x-show="telegramConfigs.length === 0" class="text-[11px] text-amber-400 bg-amber-950/30 p-2 rounded border border-amber-900/40">
-                لا توجد بوتات محفوظة، يرجى اختيار "إدخال بوت مخصص".
+              <div x-show="telegramConfigs.length === 0" class="text-[11px] text-amber-400 bg-amber-950/30 p-2 rounded border border-amber-900/40" x-text="currentLang === 'ar' ? 'لا توجد بوتات محفوظة، يرجى اختيار إدخال بوت مخصص.' : 'No saved bots, please select custom bot.'">
               </div>
             </div>
 
@@ -1387,15 +1400,15 @@
             <div x-show="newSession.telegram.custom" class="space-y-2">
               <div>
                 <label class="label pb-1 text-[11px] text-slate-400">Bot Token:</label>
-                <input type="text" x-model="newSession.telegram.botToken" placeholder="مثال: 123456:ABC-DEF..." class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                <input type="text" x-model="newSession.telegram.botToken" placeholder="123456:ABC-DEF..." class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
               </div>
               <div>
-                <label class="label pb-1 text-[11px] text-slate-400">Chat ID / Channel ID (المستلم):</label>
-                <input type="text" x-model="newSession.telegram.chatId" placeholder="مثال: 8478894397" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                <label class="label pb-1 text-[11px] text-slate-400">Chat ID / Channel ID:</label>
+                <input type="text" x-model="newSession.telegram.chatId" placeholder="8478894397" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
               </div>
               <label class="label cursor-pointer p-0 justify-start gap-2 pt-1">
                 <input type="checkbox" x-model="newSession.telegram.saveNewToConfigs" class="checkbox checkbox-xs checkbox-primary">
-                <span class="text-[11px] text-slate-300">حفظ هذا البوت تلقائياً في قائمة البوتات المحفوظة لاستخدامه في جلسات أخرى</span>
+                <span class="text-[11px] text-slate-300" x-text="currentLang === 'ar' ? 'حفظ هذا البوت تلقائياً في قائمة البوتات المحفوظة لاستخدامه في جلسات أخرى' : 'Save this bot automatically for reuse across sessions'"></span>
               </label>
             </div>
           </div>
@@ -1403,11 +1416,11 @@
 
         <!-- Allowed Modes -->
         <div class="form-control">
-          <label class="label pb-1 font-semibold text-slate-300">الواجهات المتاحة للعضو:</label>
+          <label class="label pb-1 font-semibold text-slate-300" x-text="t('allowedModes')"></label>
           <select x-model="newSession.allowedModes" class="select select-sm select-bordered bg-slate-950 border-slate-700 text-slate-100">
-            <option value="both">كلاهما: وضع الدردشة والطرفية المباشرة (Chat + Terminal)</option>
-            <option value="chat">وضع الدردشة فقط (Chat Mode Only)</option>
-            <option value="terminal">الطرفية المباشرة فقط (Terminal Only)</option>
+            <option value="both" x-text="t('modeBoth')"></option>
+            <option value="chat" x-text="t('modeChatOnly')"></option>
+            <option value="terminal" x-text="t('modeTerminalOnly')"></option>
           </select>
         </div>
 
@@ -1416,24 +1429,24 @@
           <label class="label pb-1 font-semibold text-slate-300">
             <span class="flex items-center gap-1.5">
               <i class="fa-solid fa-stopwatch text-amber-400"></i>
-              <span>المهلة الزمنية لتنفيذ المهام (Timeout):</span>
+              <span x-text="t('timeoutSec')"></span>
             </span>
           </label>
           <select x-model.number="newSession.timeout" class="select select-sm select-bordered bg-slate-950 border-slate-700 text-slate-100">
-            <option :value="0">⚡ غير محدودة (مفتوحة بدون مهلة - مستحسن للفيديوهات والعمليات الطويلة)</option>
-            <option :value="15">15 دقيقة</option>
-            <option :value="30">30 دقيقة</option>
-            <option :value="60">ساعة واحدة (60 دقيقة)</option>
-            <option :value="120">ساعتان (120 دقيقة)</option>
+            <option :value="0" x-text="currentLang === 'ar' ? '⚡ غير محدودة (مفتوحة بدون مهلة - مستحسن للعمليات الطويلة)' : '⚡ Unlimited (Recommended for long running tasks)'"></option>
+            <option :value="15" x-text="currentLang === 'ar' ? '15 دقيقة' : '15 minutes'"></option>
+            <option :value="30" x-text="currentLang === 'ar' ? '30 دقيقة' : '30 minutes'"></option>
+            <option :value="60" x-text="currentLang === 'ar' ? 'ساعة واحدة (60 دقيقة)' : '1 hour (60 minutes)'"></option>
+            <option :value="120" x-text="currentLang === 'ar' ? 'ساعتان (120 دقيقة)' : '2 hours (120 minutes)'"></option>
           </select>
         </div>
 
         <div class="modal-action pt-2">
-          <button type="button" @click="showCreateModal = false" class="btn btn-sm btn-ghost text-slate-400">إلغاء</button>
+          <button type="button" @click="showCreateModal = false" class="btn btn-sm btn-ghost text-slate-400" x-text="t('cancel')"></button>
           <button type="submit" :disabled="creatingSession" class="btn btn-sm btn-primary bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1">
             <span x-show="creatingSession" class="loading loading-spinner loading-xs"></span>
             <i x-show="!creatingSession" class="fa-solid fa-check"></i>
-            <span>توليد وإنشاء الجلسة</span>
+            <span x-text="t('submitCreate')"></span>
           </button>
         </div>
 
@@ -1448,7 +1461,7 @@
       <div class="flex items-center justify-between border-b border-slate-800 pb-3">
         <h3 class="font-bold text-base text-cyan-400 flex items-center gap-2">
           <i class="fa-solid fa-sliders"></i>
-          <span>تعديل إعدادات وصلاحيات الجلسة</span>
+          <span x-text="t('editSessionTitle')"></span>
         </h3>
         <button @click="showEditModal = false" class="btn btn-xs btn-circle btn-ghost">✕</button>
       </div>
@@ -1457,19 +1470,19 @@
         <form @submit.prevent="updateSession" class="space-y-4 text-xs">
           
           <div class="form-control">
-            <label class="label pb-1 font-semibold text-slate-300">اسم الجلسة:</label>
+            <label class="label pb-1 font-semibold text-slate-300" x-text="currentLang === 'ar' ? 'اسم الجلسة:' : 'Session Name:'"></label>
             <input type="text" x-model="editingSession.name" required
                    class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100">
           </div>
 
           <div class="form-control">
-            <label class="label pb-1 font-semibold text-slate-300">العضو المخصص:</label>
+            <label class="label pb-1 font-semibold text-slate-300" x-text="t('assignee')"></label>
             <input type="text" x-model="editingSession.assignee"
                    class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100">
           </div>
 
           <div class="form-control">
-            <label class="label pb-1 font-semibold text-slate-300">مجلد الساندبوكس:</label>
+            <label class="label pb-1 font-semibold text-slate-300" x-text="t('targetDir')"></label>
             <input type="text" x-model="editingSession.targetDir" required
                    class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono">
           </div>
@@ -1480,12 +1493,12 @@
               <label class="label pb-1 font-semibold text-slate-300">
                 <span class="flex items-center gap-1.5">
                   <i class="fa-solid fa-microchip text-cyan-400"></i>
-                  <span>محرك الوكيل (CLI Engine):</span>
+                  <span x-text="t('engine')"></span>
                 </span>
               </label>
               <select x-model="editingSession.engine" class="select select-sm select-bordered bg-slate-900 border-slate-700 text-slate-100">
-                <option value="master">👑 الوكيل العام السيادي (Master Orchestrator - Gemini Flash)</option>
-              <option value="agy">Google Antigravity (agy)</option>
+                <option value="master">👑 Master Orchestrator (Gemini Flash)</option>
+                <option value="agy">Google Antigravity (agy)</option>
                 <option value="opencode">OpenCode CLI (opencode)</option>
                 <option value="codex">OpenAI Codex CLI (codex)</option>
                 <option value="vibe">Mistral Vibe CLI (vibe)</option>
@@ -1497,11 +1510,11 @@
               <label class="label pb-1 font-semibold text-slate-300">
                 <span class="flex items-center gap-1.5">
                   <i class="fa-solid fa-cube text-purple-400"></i>
-                  <span>النموذج (Model):</span>
+                  <span x-text="t('model')"></span>
                 </span>
               </label>
               <input type="text" x-model="editingSession.model"
-                     :placeholder="editingSession.engine === 'codex' ? 'مثال: gpt-5.6-luna' : (editingSession.engine === 'claude' ? 'مثال: claude-sonnet-4-6' : (editingSession.engine === 'opencode' ? 'مثال: opencode/big-pickle' : 'تلقائي (Default)'))"
+                     :placeholder="editingSession.engine === 'codex' ? 'gpt-5.6-luna' : (editingSession.engine === 'claude' ? 'claude-sonnet-4-6' : (editingSession.engine === 'opencode' ? 'opencode/big-pickle' : 'Default'))"
                      class="input input-sm input-bordered bg-slate-900 border-slate-700 text-slate-100 placeholder-slate-500 font-mono text-xs">
             </div>
           </div>
@@ -1509,21 +1522,21 @@
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
             <label class="label cursor-pointer p-0 justify-start gap-3">
               <input type="checkbox" x-model="editingSession.sandbox" class="checkbox checkbox-sm checkbox-primary">
-              <span class="text-xs text-slate-200">تفعيل ساندبوكس الأمان (--sandbox)</span>
+              <span class="text-xs text-slate-200" x-text="t('sandboxTitle')"></span>
             </label>
             <label class="label cursor-pointer p-0 justify-start gap-3">
               <input type="checkbox" x-model="editingSession.autoApprove" class="checkbox checkbox-sm checkbox-accent">
-              <span class="text-xs text-slate-200">موافقة تلقائية للأدوات (--dangerously-skip-permissions)</span>
+              <span class="text-xs text-slate-200" x-text="t('autoApproveTitle')"></span>
             </label>
             <label class="label cursor-pointer p-0 justify-start gap-3">
               <input type="checkbox" x-model="editingSession.continueSession" class="checkbox checkbox-sm checkbox-info">
-              <span class="text-xs text-slate-200">متابعة سياق المحادثة (--continue)</span>
+              <span class="text-xs text-slate-200" x-text="t('continueSessionTitle')"></span>
             </label>
             <label class="label cursor-pointer p-0 justify-start gap-3">
               <input type="checkbox" x-model="editingSession.enableMcp" class="checkbox checkbox-sm checkbox-secondary">
               <span class="text-xs text-purple-300 flex items-center gap-1.5 font-semibold">
                 <i class="fa-solid fa-brain text-xs"></i>
-                <span>ربط بروتوكول الذاكرة السحابية (MemoryZ MCP)</span>
+                <span x-text="t('enableMcpTitle')"></span>
               </span>
             </label>
           </div>
@@ -1533,15 +1546,15 @@
             <label class="label pb-1 font-semibold text-slate-300">
               <span class="flex items-center gap-1.5">
                 <i class="fa-solid fa-stopwatch text-amber-400"></i>
-                <span>المهلة الزمنية لتنفيذ المهام (Timeout):</span>
+                <span x-text="t('timeoutSec')"></span>
               </span>
             </label>
             <select x-model.number="editingSession.timeout" class="select select-sm select-bordered bg-slate-950 border-slate-700 text-slate-100">
-              <option :value="0">⚡ غير محدودة (مفتوحة بدون مهلة - مستحسن للفيديوهات والعمليات الطويلة)</option>
-              <option :value="15">15 دقيقة</option>
-              <option :value="30">30 دقيقة</option>
-              <option :value="60">ساعة واحدة (60 دقيقة)</option>
-              <option :value="120">ساعتان (120 دقيقة)</option>
+              <option :value="0" x-text="currentLang === 'ar' ? '⚡ غير محدودة (مفتوحة بدون مهلة)' : '⚡ Unlimited timeout'"></option>
+              <option :value="15" x-text="currentLang === 'ar' ? '15 دقيقة' : '15 minutes'"></option>
+              <option :value="30" x-text="currentLang === 'ar' ? '30 دقيقة' : '30 minutes'"></option>
+              <option :value="60" x-text="currentLang === 'ar' ? 'ساعة واحدة (60 دقيقة)' : '1 hour (60 minutes)'"></option>
+              <option :value="120" x-text="currentLang === 'ar' ? 'ساعتان (120 دقيقة)' : '2 hours (120 minutes)'"></option>
             </select>
           </div>
 
@@ -1551,8 +1564,8 @@
               <div class="flex items-center gap-2">
                 <i class="fa-brands fa-telegram text-sky-400 text-base"></i>
                 <div>
-                  <div class="text-xs font-bold text-sky-200">ربط بوت تيليغرام (Telegram Bot)</div>
-                  <div class="text-[10px] text-slate-400">تواصل عبر التلغرام واستقبال الملفات والردود</div>
+                  <div class="text-xs font-bold text-sky-200" x-text="t('telegramBots')"></div>
+                  <div class="text-[10px] text-slate-400" x-text="t('telegramBotsDesc')"></div>
                 </div>
               </div>
               <input type="checkbox" x-model="editingSession.telegram.enabled" class="checkbox checkbox-sm checkbox-info">
@@ -1562,17 +1575,17 @@
               <div class="flex items-center gap-4 text-xs">
                 <label class="cursor-pointer flex items-center gap-1.5 text-slate-300">
                   <input type="radio" :value="false" x-model="editingSession.telegram.custom" class="radio radio-xs radio-info">
-                  <span>اختيار من البوتات المحفوظة</span>
+                  <span x-text="currentLang === 'ar' ? 'اختيار من البوتات المحفوظة' : 'Choose from saved bots'"></span>
                 </label>
                 <label class="cursor-pointer flex items-center gap-1.5 text-slate-300">
                   <input type="radio" :value="true" x-model="editingSession.telegram.custom" class="radio radio-xs radio-info">
-                  <span>إدخال بوت مخصص للجلسة</span>
+                  <span x-text="currentLang === 'ar' ? 'إدخال بوت مخصص للجلسة' : 'Custom bot for session'"></span>
                 </label>
               </div>
 
               <!-- Saved Bots Dropdown -->
               <div x-show="!editingSession.telegram.custom">
-                <label class="label pb-1 text-[11px] text-slate-400">اختر حساب التيليغرام:</label>
+                <label class="label pb-1 text-[11px] text-slate-400" x-text="t('selectTelegramBot')"></label>
                 <template x-if="telegramConfigs.length > 0">
                   <select x-model="editingSession.telegram.savedConfigId" class="select select-sm select-bordered w-full bg-slate-900 border-slate-700 text-slate-200 text-xs">
                     <template x-for="cfg in telegramConfigs" :key="cfg.id">
@@ -1580,8 +1593,7 @@
                     </template>
                   </select>
                 </template>
-                <div x-show="telegramConfigs.length === 0" class="text-[11px] text-amber-400 bg-amber-950/30 p-2 rounded border border-amber-900/40">
-                  لا توجد بوتات محفوظة، يرجى اختيار "إدخال بوت مخصص".
+                <div x-show="telegramConfigs.length === 0" class="text-[11px] text-amber-400 bg-amber-950/30 p-2 rounded border border-amber-900/40" x-text="currentLang === 'ar' ? 'لا توجد بوتات محفوظة، يرجى اختيار إدخال بوت مخصص.' : 'No saved bots, please select custom bot.'">
                 </div>
               </div>
 
@@ -1589,30 +1601,30 @@
               <div x-show="editingSession.telegram.custom" class="space-y-2">
                 <div>
                   <label class="label pb-1 text-[11px] text-slate-400">Bot Token:</label>
-                  <input type="text" x-model="editingSession.telegram.botToken" placeholder="مثال: 123456:ABC-DEF..." class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                  <input type="text" x-model="editingSession.telegram.botToken" placeholder="123456:ABC-DEF..." class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
                 </div>
                 <div>
-                  <label class="label pb-1 text-[11px] text-slate-400">Chat ID / Channel ID (المستلم):</label>
-                  <input type="text" x-model="editingSession.telegram.chatId" placeholder="مثال: 8478894397" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                  <label class="label pb-1 text-[11px] text-slate-400">Chat ID / Channel ID:</label>
+                  <input type="text" x-model="editingSession.telegram.chatId" placeholder="8478894397" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
                 </div>
               </div>
             </div>
           </div>
 
           <div class="form-control">
-            <label class="label pb-1 font-semibold text-slate-300">حالة الجلسة:</label>
+            <label class="label pb-1 font-semibold text-slate-300" x-text="t('status')"></label>
             <select x-model="editingSession.status" class="select select-sm select-bordered bg-slate-950 border-slate-700 text-slate-100">
-              <option value="active">نشطة (Active)</option>
-              <option value="paused">موقوفة مؤقتاً (Paused)</option>
-              <option value="closed">مغلقة نهائياً (Closed)</option>
+              <option value="active" x-text="'🟢 ' + t('active')"></option>
+              <option value="paused" x-text="'🟡 ' + t('paused')"></option>
+              <option value="closed" x-text="'🔴 ' + t('close')"></option>
             </select>
           </div>
 
           <div class="modal-action pt-2">
-            <button type="button" @click="showEditModal = false" class="btn btn-sm btn-ghost text-slate-400">إلغاء</button>
+            <button type="button" @click="showEditModal = false" class="btn btn-sm btn-ghost text-slate-400" x-text="t('cancel')"></button>
             <button type="submit" class="btn btn-sm btn-primary bg-cyan-600 hover:bg-cyan-500 border-none text-white">
               <i class="fa-solid fa-save"></i>
-              <span>حفظ التعديلات</span>
+              <span x-text="t('submitUpdate')"></span>
             </button>
           </div>
 
@@ -1634,12 +1646,10 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <span>ربط Remote MCP مع Claude و ChatGPT</span>
+              <span x-text="t('remoteMcpHeaderTitle')">ربط Remote MCP مع Claude و ChatGPT</span>
               <span class="badge badge-xs badge-secondary font-mono text-[10px]">Active</span>
             </h3>
-            <p class="text-xs text-purple-300/70">
-              تحكم كامل في مساحة العمل الخاصة بالجلسة عبر بروتوكول MCP برابط موحد
-            </p>
+            <p class="text-xs text-purple-300/70" x-text="t('remoteMcpHeaderDesc')"></p>
           </div>
         </div>
         <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
@@ -1656,9 +1666,7 @@
               <span x-text="selectedMcpSession?.targetDir"></span>
             </div>
           </div>
-          <span class="badge badge-sm badge-success bg-emerald-950 text-emerald-300 border-emerald-500/30 py-1 font-mono text-[10px]">
-            جاهز للربط السحابي
-          </span>
+          <span class="badge badge-sm badge-success bg-emerald-950 text-emerald-300 border-emerald-500/30 py-1 font-mono text-[10px]" x-text="t('readyForCloudLink')"></span>
         </div>
 
         <!-- 1. Remote MCP Endpoint for Claude / Cursor -->
@@ -1666,7 +1674,7 @@
           <div class="flex items-center justify-between">
             <span class="font-bold text-purple-300 flex items-center gap-1.5">
               <i class="fa-solid fa-bolt text-xs"></i>
-              <span>1. رابط Remote MCP الموحد (Claude Web / Mobile / Desktop / Cursor):</span>
+              <span x-text="t('unifiedRemoteMcpLink')">1. رابط Remote MCP الموحد (Claude Web / Mobile / Desktop / Cursor):</span>
             </span>
             <span class="text-[10px] text-slate-500">Streamable HTTP + SSE</span>
           </div>
@@ -1676,12 +1684,10 @@
             <button @click="copyRemoteMcpUrl(selectedMcpSession?.token)" 
                     class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-none text-white join-item px-4 gap-1">
               <i class="fa-solid fa-copy text-xs"></i>
-              <span>نسخ الرابط</span>
+              <span x-text="t('copyLink')">نسخ الرابط</span>
             </button>
           </div>
-          <p class="text-[11px] text-slate-400">
-            في تطبيق <strong>Claude Desktop</strong> أو <strong>Claude Web</strong> أو <strong>Cursor</strong>: أضف خادم MCP وضع هذا الرابط برابط واحد مباشر.
-          </p>
+          <p class="text-[11px] text-slate-400" x-text="t('claudeUsageGuide')"></p>
         </div>
 
         <!-- 2. OpenAPI 3.1 Schema for ChatGPT -->
@@ -1689,7 +1695,7 @@
           <div class="flex items-center justify-between">
             <span class="font-bold text-cyan-300 flex items-center gap-1.5">
               <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
-              <span>2. رابط OpenAPI 3.1 Schema (مخصص لـ ChatGPT Actions / Custom GPTs):</span>
+              <span x-text="t('openApiSchemaLink')">2. رابط OpenAPI 3.1 Schema (مخصص لـ ChatGPT Actions / Custom GPTs):</span>
             </span>
             <span class="text-[10px] text-slate-500">OpenAPI 3.1.0</span>
           </div>
@@ -1699,36 +1705,34 @@
             <button @click="copyOpenApiUrl(selectedMcpSession?.token)" 
                     class="btn btn-sm bg-cyan-600 hover:bg-cyan-500 border-none text-white join-item px-4 gap-1">
               <i class="fa-solid fa-copy text-xs"></i>
-              <span>نسخ الرابط</span>
+              <span x-text="t('copyLink')">نسخ الرابط</span>
             </button>
           </div>
-          <p class="text-[11px] text-slate-400">
-            في <strong>ChatGPT (Create a GPT)</strong>: اذهب إلى <strong>Configure → Actions → Import from URL</strong> وضع هذا الرابط لاستيراد الأدوات فوراً!
-          </p>
+          <p class="text-[11px] text-slate-400" x-text="t('chatGptUsageGuide')"></p>
         </div>
 
         <!-- Instructions Accordion / Steps -->
         <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2.5">
           <div class="font-semibold text-slate-200 flex items-center gap-1.5 text-xs">
             <i class="fa-solid fa-circle-question text-purple-400"></i>
-            <span>كيف يتحكم ChatGPT أو Claude في الكود والمشروع عبر هذه الجلسة؟</span>
+            <span x-text="t('howItWorksQuestion')">كيف يتحكم ChatGPT أو Claude في الكود والمشروع عبر هذه الجلسة؟</span>
           </div>
           <ul class="list-disc list-inside space-y-1.5 text-slate-400 text-[11px] leading-relaxed">
-            <li>بمجرد الربط، تظهر لـ ChatGPT/Claude أداة <code>ask_agent</code> لتنفيذ أي أمر برمجي وتعديل الملفات بواسطة Antigravity (agy).</li>
-            <li>تظهر أدوات <code>list_workspace_files</code> و <code>read_workspace_file</code> لتصفح وقراءة ملفات المشروع.</li>
-            <li>يتم تطبيق ساندبوكس الأمان وحصر العمليات داخل المجلد المحدد للجلسة تلقائياً.</li>
+            <li x-text="t('howItWorksPoint1')"></li>
+            <li x-text="t('howItWorksPoint2')"></li>
+            <li x-text="t('howItWorksPoint3')"></li>
           </ul>
         </div>
 
       </div>
 
       <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-end">
-        <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+        <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('close')">إغلاق</button>
       </div>
 
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showRemoteMcpModal = false">إغلاق</button>
+      <button @click="showRemoteMcpModal = false" x-text="t('close')">إغلاق</button>
     </form>
   </dialog>
 
@@ -1744,10 +1748,10 @@
           </div>
           <div>
             <h3 class="font-extrabold text-base text-white font-sans flex items-center gap-2">
-              <span>خادم الأوركسترا والتحكم المركزي</span>
+              <span x-text="t('orchestratorModalTitle')">خادم الأوركسترا والتحكم المركزي</span>
               <span class="badge badge-sm bg-purple-600/40 text-purple-200 border-purple-500/30 text-[10px] font-mono">Platform MCP</span>
             </h3>
-            <p class="text-xs text-purple-200/70">تحكم كامل بجميع الوكلاء، المحركات (agy, claude, codex, vibe, opencode)، والذاكرة المشتركة MemoryZ</p>
+            <p class="text-xs text-purple-200/70" x-text="t('orchestratorModalDesc')">تحكم كامل بجميع الوكلاء، المحركات (agy, claude, codex, vibe, opencode)، والذاكرة المشتركة MemoryZ</p>
           </div>
         </div>
         <button @click="showOrchestratorModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
@@ -1760,9 +1764,9 @@
         <div class="alert bg-purple-950/40 border border-purple-700/40 text-purple-200 text-xs p-3.5 flex items-start gap-2.5">
           <i class="fa-solid fa-circle-info text-purple-400 mt-0.5 text-sm"></i>
           <div class="leading-relaxed">
-            <strong>ما الفرق بين هذا الرابط ورابط الجلسات الفردية؟</strong><br>
-            • <strong>رابط الأوركسترا (هنا):</strong> يمنح الوكيل (Claude Desktop أو Cursor أو ChatGPT) صلاحية إدارة المنصة بأكملها: إنشاء جلسات، توجيه مهام لأي محرك، تمرير النتائج بين الوكلاء، واسترجاع الذكريات من MemoryZ.<br>
-            • <strong>رابط الجلسة الفردية (في بطاقات الجلسات):</strong> مقيد بساندبوكس مشروع واحد فقط لمطور أو وكيل مستقل.
+            <strong x-text="t('orchestratorVsSessionTitle')">ما الفرق بين هذا الرابط ورابط الجلسات الفردية؟</strong><br>
+            <span x-text="t('orchestratorVsSessionOrch')">• رابط الأوركسترا (هنا): يمنح الوكيل (Claude Desktop أو Cursor أو ChatGPT) صلاحية إدارة المنصة بأكملها: إنشاء جلسات، توجيه مهام لأي محرك، تمرير النتائج بين الوكلاء، واسترجاع الذكريات من MemoryZ.</span><br>
+            <span x-text="t('orchestratorVsSessionIndiv')">• رابط الجلسة الفردية (في بطاقات الجلسات): مقيد بساندبوكس مشروع واحد فقط لمطور أو وكيل مستقل.</span>
           </div>
         </div>
 
@@ -1777,20 +1781,20 @@
               </div>
               <div>
                 <h4 class="font-bold text-xs text-white flex items-center gap-2">
-                  <span>محرك اتخاذ القرار والفرز الذكي (TypeSafe Jev AI)</span>
+                  <span x-text="t('jevEngineTitle')">محرك اتخاذ القرار والفرز الذكي (TypeSafe Jev AI)</span>
                   <span class="badge badge-xs font-mono text-[10px]"
                         :class="jevEnabled ? 'badge-warning text-black font-bold' : 'badge-ghost text-slate-400'">
-                    <span x-text="jevEnabled ? 'مفعّل (يستهلك رصيد)' : 'معطّل (حفظ الرصيد)'"></span>
+                    <span x-text="jevEnabled ? t('jevActiveQuota') : t('jevDisabledQuota')"></span>
                   </span>
                 </h4>
-                <p class="text-[11px] text-slate-400">يستخدم لفرز المهام (smart_route) وتقييم الذاكرة وتلخيص المهارات. عند التعطيل يتم استخدام البديل المحلي فوراً بدون استهلاك أي توكن.</p>
+                <p class="text-[11px] text-slate-400" x-text="t('jevEngineDesc')">يستخدم لفرز المهام (smart_route) وتقييم الذاكرة وتلخيص المهارات. عند التعطيل يتم استخدام البديل المحلي فوراً بدون استهلاك أي توكن.</p>
               </div>
             </div>
 
             <!-- Action Button -->
             <button @click="toggleJevAI()" :disabled="loadingJev" class="btn btn-sm px-3 text-xs shrink-0"
                     :class="jevEnabled ? 'btn-error btn-outline hover:bg-rose-600' : 'btn-warning'">
-              <span x-show="!loadingJev" x-text="jevEnabled ? 'إلغاء وتوقيف Jev' : 'تفعيل Jev AI'"></span>
+              <span x-show="!loadingJev" x-text="jevEnabled ? t('jevDisableBtn') : t('jevEnableBtn')"></span>
               <i x-show="loadingJev" class="fa-solid fa-spinner animate-spin"></i>
             </button>
           </div>
@@ -1801,7 +1805,7 @@
           <div class="flex items-center justify-between">
             <span class="font-bold text-purple-300 flex items-center gap-1.5">
               <i class="fa-solid fa-bolt text-xs"></i>
-              <span>1. رابط خادم الأوركسترا المباشر (Claude Desktop / Cursor / Web):</span>
+              <span x-text="t('orchestratorDirectLinkTitle')">1. رابط خادم الأوركسترا المباشر (Claude Desktop / Cursor / Web):</span>
             </span>
             <span class="text-[10px] text-slate-500 font-mono">Streamable HTTP + SSE</span>
           </div>
@@ -1811,12 +1815,10 @@
             <button @click="copyOrchestratorMcpUrl()" 
                     class="btn btn-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none text-white join-item px-4 gap-1">
               <i class="fa-solid fa-copy text-xs"></i>
-              <span>نسخ الرابط</span>
+              <span x-text="t('copyLink')">نسخ الرابط</span>
             </button>
           </div>
-          <p class="text-[11px] text-slate-400">
-            أضف هذا الرابط في <strong>Claude Desktop</strong> أو <strong>Cursor</strong> ليصبح العميل قائد الأوركسترا (Orchestrator).
-          </p>
+          <p class="text-[11px] text-slate-400" x-text="t('orchestratorDirectLinkHelp')"></p>
         </div>
 
         <!-- 2. OpenAPI Schema Endpoint for ChatGPT / Custom GPTs -->
@@ -1824,7 +1826,7 @@
           <div class="flex items-center justify-between">
             <span class="font-bold text-cyan-300 flex items-center gap-1.5">
               <i class="fa-solid fa-cube text-xs"></i>
-              <span>2. رابط OpenAPI للأوركسترا (Custom GPTs / Open WebUI):</span>
+              <span x-text="t('orchestratorOpenApiTitle')">2. رابط OpenAPI للأوركسترا (Custom GPTs / Open WebUI):</span>
             </span>
             <span class="text-[10px] text-slate-500 font-mono">OpenAPI 3.1.0</span>
           </div>
@@ -1834,44 +1836,42 @@
             <button @click="copyOrchestratorOpenApiUrl()" 
                     class="btn btn-sm bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 border-none text-white join-item px-4 gap-1">
               <i class="fa-solid fa-copy text-xs"></i>
-              <span>نسخ الرابط</span>
+              <span x-text="t('copyLink')">نسخ الرابط</span>
             </button>
           </div>
-          <p class="text-[11px] text-slate-400">
-            في <strong>ChatGPT Custom GPTs</strong> أو <strong>Open WebUI</strong>: أضف Action برابط schema المباشر أعلاه.
-          </p>
+          <p class="text-[11px] text-slate-400" x-text="t('orchestratorOpenApiHelp')"></p>
         </div>
 
         <!-- Orchestrator Capabilities Overview -->
         <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-3">
           <div class="font-semibold text-slate-200 flex items-center gap-1.5 text-xs">
             <i class="fa-solid fa-toolbox text-purple-400"></i>
-            <span>الأدوات المتاحة للأوركسترا بمجرد الربط:</span>
+            <span x-text="t('orchestratorToolsTitle')">الأدوات المتاحة للأوركسترا بمجرد الربط:</span>
           </div>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
             <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
               <span class="font-mono text-purple-300 font-bold">agent_dispatch</span>
-              <p class="text-slate-400 text-[10px] mt-0.5">توجيه مهمة لأي محرك/جلسة في الخلفية مع حقن الذاكرة.</p>
+              <p class="text-slate-400 text-[10px] mt-0.5" x-text="t('toolAgentDispatchDesc')">توجيه مهمة لأي محرك/جلسة في الخلفية مع حقن الذاكرة.</p>
             </div>
             <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
               <span class="font-mono text-purple-300 font-bold">handoff</span>
-              <p class="text-slate-400 text-[10px] mt-0.5">تمرير ناتج وكيل إلى وكيل آخر تلقائياً في سلسلة عمل.</p>
+              <p class="text-slate-400 text-[10px] mt-0.5" x-text="t('toolHandoffDesc')">تمرير ناتج وكيل إلى وكيل آخر تلقائياً في سلسلة عمل.</p>
             </div>
             <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
               <span class="font-mono text-purple-300 font-bold">session_create</span>
-              <p class="text-slate-400 text-[10px] mt-0.5">إنشاء جلسة وكيل جديدة وتحديد المحرك والمسار.</p>
+              <p class="text-slate-400 text-[10px] mt-0.5" x-text="t('toolSessionCreateDesc')">إنشاء جلسة وكيل جديدة وتحديد المحرك والمسار.</p>
             </div>
             <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
               <span class="font-mono text-purple-300 font-bold">memory_fetch / recall</span>
-              <p class="text-slate-400 text-[10px] mt-0.5">جلب الذكريات بالهش الدقيق أو البحث الدلالي في MemoryZ.</p>
+              <p class="text-slate-400 text-[10px] mt-0.5" x-text="t('toolMemoryFetchDesc')">جلب الذكريات بالهش الدقيق أو البحث الدلالي في MemoryZ.</p>
             </div>
             <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
               <span class="font-mono text-purple-300 font-bold">task_tree / task_claim</span>
-              <p class="text-slate-400 text-[10px] mt-0.5">تتبع شجرة المهام الهرمية والقفل الذري لمنع تصادم الوكلاء.</p>
+              <p class="text-slate-400 text-[10px] mt-0.5" x-text="t('toolTaskTreeDesc')">تتبع شجرة المهام الهرمية والقفل الذري لمنع تصادم الوكلاء.</p>
             </div>
             <div class="p-2 rounded-lg bg-slate-900/80 border border-slate-800">
               <span class="font-mono text-purple-300 font-bold">notify</span>
-              <p class="text-slate-400 text-[10px] mt-0.5">إرسال تنبيهات للمطور عبر Telegram أو Webhook.</p>
+              <p class="text-slate-400 text-[10px] mt-0.5" x-text="t('toolNotifyDesc')">إرسال تنبيهات للمطور عبر Telegram أو Webhook.</p>
             </div>
           </div>
         </div>
@@ -1879,12 +1879,12 @@
       </div>
 
       <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-end">
-        <button @click="showOrchestratorModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+        <button @click="showOrchestratorModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('close')">إغلاق</button>
       </div>
 
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showOrchestratorModal = false">إغلاق</button>
+      <button @click="showOrchestratorModal = false" x-text="t('close')">إغلاق</button>
     </form>
   </dialog>
 
@@ -1900,10 +1900,10 @@
           </div>
           <div>
             <h3 class="text-base font-black text-white font-sans flex items-center gap-2">
-              <span>قنوات التواصل وبوتات التلغرام</span>
+              <span x-text="t('telegramModalTitle')">قنوات التواصل وبوتات التلغرام</span>
               <span class="badge badge-xs bg-sky-950 text-sky-300 border-sky-500/40">Telegram Bot API</span>
             </h3>
-            <p class="text-xs text-slate-400">إدارة البوتات المحفوظة وربطها مع الوكلاء للمحادثة وتبادل الملفات</p>
+            <p class="text-xs text-slate-400" x-text="t('telegramModalDesc')">إدارة البوتات المحفوظة وربطها مع الوكلاء للمحادثة وتبادل الملفات</p>
           </div>
         </div>
         <button @click="showTelegramModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
@@ -1916,9 +1916,9 @@
           <div class="flex items-center justify-between">
             <span class="text-xs font-bold text-slate-300 flex items-center gap-2">
               <i class="fa-solid fa-list-check text-sky-400"></i>
-              <span>البوتات والحسابات المحفوظة</span>
+              <span x-text="t('savedBotsHeader')">البوتات والحسابات المحفوظة</span>
             </span>
-            <span class="badge badge-neutral badge-xs font-mono" x-text="telegramConfigs.length + ' حسابات'"></span>
+            <span class="badge badge-neutral badge-xs font-mono" x-text="telegramConfigs.length + ' ' + t('accountsCountSuffix')"></span>
           </div>
 
           <div class="space-y-2">
@@ -1928,33 +1928,31 @@
                   <div class="flex items-center gap-2">
                     <span class="font-bold text-xs text-slate-200" x-text="cfg.name"></span>
                     <span class="badge badge-xs" :class="cfg.enabled ? 'bg-emerald-950 text-emerald-300 border-emerald-800/40' : 'bg-slate-800 text-slate-400'">
-                      <span x-text="cfg.enabled ? 'مفعّل' : 'معطّل'"></span>
+                      <span x-text="cfg.enabled ? t('botEnabled') : t('botDisabled')"></span>
                     </span>
                   </div>
                   <div class="flex items-center gap-3 text-[10px] text-slate-400 font-mono">
-                    <span>Chat ID: <span class="text-sky-300" x-text="cfg.chatId || 'غير محدد'"></span></span>
-                    <span>Token: <span class="text-slate-500" x-text="cfg.botToken ? '...' + cfg.botToken.slice(-8) : 'فارغ'"></span></span>
+                    <span>Chat ID: <span class="text-sky-300" x-text="cfg.chatId || t('botChatIdUnset')"></span></span>
+                    <span>Token: <span class="text-slate-500" x-text="cfg.botToken ? '...' + cfg.botToken.slice(-8) : t('botTokenEmpty')"></span></span>
                   </div>
                 </div>
 
                 <div class="flex items-center gap-1.5 shrink-0">
-                  <button @click="testTelegramToken(cfg.botToken)" :disabled="testingTelegramToken" class="btn btn-xs bg-sky-950 hover:bg-sky-900 border border-sky-500/40 text-sky-300 gap-1 text-[11px]" title="فحص الاتصال">
+                  <button @click="testTelegramToken(cfg.botToken)" :disabled="testingTelegramToken" class="btn btn-xs bg-sky-950 hover:bg-sky-900 border border-sky-500/40 text-sky-300 gap-1 text-[11px]" :title="t('botTestTooltip')">
                     <i class="fa-solid fa-signal text-[10px]"></i>
-                    <span>فحص</span>
+                    <span x-text="t('botTestBtn')">فحص</span>
                   </button>
-                  <button @click="editTelegramConfig(cfg)" class="btn btn-xs btn-ghost text-slate-300 hover:text-white" title="تعديل">
+                  <button @click="editTelegramConfig(cfg)" class="btn btn-xs btn-ghost text-slate-300 hover:text-white" :title="t('botEditTooltip')">
                     <i class="fa-solid fa-pen-to-square text-[11px]"></i>
                   </button>
-                  <button @click="deleteTelegramConfig(cfg.id)" class="btn btn-xs btn-ghost text-rose-400 hover:bg-rose-950/40" title="حذف">
+                  <button @click="deleteTelegramConfig(cfg.id)" class="btn btn-xs btn-ghost text-rose-400 hover:bg-rose-950/40" :title="t('botDeleteTooltip')">
                     <i class="fa-solid fa-trash-can text-[11px]"></i>
                   </button>
                 </div>
               </div>
             </template>
 
-            <div x-show="telegramConfigs.length === 0" class="p-4 rounded-xl bg-slate-950/50 border border-dashed border-slate-800 text-center text-xs text-slate-500">
-              لا توجد بوتات محفوظة حتى الآن. أضف بوتك الأول أدناه.
-            </div>
+            <div x-show="telegramConfigs.length === 0" class="p-4 rounded-xl bg-slate-950/50 border border-dashed border-slate-800 text-center text-xs text-slate-500" x-text="t('noSavedBots')"></div>
           </div>
         </div>
 
@@ -1963,33 +1961,31 @@
           <div class="flex items-center justify-between border-b border-slate-800 pb-2">
             <span class="text-xs font-bold text-sky-300 flex items-center gap-2">
               <i class="fa-solid fa-robot"></i>
-              <span x-text="newTgConfig.id ? 'تعديل حساب بوت تلغرام' : 'إضافة حساب بوت تلغرام جديد'"></span>
+              <span x-text="newTgConfig.id ? t('editBotTitle') : t('addBotTitle')"></span>
             </span>
-            <button x-show="newTgConfig.id" @click="resetTelegramForm()" class="btn btn-xs btn-ghost text-slate-400 text-[10px]">
-              إلغاء التعديل
-            </button>
+            <button x-show="newTgConfig.id" @click="resetTelegramForm()" class="btn btn-xs btn-ghost text-slate-400 text-[10px]" x-text="t('cancelEdit')"></button>
           </div>
 
           <form @submit.prevent="saveTelegramConfig" class="space-y-3 text-xs">
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label class="label pb-1 text-slate-300">اسم الحساب / التسمية:</label>
-                <input type="text" x-model="newTgConfig.name" required placeholder="مثال: بوت المطور الأساسي، قناة الفريق..." class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 text-xs">
+                <label class="label pb-1 text-slate-300" x-text="t('botNameLabel')">اسم الحساب / التسمية:</label>
+                <input type="text" x-model="newTgConfig.name" required :placeholder="t('botNamePlaceholder')" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 text-xs">
               </div>
               <div>
-                <label class="label pb-1 text-slate-300">Chat ID / معرف المحادثة أو القناة:</label>
-                <input type="text" x-model="newTgConfig.chatId" placeholder="مثال: 8478894397 أو -100xxx" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                <label class="label pb-1 text-slate-300" x-text="t('botChatIdLabel')">Chat ID / معرف المحادثة أو القناة:</label>
+                <input type="text" x-model="newTgConfig.chatId" :placeholder="t('botChatIdPlaceholder')" class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
               </div>
             </div>
 
             <div>
-              <label class="label pb-1 text-slate-300">Bot Token (من BotFather):</label>
+              <label class="label pb-1 text-slate-300" x-text="t('botTokenLabel')">Bot Token (من BotFather):</label>
               <div class="flex items-center gap-2">
-                <input type="text" x-model="newTgConfig.botToken" required placeholder="مثال: 7123456789:AAFAN2cHvjrvJ1Tu..." class="input input-sm input-bordered flex-1 bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
+                <input type="text" x-model="newTgConfig.botToken" required :placeholder="t('botTokenPlaceholder')" class="input input-sm input-bordered flex-1 bg-slate-900 border-slate-700 text-slate-200 font-mono text-xs">
                 <button type="button" @click="testTelegramToken()" :disabled="testingTelegramToken || !newTgConfig.botToken.trim()" class="btn btn-sm bg-sky-900/60 hover:bg-sky-800 border border-sky-500/40 text-sky-200 gap-1.5 shrink-0 text-xs">
                   <span x-show="testingTelegramToken" class="loading loading-spinner loading-xs"></span>
                   <i x-show="!testingTelegramToken" class="fa-solid fa-bolt-lightning text-xs"></i>
-                  <span>اختبار الاتصال</span>
+                  <span x-text="t('botTestConnectionBtn')">اختبار الاتصال</span>
                 </button>
               </div>
             </div>
@@ -1998,11 +1994,11 @@
             <div x-show="telegramTestResult" class="p-3 rounded-lg text-xs" :class="telegramTestResult?.success ? 'bg-emerald-950/40 border border-emerald-500/40 text-emerald-300' : 'bg-rose-950/40 border border-rose-500/40 text-rose-300'" x-cloak>
               <div class="flex items-center gap-2 font-bold">
                 <i :class="telegramTestResult?.success ? 'fa-solid fa-circle-check text-emerald-400' : 'fa-solid fa-circle-xmark text-rose-400'"></i>
-                <span x-text="telegramTestResult?.success ? 'الاتصال ناجح! معلومات البوت:' : 'فشل الاتصال:'"></span>
+                <span x-text="telegramTestResult?.success ? t('botConnSuccess') : t('botConnFailed')"></span>
               </div>
               <div x-show="telegramTestResult?.success" class="mt-1 font-mono text-[11px] space-y-0.5">
-                <div>الاسم: <span class="text-white" x-text="telegramTestResult?.bot?.first_name"></span></div>
-                <div>اليوزر: <span class="text-cyan-300" x-text="'@' + telegramTestResult?.bot?.username"></span></div>
+                <div><span x-text="t('botNameField')"></span> <span class="text-white" x-text="telegramTestResult?.bot?.first_name"></span></div>
+                <div><span x-text="t('botUsernameField')"></span> <span class="text-cyan-300" x-text="'@' + telegramTestResult?.bot?.username"></span></div>
               </div>
               <div x-show="!telegramTestResult?.success" class="mt-1 text-[11px]" x-text="telegramTestResult?.error"></div>
             </div>
@@ -2010,12 +2006,12 @@
             <div class="flex items-center justify-between pt-1">
               <label class="label cursor-pointer p-0 gap-2">
                 <input type="checkbox" x-model="newTgConfig.enabled" class="checkbox checkbox-xs checkbox-info">
-                <span class="text-xs text-slate-300">تفعيل الاستماع للبوت فورياً</span>
+                <span class="text-xs text-slate-300" x-text="t('botEnableListening')">تفعيل الاستماع للبوت فورياً</span>
               </label>
 
               <button type="submit" class="btn btn-sm btn-primary bg-sky-600 hover:bg-sky-500 border-none text-white gap-1.5">
                 <i class="fa-solid fa-save text-xs"></i>
-                <span x-text="newTgConfig.id ? 'تحديث الحساب' : 'حفظ البوت'"></span>
+                <span x-text="newTgConfig.id ? t('botUpdateBtn') : t('botSaveBtn')"></span>
               </button>
             </div>
           </form>
@@ -2025,26 +2021,26 @@
         <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-2.5 text-xs">
           <div class="font-bold text-slate-200 flex items-center gap-2">
             <i class="fa-solid fa-lightbulb text-amber-400"></i>
-            <span>كيف يعمل البوت مع الوكلاء؟</span>
+            <span x-text="t('howTgWorksTitle')">كيف يعمل البوت مع الوكلاء؟</span>
           </div>
           <ul class="space-y-1.5 text-slate-400 text-[11px] list-disc list-inside">
-            <li><strong class="text-slate-300">أمر /sessions:</strong> يعرض الجلسات المرتبطة مع أزرار مضمنة لاختيار الجلسة النشطة بنقرة واحدة.</li>
-            <li><strong class="text-slate-300">الرد المباشر (Reply):</strong> إذا قمت بالرد (Reply) على أي رسالة من الوكيل، يتعرف البوت على الجلسة ويوجه الرد إليها تلقائياً!</li>
-            <li><strong class="text-slate-300">رفع الملفات:</strong> أرسل أي ملف أو صورة إلى البوت، وسيتم حفظها فوراً في مجلد الجلسة وإبلاغ الوكيل بمسارها.</li>
-            <li><strong class="text-slate-300">تنزيل الملفات:</strong> اطلب ملفاً بأمر <code class="text-sky-300 font-mono">/getfile &lt;filename&gt;</code> أو استعرض محتويات المسار بأمر <code class="text-sky-300 font-mono">/files</code>.</li>
-            <li><strong class="text-slate-300">معرف الجلسة في الردود:</strong> كل رد قادم من الوكيل يوضح في رأسه معرف الجلسة واسمها بدقة لتجنب أي التباس.</li>
+            <li x-text="t('tgPointSessions')"><strong>أمر /sessions:</strong> يعرض الجلسات المرتبطة مع أزرار مضمنة لاختيار الجلسة النشطة بنقرة واحدة.</li>
+            <li x-text="t('tgPointReply')"><strong>الرد المباشر (Reply):</strong> إذا قمت بالرد (Reply) على أي رسالة من الوكيل، يتعرف البوت على الجلسة ويوجه الرد إليها تلقائياً!</li>
+            <li x-text="t('tgPointUpload')"><strong>رفع الملفات:</strong> أرسل أي ملف أو صورة إلى البوت، وسيتم حفظها فوراً في مجلد الجلسة وإبلاغ الوكيل بمسارها.</li>
+            <li x-text="t('tgPointDownload')"><strong>تنزيل الملفات:</strong> اطلب ملفاً بأمر <code class="text-sky-300 font-mono">/getfile &lt;filename&gt;</code> أو استعرض محتويات المسار بأمر <code class="text-sky-300 font-mono">/files</code>.</li>
+            <li x-text="t('tgPointSessionId')"><strong>معرف الجلسة في الردود:</strong> كل رد قادم من الوكيل يوضح في رأسه معرف الجلسة واسمها بدقة لتجنب أي التباس.</li>
           </ul>
         </div>
 
       </div>
 
       <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-end">
-        <button @click="showTelegramModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+        <button @click="showTelegramModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('close')">إغلاق</button>
       </div>
 
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showTelegramModal = false">إغلاق</button>
+      <button @click="showTelegramModal = false" x-text="t('close')">إغلاق</button>
     </form>
   </dialog>
 
@@ -2058,8 +2054,8 @@
             <i class="fa-solid fa-key text-base"></i>
           </div>
           <div>
-            <h3 class="text-base font-black text-white font-sans">إعداد مفاتيح النظام و .env</h3>
-            <p class="text-xs text-slate-400">ضبط المفاتيح التوليدية والذاكرة السيادية لتشغيل المنصة</p>
+            <h3 class="text-base font-black text-white font-sans" x-text="t('keysModalTitle')">إعداد مفاتيح النظام و .env</h3>
+            <p class="text-xs text-slate-400" x-text="t('keysModalDesc')">ضبط المفاتيح التوليدية والذاكرة السيادية لتشغيل المنصة</p>
           </div>
         </div>
         <button @click="closeKeysModal()" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
@@ -2075,12 +2071,12 @@
               <i class="fa-brands fa-google text-lg"></i>
               <div>
                 <div class="font-bold text-xs">Google Gemini AI</div>
-                <div class="text-[10px] text-slate-400">الذكاء واستخلاص المهارات</div>
+                <div class="text-[10px] text-slate-400" x-text="t('geminiKeyDesc')">الذكاء واستخلاص المهارات</div>
               </div>
             </div>
             <span class="badge badge-xs font-mono py-1 px-2 border-none"
                   :class="keysStatus?.keys?.gemini?.configured ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'"
-                  x-text="keysStatus?.keys?.gemini?.configured ? 'متوفر ✔' : 'غير متوفر ✖'"></span>
+                  x-text="keysStatus?.keys?.gemini?.configured ? t('statusAvailable') : t('statusMissing')"></span>
           </div>
 
           <!-- MemoryZ Key Status -->
@@ -2090,12 +2086,12 @@
               <i class="fa-solid fa-brain text-lg"></i>
               <div>
                 <div class="font-bold text-xs">MemoryZ Substrate</div>
-                <div class="text-[10px] text-slate-400">الذاكرة السيادية والمهام</div>
+                <div class="text-[10px] text-slate-400" x-text="t('memoryzKeyDesc')">الذاكرة السيادية والمهام</div>
               </div>
             </div>
             <span class="badge badge-xs font-mono py-1 px-2 border-none"
                   :class="keysStatus?.keys?.memoryz?.configured ? 'bg-emerald-500/20 text-emerald-300' : 'bg-rose-500/20 text-rose-300'"
-                  x-text="keysStatus?.keys?.memoryz?.configured ? 'متوفر ✔' : 'غير متوفر ✖'"></span>
+                  x-text="keysStatus?.keys?.memoryz?.configured ? t('statusAvailable') : t('statusMissing')"></span>
           </div>
 
           <!-- Jev AI Key Status -->
@@ -2105,12 +2101,12 @@
               <i class="fa-solid fa-bolt-lightning text-lg text-amber-400"></i>
               <div>
                 <div class="font-bold text-xs">TypeSafe Jev AI</div>
-                <div class="text-[10px] text-slate-400">اختياري (System One)</div>
+                <div class="text-[10px] text-slate-400" x-text="t('jevKeyDesc')">اختياري (System One)</div>
               </div>
             </div>
             <span class="badge badge-xs font-mono py-1 px-2 border-none"
                   :class="keysStatus?.keys?.jev?.configured ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-400'"
-                  x-text="keysStatus?.keys?.jev?.configured ? 'متوفر ✔' : 'اختياري'"></span>
+                  x-text="keysStatus?.keys?.jev?.configured ? t('statusAvailable') : t('statusOptional')"></span>
           </div>
 
           <!-- Admin Password Status -->
@@ -2119,23 +2115,23 @@
             <div class="flex items-center gap-2.5">
               <i class="fa-solid fa-shield-halved text-lg"></i>
               <div>
-                <div class="font-bold text-xs">أمان لوحة الإدارة</div>
-                <div class="text-[10px] text-slate-400">كلمة المرور الرئيسية</div>
+                <div class="font-bold text-xs" x-text="t('adminSecurityTitle')"></div>
+                <div class="text-[10px] text-slate-400" x-text="t('adminPassDesc')"></div>
               </div>
             </div>
             <span class="badge badge-xs font-mono py-1 px-2 border-none"
                   :class="keysStatus?.keys?.adminPass?.configured ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300'"
-                  x-text="keysStatus?.keys?.adminPass?.configured ? 'مخصصة 🔒' : 'افتراضية ⚠️'"></span>
+                  x-text="keysStatus?.keys?.adminPass?.configured ? t('statusCustomPass') : t('statusDefaultPass')"></span>
           </div>
         </div>
 
         <!-- Mode Tabs -->
         <div class="tabs tabs-boxed bg-slate-950 p-1 rounded-xl">
           <a class="tab text-xs font-bold transition-all" :class="{ 'tab-active bg-cyan-600 text-white': keysTab === 'form' }" @click="keysTab = 'form'">
-            <i class="fa-solid fa-pen-to-square ml-1.5"></i> الإدخال المباشر والحفظ في .env
+            <i class="fa-solid fa-pen-to-square ml-1.5"></i> <span x-text="t('keysTabForm')">الإدخال المباشر والحفظ في .env</span>
           </a>
           <a class="tab text-xs font-bold transition-all" :class="{ 'tab-active bg-cyan-600 text-white': keysTab === 'manual' }" @click="keysTab = 'manual'">
-            <i class="fa-solid fa-terminal ml-1.5"></i> التثبيت اليدوي (الملف والطرفية)
+            <i class="fa-solid fa-terminal ml-1.5"></i> <span x-text="t('keysTabManual')">التثبيت اليدوي (الملف والطرفية)</span>
           </a>
         </div>
 
@@ -2144,45 +2140,45 @@
           <form @submit.prevent="saveKeysFromModal" class="space-y-3">
             <div class="form-control">
               <label class="label pb-1 flex justify-between">
-                <span class="label-text text-xs font-bold text-slate-200">Google Gemini API Key (مطلوب)</span>
-                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] text-cyan-400 hover:underline">احصل عليه مجاناً ↗</a>
+                <span class="label-text text-xs font-bold text-slate-200" x-text="t('geminiKeyLabel')">Google Gemini API Key (مطلوب)</span>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] text-cyan-400 hover:underline" x-text="t('geminiKeyFreeLink')">احصل عليه مجاناً ↗</a>
               </label>
-              <input type="password" x-model="keysForm.geminiApiKey" placeholder="AIzaSy... أو الصق المفتاح هنا"
+              <input type="password" x-model="keysForm.geminiApiKey" :placeholder="t('geminiKeyPlaceholder')"
                      class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-cyan-500">
             </div>
 
             <div class="form-control">
               <label class="label pb-1 flex justify-between">
-                <span class="label-text text-xs font-bold text-slate-200">MemoryZ Substrate Token (مطلوب)</span>
-                <a href="https://memoryz.wino.deno.net" target="_blank" class="text-[10px] text-cyan-400 hover:underline">بوابة MemoryZ ↗</a>
+                <span class="label-text text-xs font-bold text-slate-200" x-text="t('memoryzTokenLabel')">MemoryZ Substrate Token (مطلوب)</span>
+                <a href="https://memoryz.wino.deno.net" target="_blank" class="text-[10px] text-cyan-400 hover:underline" x-text="t('memoryzPortalLink')">بوابة MemoryZ ↗</a>
               </label>
-              <input type="password" x-model="keysForm.memoryzToken" placeholder="mz_... أو التوكن الخاص بك"
+              <input type="password" x-model="keysForm.memoryzToken" :placeholder="t('memoryzTokenPlaceholder')"
                      class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-cyan-500">
             </div>
 
             <div class="form-control">
               <label class="label pb-1 flex justify-between">
-                <span class="label-text text-xs font-bold text-slate-200">TypeSafe Jev AI Key (اختياري)</span>
-                <a href="https://typesafe.ai" target="_blank" class="text-[10px] text-cyan-400 hover:underline">موقع Jev ↗</a>
+                <span class="label-text text-xs font-bold text-slate-200" x-text="t('jevKeyLabel')">TypeSafe Jev AI Key (اختياري)</span>
+                <a href="https://typesafe.ai" target="_blank" class="text-[10px] text-cyan-400 hover:underline" x-text="t('jevSiteLink')">موقع Jev ↗</a>
               </label>
-              <input type="password" x-model="keysForm.jevApiKey" placeholder="jev_... (اختياري لنظام التقييم)"
+              <input type="password" x-model="keysForm.jevApiKey" :placeholder="t('jevKeyPlaceholder')"
                      class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-cyan-500">
             </div>
 
             <div class="form-control">
               <label class="label pb-1">
-                <span class="label-text text-xs font-bold text-slate-200">تعيين كلمة مرور جديدة للمسؤول (ADMIN_PASS)</span>
+                <span class="label-text text-xs font-bold text-slate-200" x-text="t('adminPassLabel')">تعيين كلمة مرور جديدة للمسؤول (ADMIN_PASS)</span>
               </label>
-              <input type="password" x-model="keysForm.adminPass" placeholder="اتركه فارغاً للإبقاء على الحالية"
+              <input type="password" x-model="keysForm.adminPass" :placeholder="t('adminPassPlaceholder')"
                      class="input input-sm input-bordered bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-cyan-500">
             </div>
 
             <div class="pt-2 flex items-center justify-between">
-              <div class="text-[10px] text-slate-500 font-mono" x-text="keysStatus?.envPath ? 'المسار: ' + keysStatus.envPath : ''"></div>
+              <div class="text-[10px] text-slate-500 font-mono" x-text="keysStatus?.envPath ? t('envPathPrefix') + keysStatus.envPath : ''"></div>
               <button type="submit" :disabled="keysSaving" class="btn btn-sm btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 border-none text-white px-5 shadow-lg shadow-cyan-500/20">
                 <span x-show="keysSaving" class="loading loading-spinner loading-xs"></span>
                 <i x-show="!keysSaving" class="fa-solid fa-floppy-disk text-xs"></i>
-                <span>حفظ وتفعيل فوري في .env</span>
+                <span x-text="t('saveKeysBtn')">حفظ وتفعيل فوري في .env</span>
               </button>
             </div>
           </form>
@@ -2190,34 +2186,32 @@
 
         <!-- TAB 2: MANUAL -->
         <div x-show="keysTab === 'manual'" class="space-y-3">
-          <p class="text-xs text-slate-300">
-            يمكنك إنشاء أو تعديل ملف <code class="text-cyan-300 font-mono bg-slate-950 px-1 py-0.5 rounded">.env</code> في مسار تشغيل التطبيق يدوياً أو تمرير المتغيرات في الطرفية:
-          </p>
-          <div class="relative bg-slate-950 rounded-xl p-3 border border-slate-800 font-mono text-xs text-slate-300 select-all overflow-x-auto whitespace-pre"># ملف .env في مسار تشغيل المشروع
+          <p class="text-xs text-slate-300" x-text="t('keysManualDesc')"></p>
+          <div class="relative bg-slate-950 rounded-xl p-3 border border-slate-800 font-mono text-xs text-slate-300 select-all overflow-x-auto whitespace-pre"># .env
 PORT=3333
 ADMIN_USER=admin
 ADMIN_PASS=your_strong_password
 
-# المفاتيح التوليدية والذاكرة المشتركة
+# Generative AI & MemoryZ Substrate
 GEMINI_API_KEY=your_gemini_api_key
 MEMORYZ_TOKEN=your_memoryz_token
 MEMORYZ_URL=https://memoryz.wino.deno.net
 JEV_AI_KEY=your_jev_key_optional</div>
           <div class="bg-cyan-950/20 border border-cyan-500/30 rounded-xl p-3 text-[11px] text-cyan-300">
             <i class="fa-solid fa-circle-info ml-1"></i>
-            عند استخدام <code class="font-mono bg-cyan-950/60 px-1 rounded">npx vibzcode</code>، يبحث التطبيق تلقائياً عن ملف <code class="font-mono bg-cyan-950/60 px-1 rounded">.env</code> في المجلد الحالي أو في <code class="font-mono bg-cyan-950/60 px-1 rounded">~/.vibzcode/.env</code>.
+            <span x-text="t('npxEnvNote')"></span>
           </div>
         </div>
 
       </div>
 
       <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-between items-center">
-        <span class="text-[10px] text-slate-500">لن يتم رفع ملف .env إلى Git أو npm أبداً بفضل العزل الأمني</span>
-        <button @click="closeKeysModal()" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+        <span class="text-[10px] text-slate-500" x-text="t('securityEnvNote')">لن يتم رفع ملف .env إلى Git أو npm أبداً بفضل العزل الأمني</span>
+        <button @click="closeKeysModal()" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('close')">إغلاق</button>
       </div>
     </div>
     <form method="dialog" class="modal-backdrop bg-black/70 backdrop-blur-sm">
-      <button @click="closeKeysModal()">إغلاق</button>
+      <button @click="closeKeysModal()" x-text="t('close')">إغلاق</button>
     </form>
   </dialog>
 
@@ -2239,10 +2233,10 @@ JEV_AI_KEY=your_jev_key_optional</div>
           </div>
           <div class="text-right truncate">
             <div class="text-xs font-bold text-slate-100 flex items-center gap-1.5">
-              <span>وجّه الوكيل العام السيادي (Master Agent)</span>
+              <span x-text="t('masterAgentTip')">وجّه الوكيل العام السيادي (Master Agent)</span>
               <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
             </div>
-            <div class="text-[11px] text-slate-400 truncate">يفهم السياق، يتذكر عبر MemoryZ، ويتحكم بجميع الجلسات...</div>
+            <div class="text-[11px] text-slate-400 truncate" x-text="t('masterAgentLauncherDesc')">يفهم السياق، يتذكر عبر MemoryZ، ويتحكم بجميع الجلسات...</div>
           </div>
         </div>
         <div class="flex items-center gap-1.5 shrink-0">
@@ -2271,28 +2265,28 @@ JEV_AI_KEY=your_jev_key_optional</div>
           </div>
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <h4 class="text-xs font-black text-white truncate">الوكيل العام السيادي (Master Orchestrator)</h4>
-              <span class="badge badge-xs bg-amber-950 text-amber-300 border-amber-500/40 font-mono text-[10px]">12 أداة نشطة</span>
+              <h4 class="text-xs font-black text-white truncate" x-text="t('masterAgentFullTitle')">الوكيل العام السيادي (Master Orchestrator)</h4>
+              <span class="badge badge-xs bg-amber-950 text-amber-300 border-amber-500/40 font-mono text-[10px]" x-text="t('masterActiveTools')">12 أداة نشطة</span>
             </div>
-            <p class="text-[10px] text-slate-400 truncate">متصل بـ Gemini Flash + MemoryZ + جميع جلسات الوكلاء</p>
+            <p class="text-[10px] text-slate-400 truncate" x-text="t('masterAgentHeaderDesc')">متصل بـ Gemini Flash + MemoryZ + جميع جلسات الوكلاء</p>
           </div>
         </div>
 
         <div class="flex items-center gap-1.5 shrink-0">
           <!-- Model Selector -->
           <select x-model="masterModel" class="select select-xs bg-slate-950 border-slate-700 text-amber-300 font-mono text-[10px] rounded-lg focus:border-amber-500">
-            <option value="">Gemini 2.5 Flash (تلقائي)</option>
+            <option value="" x-text="t('masterDefaultModel')">Gemini 2.5 Flash (تلقائي)</option>
             <option value="gemini-3-flash-preview">Gemini 3 Flash Preview</option>
             <option value="gemini-2.0-flash">Gemini 2.0 Flash</option>
           </select>
 
           <!-- Clear History Button -->
-          <button @click="clearMasterHistory()" class="btn btn-xs btn-ghost text-slate-400 hover:text-rose-400 tooltip tooltip-bottom" data-tip="مسح السجل">
+          <button @click="clearMasterHistory()" class="btn btn-xs btn-ghost text-slate-400 hover:text-rose-400 tooltip tooltip-bottom" :data-tip="t('masterClearHistoryTip')">
             <i class="fa-solid fa-trash-can text-xs"></i>
           </button>
 
           <!-- Toggle Messages Drawer Height -->
-          <button @click="masterBarExpanded = !masterBarExpanded" class="btn btn-xs btn-ghost text-slate-300 hover:text-white tooltip tooltip-bottom" :data-tip="masterBarExpanded ? 'تصغير المحادثة' : 'توسيع المحادثة'">
+          <button @click="masterBarExpanded = !masterBarExpanded" class="btn btn-xs btn-ghost text-slate-300 hover:text-white tooltip tooltip-bottom" :data-tip="masterBarExpanded ? t('masterCollapseTip') : t('masterExpandTip')">
             <i class="fa-solid text-xs" :class="masterBarExpanded ? 'fa-chevron-down' : 'fa-chevron-up'"></i>
           </button>
 
@@ -2303,26 +2297,26 @@ JEV_AI_KEY=your_jev_key_optional</div>
 
       <!-- Quick Command Chips -->
       <div class="px-3 py-2 bg-slate-950/70 border-b border-slate-800/80 flex items-center gap-1.5 overflow-x-auto no-scrollbar text-[11px]">
-        <span class="text-[10px] text-slate-500 font-bold shrink-0 ml-1"><i class="fa-solid fa-bolt text-amber-400"></i> أوامر سريعة:</span>
-        <button @click="sendMasterCommand('اعرض لي حالة جميع الجلسات المفتوحة والمهام الجارية حالياً باختصار')" :disabled="masterLoading"
+        <span class="text-[10px] text-slate-500 font-bold shrink-0 ml-1"><i class="fa-solid fa-bolt text-amber-400"></i> <span x-text="t('masterQuickCmds')">أوامر سريعة:</span></span>
+        <button @click="sendMasterCommand(t('masterCmdSessionsPrompt'))" :disabled="masterLoading"
                 class="btn btn-xs bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-lg shrink-0 gap-1 font-normal">
           <i class="fa-solid fa-layer-group text-cyan-400 text-[10px]"></i>
-          <span>حالة الجلسات</span>
+          <span x-text="t('masterCmdSessions')">حالة الجلسات</span>
         </button>
-        <button @click="sendMasterCommand('استرجع لي أهم القواعد والمهارات المحفوظة في ذاكرة MemoryZ')" :disabled="masterLoading"
+        <button @click="sendMasterCommand(t('masterCmdMemoriesPrompt'))" :disabled="masterLoading"
                 class="btn btn-xs bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-lg shrink-0 gap-1 font-normal">
           <i class="fa-solid fa-brain text-purple-400 text-[10px]"></i>
-          <span>ذكريات MemoryZ</span>
+          <span x-text="t('masterCmdMemories')">ذكريات MemoryZ</span>
         </button>
-        <button @click="sendMasterCommand('اعرض شجرة المهام الحالية في MemoryZ وحالة كل مهمة')" :disabled="masterLoading"
+        <button @click="sendMasterCommand(t('masterCmdTaskTreePrompt'))" :disabled="masterLoading"
                 class="btn btn-xs bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-lg shrink-0 gap-1 font-normal">
           <i class="fa-solid fa-sitemap text-emerald-400 text-[10px]"></i>
-          <span>شجرة المهام</span>
+          <span x-text="t('masterCmdTaskTree')">شجرة المهام</span>
         </button>
-        <button @click="masterInput = 'أنشئ جلسة جديدة باسم '; document.getElementById('master-command-input').focus()"
+        <button @click="masterInput = t('masterCmdCreatePromptPrefix'); document.getElementById('master-command-input').focus()"
                 class="btn btn-xs bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-slate-200 rounded-lg shrink-0 gap-1 font-normal">
           <i class="fa-solid fa-plus text-amber-400 text-[10px]"></i>
-          <span>إنشاء جلسة بأمر</span>
+          <span x-text="t('masterCmdCreateSession')">إنشاء جلسة بأمر</span>
         </button>
       </div>
 
@@ -2336,10 +2330,8 @@ JEV_AI_KEY=your_jev_key_optional</div>
             <div class="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 mx-auto">
               <i class="fa-solid fa-wand-magic-sparkles text-base"></i>
             </div>
-            <p class="text-xs font-bold text-slate-200">الوكيل العام جاهز لتلقي أوامرك</p>
-            <p class="text-[11px] text-slate-400 max-w-md mx-auto">
-              اطلب منه فحص أي مشروع، توجيه مهمة لـ Claude أو Antigravity أو Codex، تمرير مخرجات وكيل لآخر، أو حفظ قاعدة في MemoryZ.
-            </p>
+            <p class="text-xs font-bold text-slate-200" x-text="t('masterWelcomeTitle')"></p>
+            <p class="text-[11px] text-slate-400 max-w-md mx-auto" x-text="t('masterWelcomeDesc')"></p>
           </div>
         </template>
 
@@ -2354,7 +2346,7 @@ JEV_AI_KEY=your_jev_key_optional</div>
               <div class="flex items-center justify-between gap-3 mb-1 text-[10px] opacity-75">
                 <span class="font-bold flex items-center gap-1">
                   <i :class="msg.role === 'user' ? 'fa-solid fa-user text-cyan-400' : 'fa-solid fa-crown text-amber-400'"></i>
-                  <span x-text="msg.role === 'user' ? 'أنت' : 'الوكيل العام'"></span>
+                  <span x-text="msg.role === 'user' ? t('masterUserLabel') : t('masterAgentLabel')"></span>
                 </span>
                 <span class="font-mono" x-text="msg.time || ''"></span>
               </div>
@@ -2381,7 +2373,7 @@ JEV_AI_KEY=your_jev_key_optional</div>
         <!-- Loading Indicator -->
         <div x-show="masterLoading" class="flex items-center gap-2.5 p-3 rounded-xl bg-amber-950/20 border border-amber-500/30 text-amber-300 text-xs">
           <span class="loading loading-dots loading-sm text-amber-400"></span>
-          <span>الوكيل العام يحلل السياق وينفذ الأدوات المطلوبة...</span>
+          <span x-text="t('masterLoadingMsg')">الوكيل العام يحلل السياق وينفذ الأدوات المطلوبة...</span>
         </div>
       </div>
 
@@ -2392,7 +2384,7 @@ JEV_AI_KEY=your_jev_key_optional</div>
                  type="text"
                  x-model="masterInput"
                  :disabled="masterLoading"
-                 placeholder="اكتب أمرك للوكيل العام (مثال: وجه جلسة الفيرم لفحص الأخطاء، أو تذكر أن المنفذ 4000)..."
+                 :placeholder="t('masterInputPlaceholder')"
                  class="input input-sm input-bordered w-full bg-slate-900 border-slate-700 focus:border-amber-500 text-slate-100 text-xs pr-3 pl-9 rounded-xl">
           <i class="fa-solid fa-terminal absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
         </div>
@@ -2401,7 +2393,7 @@ JEV_AI_KEY=your_jev_key_optional</div>
                 class="btn btn-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border-none text-slate-950 font-black rounded-xl px-4 gap-1.5 shadow-lg shadow-amber-500/20">
           <span x-show="masterLoading" class="loading loading-spinner loading-xs"></span>
           <i x-show="!masterLoading" class="fa-solid fa-paper-plane text-xs"></i>
-          <span class="text-xs">تنفيذ</span>
+          <span class="text-xs" x-text="t('masterExecuteBtn')">تنفيذ</span>
         </button>
       </form>
 

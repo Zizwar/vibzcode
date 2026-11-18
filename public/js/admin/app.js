@@ -9,19 +9,22 @@ Vibz.createAdminApp = function() {
 
     // Theme State
     theme: localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark',
+    lang: (typeof localStorage !== 'undefined' && localStorage.getItem('vibz_lang')) || 'ar',
 
     // i18n Helpers
     t(key) {
+      const _ = this.lang;
       return Vibz.i18n ? Vibz.i18n.t(key) : key;
     },
 
     get currentLang() {
-      return Vibz.i18n ? Vibz.i18n.currentLang : 'ar';
+      return this.lang;
     },
 
     toggleLang() {
       if (Vibz.i18n) {
         Vibz.i18n.toggleLang();
+        this.lang = Vibz.i18n.currentLang;
       }
     },
 
@@ -34,6 +37,16 @@ Vibz.createAdminApp = function() {
       if (typeof this.initMasterBar === 'function') {
         this.initMasterBar();
       }
+
+      const updateTitle = () => {
+        document.title = 'VibzCode - ' + (this.lang === 'ar' ? 'لوحة تحكم وتنسيق وكلاء الذكاء الاصطناعي' : 'AI Agents Orchestration & Control Plane');
+      };
+      updateTitle();
+
+      document.addEventListener('vibz-lang-changed', (e) => {
+        this.lang = e.detail;
+        updateTitle();
+      });
       const savedToken = localStorage.getItem('vibz_admin_token') || localStorage.getItem('agyz_admin_token');
       if (savedToken) {
         this.adminToken = savedToken;

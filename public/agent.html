@@ -105,7 +105,7 @@
             <i class="fa-solid fa-wand-magic-sparkles text-2xl"></i>
           </div>
           <h2 class="text-2xl font-black text-white font-sans">VibzCode Agent Access</h2>
-          <p class="text-xs text-slate-400">أدخل رمز الوصول الخاص بالجلسة (Session Token) للبدء</p>
+          <p class="text-xs text-slate-400" x-text="t('loginSessionTokenDesc')"></p>
         </div>
 
         <div x-show="authError" x-transition class="alert alert-error bg-rose-950/60 border border-rose-500/40 text-rose-300 py-2.5 text-xs">
@@ -116,7 +116,7 @@
         <form @submit.prevent="authenticateWithToken" class="space-y-4">
           <div class="form-control">
             <label class="label pb-1">
-              <span class="label-text text-xs font-semibold text-slate-300">رمز الجلسة (Session Token):</span>
+              <span class="label-text text-xs font-semibold text-slate-300" x-text="t('sessionTokenLabel')"></span>
             </label>
             <div class="relative flex items-center">
               <input type="text" x-model="tokenInput" placeholder="vibz_xxxxxxxxxxxxxxxx" required
@@ -129,14 +129,14 @@
                   class="btn btn-primary w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white font-bold shadow-lg shadow-cyan-500/20 text-sm mt-2">
             <span x-show="authLoading" class="loading loading-spinner loading-xs"></span>
             <i x-show="!authLoading" class="fa-solid fa-arrow-right-to-bracket"></i>
-            <span>دخول إلى بيئة الوكيل</span>
+            <span x-text="t('enterAgentEnv')"></span>
           </button>
         </form>
 
         <div class="text-center pt-2">
           <a href="/" class="text-xs text-cyan-400 hover:underline">
             <i class="fa-solid fa-lock text-[10px] ml-1"></i>
-            لوحة الإدارة المركزية
+            <span x-text="t('centralAdminPanel')"></span>
           </a>
         </div>
       </div>
@@ -156,7 +156,7 @@
         <!-- Right (in RTL): Home, Sparkles & Desktop Titles -->
         <div class="flex items-center gap-1.5 sm:gap-2.5 shrink-0 min-w-0">
           <!-- Back to Central Dashboard Button -->
-          <a href="/" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-cyan-400" data-tip="العودة للوحة الرئيسية">
+          <a href="/" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-cyan-400" :data-tip="t('backToDashboard')">
             <i class="fa-solid fa-house text-xs"></i>
           </a>
 
@@ -185,7 +185,7 @@
                     class="badge bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[10px] py-0.5 px-1.5 font-semibold gap-1 cursor-pointer hover:bg-purple-900 transition-colors tooltip tooltip-bottom"
                     :data-tip="'جلسة متفرعة من: ' + session?.forkedFrom?.sessionName">
                 <i class="fa-solid fa-code-fork text-[9px] text-purple-400"></i>
-                <span>فرع</span>
+                <span x-text="t('branchBadge')"></span>
               </span>
             </div>
             <div class="text-[10px] sm:text-[11px] text-slate-400 flex items-center gap-1 font-mono truncate max-w-[180px] md:max-w-[280px]">
@@ -201,13 +201,13 @@
                   class="join-item btn btn-xs sm:btn-sm gap-1 transition-all font-semibold"
                   :class="activeView === 'chat' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md border-none' : 'btn-ghost text-slate-400 hover:text-white'">
             <i class="fa-solid fa-comments text-xs"></i>
-            <span class="hidden md:inline">محادثة AI</span>
+            <span class="hidden md:inline" x-text="t('chatMode')"></span>
           </button>
           <button @click="switchView('terminal')"
                   class="join-item btn btn-xs sm:btn-sm gap-1 transition-all font-semibold"
                   :class="activeView === 'terminal' ? 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-md border-none' : 'btn-ghost text-slate-400 hover:text-white'">
             <i class="fa-solid fa-terminal text-xs"></i>
-            <span class="hidden md:inline">الطرفية المباشرة</span>
+            <span class="hidden md:inline" x-text="t('terminalMode')"></span>
           </button>
         </div>
 
@@ -216,16 +216,16 @@
           <!-- Chat Mode Specific Actions -->
           <template x-if="activeView === 'chat'">
             <div class="flex items-center gap-1">
-              <button @click="openBranchesModal()" class="btn btn-ghost btn-sm btn-circle sm:btn-sm text-slate-300 hover:text-cyan-400 tooltip tooltip-bottom" data-tip="شجرة الفروع والجلسات المتفرعة">
+              <button @click="openBranchesModal()" class="btn btn-ghost btn-sm btn-circle sm:btn-sm text-slate-300 hover:text-cyan-400 tooltip tooltip-bottom" :data-tip="t('branchesModalTitle')">
                 <i class="fa-solid fa-code-fork text-cyan-400 text-xs"></i>
-                <span class="text-xs font-semibold hidden lg:inline mr-1">الفروع</span>
+                <span class="text-xs font-semibold hidden lg:inline mr-1" x-text="t('branches')"></span>
                 <span x-show="branchFamily && branchFamily.length > 1" class="badge badge-xs bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[9px]" x-text="branchFamily.length"></span>
               </button>
-              <button x-show="chatLoading" @click="abortChat" class="btn btn-xs btn-error text-xs gap-1 tooltip tooltip-bottom" data-tip="إلغاء الأمر الحالي">
+              <button x-show="chatLoading" @click="abortChat" class="btn btn-xs btn-error text-xs gap-1 tooltip tooltip-bottom" :data-tip="t('abortCommand')">
                 <i class="fa-solid fa-stop text-[10px]"></i>
-                <span class="hidden sm:inline">إيقاف</span>
+                <span class="hidden sm:inline" x-text="t('stop')"></span>
               </button>
-              <button @click="clearChat" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-white" data-tip="بدء محادثة جديدة وتصفير الشاشة">
+              <button @click="clearChat" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-white" :data-tip="t('clearChat')">
                 <i class="fa-solid fa-plus text-cyan-400"></i>
               </button>
             </div>
@@ -235,14 +235,14 @@
           <template x-if="activeView === 'terminal'">
             <div class="flex items-center gap-1">
               <button @click="toggleArabicMode" class="btn btn-ghost btn-xs border border-slate-700 tooltip tooltip-bottom text-xs gap-1"
-                      :class="arabicModeIndex > 0 ? 'border-cyan-500/40 text-cyan-300' : ''" :data-tip="'تبديل معالجة العربية: ' + arabicModes[arabicModeIndex].label">
+                      :class="arabicModeIndex > 0 ? 'border-cyan-500/40 text-cyan-300' : ''" :data-tip="t('switchArabicMode') + ': ' + arabicModes[arabicModeIndex].label">
                 <i :class="arabicModes[arabicModeIndex].icon"></i>
                 <span class="text-[10px] hidden sm:inline" x-text="arabicModes[arabicModeIndex].label"></span>
               </button>
-              <button @click="copyAllTerminal" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-white" data-tip="نسخ نص الطرفية">
+              <button @click="copyAllTerminal" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-white" :data-tip="t('copyTerminal')">
                 <i class="fa-solid fa-copy text-xs"></i>
               </button>
-              <button @click="restartTerminalSession" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-amber-400 hover:text-amber-300" data-tip="مسح وإعادة تشغيل الطرفية">
+              <button @click="restartTerminalSession" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-amber-400 hover:text-amber-300" :data-tip="t('restartTerminal')">
                 <i class="fa-solid fa-arrows-rotate text-xs"></i>
               </button>
             </div>
@@ -260,11 +260,11 @@
           </button>
 
           <!-- Fullscreen Toggle (Always visible) -->
-          <button @click="toggleFullscreen" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-white" :data-tip="isFullscreen ? 'إنهاء ملء الشاشة' : 'ملء الشاشة'">
+          <button @click="toggleFullscreen" class="btn btn-ghost btn-sm btn-circle tooltip tooltip-bottom text-slate-300 hover:text-white" :data-tip="isFullscreen ? t('exitFullscreen') : t('enterFullscreen')">
             <i class="fa-solid text-xs" :class="isFullscreen ? 'fa-compress text-cyan-400' : 'fa-expand'"></i>
           </button>
 
-          <button @click="handleLogout" class="btn btn-ghost btn-sm btn-circle text-rose-400 hover:text-rose-300 tooltip tooltip-bottom" data-tip="تسجيل الخروج">
+          <button @click="handleLogout" class="btn btn-ghost btn-sm btn-circle text-rose-400 hover:text-rose-300 tooltip tooltip-bottom" :data-tip="t('logout')">
             <i class="fa-solid fa-right-from-bracket text-xs"></i>
           </button>
         </div>
@@ -287,7 +287,7 @@
           <span x-show="session?.forkedFrom" @click="openBranchesModal()"
                 class="badge bg-purple-950/80 text-purple-300 border border-purple-500/40 text-[9px] py-0 px-1 font-semibold shrink-0 cursor-pointer">
             <i class="fa-solid fa-code-fork text-[8px] text-purple-400"></i>
-            <span>فرع</span>
+            <span x-text="t('branchBadge')"></span>
           </span>
           <span x-show="session?.assignee" class="text-[10px] text-slate-400 truncate max-w-[80px]" x-text="'(' + session?.assignee + ')'"></span>
         </div>
@@ -304,38 +304,44 @@
         <div class="flex items-center gap-1.5 flex-wrap">
           
           <!-- Workspace Directory -->
-          <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-300 tooltip tooltip-bottom cursor-default" :data-tip="'مساحة العمل: ' + session?.targetDir">
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] font-mono text-slate-300 tooltip tooltip-bottom cursor-default" :data-tip="t('workspaceTooltip') + ': ' + session?.targetDir">
             <i class="fa-solid fa-folder text-amber-400"></i>
             <span class="truncate max-w-[120px] sm:max-w-[200px]" x-text="session?.targetDir?.split('/').pop() || session?.targetDir"></span>
           </div>
 
           <!-- Sandbox Badge -->
-          <div x-show="session?.sandbox" class="p-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs tooltip tooltip-bottom cursor-default" data-tip="ساندبوكس مقيّد ومعزول بأمان">
+          <div x-show="session?.sandbox" class="p-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs tooltip tooltip-bottom cursor-default" :data-tip="t('sandboxProtected')">
             <i class="fa-solid fa-shield-halved"></i>
           </div>
 
           <!-- Auto-Approve Badge -->
-          <div x-show="session?.autoApprove" class="p-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs tooltip tooltip-bottom cursor-default" data-tip="تنفيذ مباشر وتلقائي للأوامر">
+          <div x-show="session?.autoApprove" class="p-1.5 rounded-lg bg-emerald-950/60 border border-emerald-500/30 text-emerald-400 text-xs tooltip tooltip-bottom cursor-default" :data-tip="t('autoApproveActive')">
             <i class="fa-solid fa-bolt"></i>
           </div>
 
           <!-- MemoryZ MCP Button -->
-          <button @click="openMemoryModal" class="btn btn-xs btn-ghost bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/30 text-purple-300 gap-1.5 tooltip tooltip-bottom" data-tip="ذاكرة المعرفة الدلالية (MemoryZ MCP)">
+          <button @click="openMemoryModal" class="btn btn-xs btn-ghost bg-purple-950/60 hover:bg-purple-900/80 border border-purple-500/30 text-purple-300 gap-1.5 tooltip tooltip-bottom" :data-tip="t('memoryzTooltip')">
             <i class="fa-solid fa-brain text-purple-400 text-xs"></i>
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
           </button>
 
           <!-- Remote MCP Button for Claude / ChatGPT -->
-          <button @click="openRemoteMcpModal" class="btn btn-xs btn-ghost bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/30 text-cyan-300 gap-1.5 tooltip tooltip-bottom" data-tip="ربط بروتوكول Remote MCP (Claude / ChatGPT)">
+          <button @click="openRemoteMcpModal" class="btn btn-xs btn-ghost bg-cyan-950/60 hover:bg-cyan-900/80 border border-cyan-500/30 text-cyan-300 gap-1.5 tooltip tooltip-bottom" :data-tip="t('remoteMcpTooltip')">
             <i class="fa-solid fa-satellite-dish text-cyan-400 text-xs"></i>
             <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
           </button>
 
           <!-- Workspace Files Count Badge -->
-          <button @click="showFileDrawer = true; fetchWorkspaceTree();" class="btn btn-xs btn-ghost bg-slate-800/60 border border-slate-700 text-slate-300 gap-1 tooltip tooltip-bottom" data-tip="فتح شجرة ملفات المشروع">
+          <button @click="showFileDrawer = true; fetchWorkspaceTree();" class="btn btn-xs btn-ghost bg-slate-800/60 border border-slate-700 text-slate-300 gap-1 tooltip tooltip-bottom" :data-tip="t('openFilesTree')">
             <i class="fa-solid fa-folder-tree text-amber-400 text-[10px]"></i>
-            <span class="font-mono text-[10px]" x-text="totalFilesCount ? totalFilesCount + ' ملف' : 'الملفات'"></span>
+            <span class="font-mono text-[10px]" x-text="totalFilesCount ? totalFilesCount + ' ' + (currentLang === 'ar' ? t('filesCount') : t('filesCount')) : t('files')"></span>
           </button>
+
+          <!-- Agent Skill Button (Link to /vibzcode.skill.md) -->
+          <a href="/vibzcode.skill.md" target="_blank" class="btn btn-xs btn-ghost bg-amber-950/60 hover:bg-amber-900/80 border border-amber-500/30 text-amber-300 gap-1.5 tooltip tooltip-bottom" :data-tip="t('agentSkillTip')">
+            <i class="fa-solid fa-book-sparkles text-amber-400 text-[11px]"></i>
+            <span class="font-mono text-[10px] hidden sm:inline" x-text="currentLang === 'ar' ? 'مهارة الوكيل' : 'Skill'">Skill</span>
+          </a>
 
         </div>
 
@@ -343,7 +349,7 @@
         <div class="flex items-center gap-2 flex-wrap">
           
           <!-- Model Selection Dropdown -->
-          <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom" data-tip="اختيار نموذج الذكاء الاصطناعي">
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom" :data-tip="t('modelSelectionTip')">
             <i class="fa-solid fa-microchip text-cyan-400 text-xs"></i>
             <select x-model="selectedModel" @change="onModelChange()" class="bg-transparent text-slate-200 text-[11px] font-mono focus:outline-none cursor-pointer border-none py-0 pr-4 pl-0">
               <template x-for="m in availableModels" :key="m.id">
@@ -353,31 +359,33 @@
           </div>
 
           <!-- Thinking Effort Selector -->
-          <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom" data-tip="مستوى التفكير والتعمق (Thinking Effort)">
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom" :data-tip="t('thinkingEffortTip')">
             <i class="fa-solid fa-brain text-amber-400 text-xs"></i>
-            <span class="text-slate-400 text-[10px] hidden sm:inline">تفكير:</span>
+            <span class="text-slate-400 text-[10px] hidden sm:inline" x-text="t('thinking') + ':'"></span>
             <select x-model="selectedEffort" @change="onEffortChange()" class="bg-transparent text-amber-300 font-semibold text-[11px] font-mono focus:outline-none cursor-pointer border-none py-0 pr-4 pl-0">
               <template x-for="ef in availableEfforts" :key="ef.id">
-                <option :value="ef.id" x-text="ef.name" class="bg-slate-900 text-slate-100"></option>
+                <option :value="ef.id" x-text="currentLang === 'ar' ? ef.name : (ef.nameEn || ef.name)" class="bg-slate-900 text-slate-100"></option>
               </template>
             </select>
           </div>
 
           <!-- Continue context toggle -->
-          <label class="cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom select-none" data-tip="متابعة سياق المحادثة السابقة">
+          <label class="cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom select-none" :data-tip="t('continueContextTip')">
             <input type="checkbox" x-model="chatContinue" class="checkbox checkbox-xs checkbox-accent">
             <i class="fa-solid fa-clock-rotate-left text-xs text-slate-400"></i>
             <span class="text-slate-400 text-[10px] hidden sm:inline font-mono">Continue</span>
           </label>
 
           <!-- MemoryZ MCP Context Toggle -->
-          <label class="cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom select-none" data-tip="تضمين سياق الذاكرة وبروتوكول MCP في الأوامر">
+          <label class="cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom select-none" :data-tip="t('mcpContextTip')">
             <input type="checkbox" x-model="useMemoryzMcp" class="checkbox checkbox-xs checkbox-secondary">
             <i class="fa-solid fa-plug text-xs text-purple-400"></i>
             <span class="text-purple-300 text-[10px] hidden sm:inline font-mono">MCP</span>
           </label>
 
         </div>
+
+      </div>
 
       </div>
 
@@ -395,31 +403,31 @@
             <div class="space-y-2">
               <h2 class="text-xl sm:text-2xl font-black text-white" x-text="session?.name"></h2>
               <p class="text-xs sm:text-sm text-slate-400 leading-relaxed max-w-md mx-auto">
-                أهلاً بك <span class="text-cyan-300 font-bold" x-text="session?.assignee"></span>! هذا الوكيل مخصص لمساعدتك في مشروع <code class="text-cyan-300 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800" x-text="session?.targetDir"></code>.
+                <span x-text="t('welcomeGreeting')"></span> <span class="text-cyan-300 font-bold" x-text="session?.assignee"></span>! <span x-text="t('agentDedicatedTo')"></span> <code class="text-cyan-300 font-mono bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800" x-text="session?.targetDir"></code>.
               </p>
             </div>
 
             <!-- Quick Suggestion Chips -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 w-full pt-2">
-              <button @click="sendChatMessage('استعرض محتويات مساحة العمل ولخص ملفات المشروع ومكوناته')"
+              <button @click="sendChatMessage(t('suggestionFiles'))"
                       class="btn btn-sm btn-ghost bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs justify-start h-auto py-3 px-3.5 text-right transition-all hover:border-cyan-500/40">
                 <i class="fa-solid fa-folder-tree text-cyan-400 ml-2"></i>
-                <span>استعراض ملفات المشروع</span>
+                <span x-text="t('suggestionFiles')"></span>
               </button>
-              <button @click="sendChatMessage('افحص الكود والملفات واذكر الأخطاء أو الملاحظات البرمجية')"
+              <button @click="sendChatMessage(t('suggestionAudit'))"
                       class="btn btn-sm btn-ghost bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs justify-start h-auto py-3 px-3.5 text-right transition-all hover:border-cyan-500/40">
                 <i class="fa-solid fa-bug text-rose-400 ml-2"></i>
-                <span>فحص الأخطاء والمشاكل</span>
+                <span x-text="t('suggestionAudit')"></span>
               </button>
-              <button @click="sendChatMessage('ما هي حالة المشروع وما هي الخطوات المقترحة للتطوير؟')"
+              <button @click="sendChatMessage(t('suggestionIdeas'))"
                       class="btn btn-sm btn-ghost bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs justify-start h-auto py-3 px-3.5 text-right transition-all hover:border-cyan-500/40">
                 <i class="fa-solid fa-lightbulb text-amber-400 ml-2"></i>
-                <span>اقتراحات تطوير للمشروع</span>
+                <span x-text="t('suggestionIdeas')"></span>
               </button>
-              <button @click="sendChatMessage('اشرح طريقة تشغيل واختبار المشروع محلياً')"
+              <button @click="sendChatMessage(t('suggestionRun'))"
                       class="btn btn-sm btn-ghost bg-slate-900/90 hover:bg-slate-800 text-slate-200 border border-slate-800 text-xs justify-start h-auto py-3 px-3.5 text-right transition-all hover:border-cyan-500/40">
                 <i class="fa-solid fa-play text-emerald-400 ml-2"></i>
-                <span>طريقة تشغيل المشروع</span>
+                <span x-text="t('suggestionRun')"></span>
               </button>
             </div>
           </div>
@@ -432,18 +440,18 @@
               </div>
               <div>
                 <div class="font-bold text-white flex items-center gap-2">
-                  <span>جلسة متفرعة (Forked Branch)</span>
-                  <span class="badge badge-xs bg-purple-900/80 text-purple-300 border border-purple-500/30 text-[9px] py-1">تخفيض التوكنز وعزل الذاكرة</span>
+                  <span x-text="t('forkedBranch')"></span>
+                  <span class="badge badge-xs bg-purple-900/80 text-purple-300 border border-purple-500/30 text-[9px] py-1" x-text="t('forkedBadge')"></span>
                 </div>
                 <div class="text-[11px] text-purple-300/80 mt-0.5">
-                  متفرعة من الجلسة: <strong class="text-white" x-text="session?.forkedFrom?.sessionName"></strong>
-                  <span x-show="session?.forkedFrom?.messageSnippet"> - عند: "<span class="italic text-purple-200" x-text="session?.forkedFrom?.messageSnippet"></span>"</span>
+                  <span x-text="t('forkedFromLabel')"></span> <strong class="text-white" x-text="session?.forkedFrom?.sessionName"></strong>
+                  <span x-show="session?.forkedFrom?.messageSnippet"> - <span x-text="t('atMessage')"></span> "<span class="italic text-purple-200" x-text="session?.forkedFrom?.messageSnippet"></span>"</span>
                 </div>
               </div>
             </div>
             <button @click="openBranchesModal()" class="btn btn-ghost btn-xs text-purple-300 hover:text-white border border-purple-500/30 text-[11px] shrink-0 gap-1.5 px-3 py-1 h-auto">
               <i class="fa-solid fa-diagram-project text-xs"></i>
-              <span>عرض شجرة الفروع</span>
+              <span x-text="t('viewFamilyTree')"></span>
             </button>
           </div>
 
@@ -458,22 +466,22 @@
                 <div class="max-w-[88%] sm:max-w-[78%] bg-gradient-to-br from-blue-950/60 to-slate-900/90 border border-blue-500/30 rounded-2xl rounded-tr-none px-4 py-3 shadow-lg">
                   <div class="flex items-center justify-between gap-4 mb-1.5 text-[11px] text-cyan-300/80 border-b border-blue-500/20 pb-1">
                     <div class="flex items-center gap-1.5">
-                      <span class="font-bold" x-text="msg.sender || session?.assignee || 'أنت'"></span>
+                      <span class="font-bold" x-text="msg.sender || session?.assignee || t('you')"></span>
                       <span x-show="msg.sender" class="badge badge-xs bg-cyan-950/80 text-cyan-300 border border-cyan-500/30 text-[9px] px-1 py-0">MCP</span>
-                      <span x-show="msg.editedAt" class="badge badge-xs bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[9px] px-1 py-0">معدلة</span>
+                      <span x-show="msg.editedAt" class="badge badge-xs bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[9px] px-1 py-0" x-text="t('edited')"></span>
                     </div>
                     <div class="flex items-center gap-1.5">
-                      <span x-show="forkCountByMsgId[msg.id]" @click="openBranchesModal()" class="badge badge-xs bg-purple-950 text-purple-300 border border-purple-500/40 text-[9px] px-1.5 py-0 cursor-pointer gap-1 tooltip tooltip-bottom" :data-tip="forkCountByMsgId[msg.id] + ' فروع متفرعة من هذا الطلب'">
+                      <span x-show="forkCountByMsgId[msg.id]" @click="openBranchesModal()" class="badge badge-xs bg-purple-950 text-purple-300 border border-purple-500/40 text-[9px] px-1.5 py-0 cursor-pointer gap-1 tooltip tooltip-bottom" :data-tip="forkCountByMsgId[msg.id] + ' ' + t('forkCountSuffix')">
                         <i class="fa-solid fa-code-fork text-[8px]"></i>
-                        <span x-text="forkCountByMsgId[msg.id] + ' فروع'"></span>
+                        <span x-text="forkCountByMsgId[msg.id] + ' ' + t('forkCountText')"></span>
                       </span>
-                      <button @click="openForkModal(msg, idx)" class="btn btn-ghost btn-xs text-cyan-400/80 hover:text-cyan-300 gap-1 tooltip tooltip-bottom p-0.5 h-auto min-h-0" data-tip="تفريع جلسة جديدة من هذا الطلب">
+                      <button @click="openForkModal(msg, idx)" class="btn btn-ghost btn-xs text-cyan-400/80 hover:text-cyan-300 gap-1 tooltip tooltip-bottom p-0.5 h-auto min-h-0" :data-tip="t('forkTooltipPrompt')">
                         <i class="fa-solid fa-code-fork text-[10px] text-cyan-400"></i>
-                        <span class="text-[9px]">فورك</span>
+                        <span class="text-[9px]" x-text="t('forkBtn')"></span>
                       </button>
-                      <button @click="openEditModal(msg, idx)" :disabled="chatLoading" class="btn btn-ghost btn-xs text-amber-400/80 hover:text-amber-300 gap-1 tooltip tooltip-bottom p-0.5 h-auto min-h-0" data-tip="تعديل هذا الطلب واستئناف الدردشة من هنا">
+                      <button @click="openEditModal(msg, idx)" :disabled="chatLoading" class="btn btn-ghost btn-xs text-amber-400/80 hover:text-amber-300 gap-1 tooltip tooltip-bottom p-0.5 h-auto min-h-0" :data-tip="t('editTooltipPrompt')">
                         <i class="fa-solid fa-pen-to-square text-[10px] text-amber-400"></i>
-                        <span class="text-[9px]">تعديل</span>
+                        <span class="text-[9px]" x-text="t('editBtn')"></span>
                       </button>
                       <span x-text="msg.time" class="font-mono text-slate-400"></span>
                     </div>
@@ -495,42 +503,42 @@
                       <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400" x-text="session?.name"></span>
                       <span x-show="msg.isIntermediate" class="badge badge-xs bg-cyan-950 text-cyan-300 border border-cyan-600/40 text-[9px] px-1.5 py-0.5 gap-1">
                         <i class="fa-solid fa-bolt text-[8px]"></i>
-                        <span>تحديث مرحلي</span>
+                        <span x-text="t('intermediateUpdate')"></span>
                       </span>
                       <span x-show="msg.editedAt" class="badge badge-xs bg-amber-950/80 text-amber-300 border border-amber-500/30 text-[9px] px-1.5 py-0.5 gap-1">
                         <i class="fa-solid fa-pen-to-square text-[8px] text-amber-400"></i>
-                        <span>معدل</span>
+                        <span x-text="t('edited')"></span>
                       </span>
                       <span x-show="msg.duration" class="badge badge-xs badge-ghost font-mono text-[10px] text-slate-400 gap-1">
                         <i class="fa-solid fa-stopwatch text-slate-500 text-[9px]"></i>
                         <span x-text="msg.duration + 's'"></span>
                       </span>
-                      <span x-show="msg.model" class="badge badge-xs bg-slate-900 border border-cyan-500/30 font-mono text-[9px] text-cyan-300 gap-1" :title="'النموذج: ' + msg.model + (msg.effort ? ' (تفكير: ' + msg.effort + ')' : '')">
+                      <span x-show="msg.model" class="badge badge-xs bg-slate-900 border border-cyan-500/30 font-mono text-[9px] text-cyan-300 gap-1" :title="t('model') + ' ' + msg.model + (msg.effort ? ' (' + t('thinking') + ': ' + msg.effort + ')' : '')">
                         <i class="fa-solid fa-microchip text-[8px] text-cyan-400"></i>
                         <span x-text="msg.model.replace('gemini-', '').replace('claude-', '')"></span>
                       </span>
                       <span x-show="msg.usage && msg.usage.total_tokens" class="badge badge-xs bg-emerald-950/70 border border-emerald-500/30 font-mono text-[9px] text-emerald-300 gap-1 tooltip tooltip-bottom cursor-help"
-                            :data-tip="`إجمالي التوكنز: ${(msg.usage.total_tokens || 0).toLocaleString()} | إدخال: ${(msg.usage.input_tokens || 0).toLocaleString()} | إخراج: ${(msg.usage.output_tokens || 0).toLocaleString()} | تفكير: ${(msg.usage.thinking_tokens || 0).toLocaleString()}`">
+                            :data-tip="`${t('totalTokens')}: ${(msg.usage.total_tokens || 0).toLocaleString()} | ${t('inputTokens')}: ${(msg.usage.input_tokens || 0).toLocaleString()} | ${t('outputTokens')}: ${(msg.usage.output_tokens || 0).toLocaleString()} | ${t('thinkingTokens')}: ${(msg.usage.thinking_tokens || 0).toLocaleString()}`">
                         <i class="fa-solid fa-coins text-[8px] text-emerald-400"></i>
                         <span x-text="(msg.usage.total_tokens || 0).toLocaleString() + ' tok'"></span>
                       </span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span x-show="forkCountByMsgId[msg.id]" @click="openBranchesModal()" class="badge badge-xs bg-purple-950 text-purple-300 border border-purple-500/40 text-[9px] px-1.5 py-0 cursor-pointer gap-1 tooltip tooltip-bottom" :data-tip="forkCountByMsgId[msg.id] + ' فروع متفرعة من هذا الرد'">
+                      <span x-show="forkCountByMsgId[msg.id]" @click="openBranchesModal()" class="badge badge-xs bg-purple-950 text-purple-300 border border-purple-500/40 text-[9px] px-1.5 py-0 cursor-pointer gap-1 tooltip tooltip-bottom" :data-tip="forkCountByMsgId[msg.id] + ' ' + t('forkCountSuffixReply')">
                         <i class="fa-solid fa-code-fork text-[8px]"></i>
-                        <span x-text="forkCountByMsgId[msg.id] + ' فروع'"></span>
+                        <span x-text="forkCountByMsgId[msg.id] + ' ' + t('forkCountText')"></span>
                       </span>
-                      <button @click="openForkModal(msg, idx)" class="btn btn-ghost btn-xs text-cyan-400/80 hover:text-cyan-300 hover:bg-cyan-950/40 border border-cyan-500/20 gap-1 tooltip tooltip-bottom px-2" data-tip="تفريع جلسة جديدة من هذا الرد (Fork Session)">
+                      <button @click="openForkModal(msg, idx)" class="btn btn-ghost btn-xs text-cyan-400/80 hover:text-cyan-300 hover:bg-cyan-950/40 border border-cyan-500/20 gap-1 tooltip tooltip-bottom px-2" :data-tip="t('forkTooltipReply')">
                         <i class="fa-solid fa-code-fork text-[10px] text-cyan-400"></i>
-                        <span class="text-[10px] font-semibold">فورك</span>
+                        <span class="text-[10px] font-semibold" x-text="t('forkBtn')"></span>
                       </button>
-                      <button @click="openEditModal(msg, idx)" :disabled="chatLoading" class="btn btn-ghost btn-xs text-amber-400/80 hover:text-amber-300 hover:bg-amber-950/40 border border-amber-500/20 gap-1 tooltip tooltip-bottom px-2" data-tip="تعديل هذا الرد واستئناف الدردشة من هنا">
+                      <button @click="openEditModal(msg, idx)" :disabled="chatLoading" class="btn btn-ghost btn-xs text-amber-400/80 hover:text-amber-300 hover:bg-amber-950/40 border border-amber-500/20 gap-1 tooltip tooltip-bottom px-2" :data-tip="t('editTooltipReply')">
                         <i class="fa-solid fa-pen-to-square text-[10px] text-amber-400"></i>
-                        <span class="text-[10px] font-semibold">تعديل</span>
+                        <span class="text-[10px] font-semibold" x-text="t('editBtn')"></span>
                       </button>
-                      <button @click="copyMessageText(msg.content)" class="btn btn-ghost btn-xs text-slate-400 hover:text-white gap-1 tooltip tooltip-bottom" data-tip="نسخ الرد">
+                      <button @click="copyMessageText(msg.content)" class="btn btn-ghost btn-xs text-slate-400 hover:text-white gap-1 tooltip tooltip-bottom" :data-tip="t('copyTooltip')">
                         <i class="fa-solid fa-copy text-[10px]"></i>
-                        <span class="text-[10px]">نسخ</span>
+                        <span class="text-[10px]" x-text="t('copyBtn')"></span>
                       </button>
                       <span x-text="msg.time" class="font-mono text-[10px] text-slate-500"></span>
                     </div>
@@ -543,25 +551,25 @@
                     <div class="flex items-center gap-3 flex-wrap">
                       <span class="flex items-center gap-1 text-emerald-400 font-semibold">
                         <i class="fa-solid fa-coins text-[9px]"></i>
-                        <span>إجمالي التوكنز:</span>
+                        <span x-text="t('totalTokens') + ':'"></span>
                         <span class="text-emerald-300 font-bold" x-text="(msg.usage.total_tokens || 0).toLocaleString()"></span>
                       </span>
                       <span x-show="msg.usage.input_tokens" class="flex items-center gap-1 text-slate-400">
-                        <span class="text-slate-500">إدخال:</span>
+                        <span class="text-slate-500" x-text="t('inputTokens') + ':'"></span>
                         <span class="text-slate-300" x-text="(msg.usage.input_tokens || 0).toLocaleString()"></span>
                       </span>
                       <span x-show="msg.usage.output_tokens" class="flex items-center gap-1 text-slate-400">
-                        <span class="text-slate-500">إخراج:</span>
+                        <span class="text-slate-500" x-text="t('outputTokens') + ':'"></span>
                         <span class="text-slate-300" x-text="(msg.usage.output_tokens || 0).toLocaleString()"></span>
                       </span>
                       <span x-show="msg.usage.thinking_tokens" class="flex items-center gap-1 text-amber-400">
                         <i class="fa-solid fa-brain text-[8px]"></i>
-                        <span class="text-amber-500">تفكير:</span>
+                        <span class="text-amber-500" x-text="t('thinkingTokens') + ':'"></span>
                         <span class="text-amber-300 font-bold" x-text="(msg.usage.thinking_tokens || 0).toLocaleString()"></span>
                       </span>
                       <span x-show="msg.usage.cache_read_tokens" class="flex items-center gap-1 text-cyan-400">
                         <i class="fa-solid fa-database text-[8px]"></i>
-                        <span class="text-cyan-500">كاش:</span>
+                        <span class="text-cyan-500" x-text="t('cacheTokens') + ':'"></span>
                         <span class="text-cyan-300" x-text="(msg.usage.cache_read_tokens || 0).toLocaleString()"></span>
                       </span>
                     </div>
@@ -577,7 +585,7 @@
                       <summary class="cursor-pointer hover:text-cyan-300 select-none flex items-center justify-between text-slate-400 font-mono text-[11px]">
                         <span class="flex items-center gap-1.5">
                           <i class="fa-solid fa-list-check text-cyan-400 text-[10px]"></i>
-                          <span>سير العمل والأدوات المنفذة (<span x-text="msg.steps.length"></span>)</span>
+                          <span><span x-text="t('workflowSteps')"></span> (<span x-text="msg.steps.length"></span>)</span>
                         </span>
                         <i class="fa-solid fa-chevron-down text-[9px] transition-transform group-open:rotate-180"></i>
                       </summary>
@@ -608,7 +616,7 @@
               <div class="flex items-center justify-between gap-3 text-xs">
                 <div class="flex items-center gap-2 text-cyan-300 font-semibold">
                   <span class="loading loading-spinner loading-xs text-cyan-400"></span>
-                  <span x-text="activeStep ? 'المهمة قيد التشغيل في الخلفية...' : 'جاري التفكير ومعالجة الأمر...'"></span>
+                  <span x-text="activeStep ? t('taskRunningBackground') : t('thinkingProcessing')"></span>
                 </div>
                 <div class="flex items-center gap-1 font-mono text-xs text-slate-400">
                   <i class="fa-solid fa-stopwatch text-slate-500 text-[10px]"></i>
@@ -621,16 +629,16 @@
                 <div class="flex items-center justify-between text-xs">
                   <span class="flex items-center gap-1.5 font-bold text-cyan-300 font-mono">
                     <i class="fa-solid fa-gear fa-spin text-cyan-400 text-[11px]"></i>
-                    <span x-text="activeStep?.name === 'run_command' ? 'تشغيل أمر بالخلفية:' : ('أداة: ' + (activeStep?.name || 'إجراء'))"></span>
+                    <span x-text="activeStep?.name === 'run_command' ? t('runningBackgroundCmd') : (t('toolLabel') + ': ' + (activeStep?.name || 'action'))"></span>
                   </span>
-                  <span class="badge badge-xs bg-cyan-950 text-cyan-300 border border-cyan-600/50 text-[9px] animate-pulse">نشط الآن</span>
+                  <span class="badge badge-xs bg-cyan-950 text-cyan-300 border border-cyan-600/50 text-[9px] animate-pulse" x-text="t('activeNow')"></span>
                 </div>
                 <div x-show="activeStep?.detail" class="text-[11px] font-mono text-emerald-300 break-all bg-black/60 p-2 rounded-lg border border-slate-800 dir-ltr text-left" x-text="activeStep?.detail"></div>
               </div>
 
               <!-- Steps Completed So Far in this Turn -->
               <div x-show="activeStepsHistory && activeStepsHistory.length > 0" class="space-y-1 pt-1 border-t border-slate-800/60">
-                <div class="text-[10px] text-slate-400 font-medium">سير العمل المنجز:</div>
+                <div class="text-[10px] text-slate-400 font-medium" x-text="t('workflowCompleted')"></div>
                 <div class="space-y-1 max-h-24 overflow-y-auto pr-1">
                   <template x-for="(st, sidx) in activeStepsHistory" :key="sidx">
                     <div class="flex items-center gap-2 font-mono text-[10px] text-slate-300 bg-slate-950/60 p-1.5 rounded-lg border border-slate-800">
@@ -645,10 +653,10 @@
 
               <!-- Footer with Abort Button -->
               <div class="pt-1.5 flex items-center justify-between border-t border-slate-800/80">
-                <span class="text-[10px] text-slate-400">تواصل العملية في الخلفية بالساندبوكس</span>
+                <span class="text-[10px] text-slate-400" x-text="t('sandboxBackgroundNote')"></span>
                 <button @click="abortChat" class="btn btn-xs btn-outline btn-error gap-1">
                   <i class="fa-solid fa-stop text-[10px]"></i>
-                  <span>إلغاء الأمر</span>
+                  <span x-text="t('abortCommand')"></span>
                 </button>
               </div>
             </div>
@@ -663,25 +671,25 @@
             <div class="flex items-center gap-1.5 flex-wrap px-1 text-xs">
               <span class="text-[10px] text-slate-500 font-mono flex items-center gap-1">
                 <i class="fa-solid fa-terminal text-[9px]"></i>
-                <span>أوامر سريعة:</span>
+                <span x-text="t('quickCommands') + ':'"></span>
               </span>
-              <button type="button" @click="insertSlashCommand('/browser ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-cyan-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="تشغيل المتصفح والبحث بالإنترنت مع أخذ لقطات شاشة">
+              <button type="button" @click="insertSlashCommand('/browser ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-cyan-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" :title="t('cmdBrowserTip')">
                 <i class="fa-solid fa-globe text-[10px] text-cyan-400"></i>
                 <span>/browser</span>
               </button>
-              <button type="button" @click="insertSlashCommand('/plan ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-amber-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="تخطيط استراتيجي خطوة بخطوة قبل التنفيذ">
+              <button type="button" @click="insertSlashCommand('/plan ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-amber-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" :title="t('cmdPlanTip')">
                 <i class="fa-solid fa-list-check text-[10px] text-amber-400"></i>
                 <span>/plan</span>
               </button>
-              <button type="button" @click="insertSlashCommand('/boost ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-purple-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="تحليل وتفكير عميق وتخطيط متعدد الزوايا">
+              <button type="button" @click="insertSlashCommand('/boost ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-purple-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" :title="t('cmdBoostTip')">
                 <i class="fa-solid fa-bolt text-[10px] text-purple-400"></i>
                 <span>/boost</span>
               </button>
-              <button type="button" @click="insertSlashCommand('/grill-me ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-emerald-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="مقابلة تفاعلية لتحديد القرارات المعمارية والتصميمية">
+              <button type="button" @click="insertSlashCommand('/grill-me ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-emerald-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" :title="t('cmdGrillMeTip')">
                 <i class="fa-solid fa-comments text-[10px] text-emerald-400"></i>
                 <span>/grill-me</span>
               </button>
-              <button type="button" @click="insertSlashCommand('/teamwork ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-blue-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="توزيع العمل على فريق من الوكلاء المستقلين المتوازيين">
+              <button type="button" @click="insertSlashCommand('/teamwork ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-blue-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" :title="t('cmdTeamworkTip')">
                 <i class="fa-solid fa-people-group text-[10px] text-blue-400"></i>
                 <span>/teamwork</span>
               </button>
@@ -692,7 +700,7 @@
                         x-model="chatInputText"
                         @keydown.ctrl.enter.prevent="sendChatMessage()"
                         @keydown.meta.enter.prevent="sendChatMessage()"
-                        placeholder="اكتب طلبك أو مهمتك للوكيل هنا..."
+                        :placeholder="t('inputPlaceholder')"
                         rows="2"
                         :disabled="chatLoading"
                         class="textarea textarea-ghost w-full resize-none bg-transparent text-slate-100 placeholder-slate-500 text-sm leading-relaxed focus:outline-none font-arabic p-1.5"></textarea>
@@ -700,15 +708,15 @@
               <button type="submit"
                       :disabled="chatLoading || !chatInputText.trim()"
                       class="btn btn-primary bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white rounded-xl h-10 min-h-10 px-4 shrink-0 gap-1.5 shadow-md shadow-cyan-500/20"
-                      title="إرسال الطلب للوكيل">
+                      :title="t('send')">
                 <span x-show="chatLoading" class="loading loading-spinner loading-xs"></span>
-                <span x-show="!chatLoading" class="hidden sm:inline font-bold text-xs">إرسال</span>
+                <span x-show="!chatLoading" class="hidden sm:inline font-bold text-xs" x-text="t('send')"></span>
                 <i x-show="!chatLoading" class="fa-solid fa-paper-plane text-xs"></i>
               </button>
             </div>
             <div class="flex items-center justify-between text-[11px] text-slate-500 px-1">
-              <span>مساحة العمل: <span class="font-mono text-cyan-400" x-text="session?.targetDir"></span></span>
-              <span class="font-mono text-slate-400">Enter: سطر جديد • الإرسال عبر زر الإرسال أو Ctrl+Enter</span>
+              <span><span x-text="t('workspaceLabel')"></span>: <span class="font-mono text-cyan-400" x-text="session?.targetDir"></span></span>
+              <span class="font-mono text-slate-400" x-text="t('inputHint')"></span>
             </div>
           </form>
         </div>
@@ -726,12 +734,12 @@
           <form @submit.prevent="submitTerminalInput" class="join w-full">
             <div class="relative flex-1">
               <input type="text" id="terminal-input" x-model="terminalInputText"
-                     placeholder="اكتب أمراً في التيرمنال واضغط إرسال..."
+                     :placeholder="t('terminalInputPlaceholder')"
                      class="input input-bordered join-item w-full bg-slate-950 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-cyan-500 text-sm font-arabic"
                      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" dir="auto">
             </div>
             <button type="submit" class="btn btn-primary join-item bg-gradient-to-r from-cyan-600 to-blue-600 border-none text-white px-5 gap-2 font-bold text-xs">
-              <span>إرسال</span>
+              <span x-text="t('send')"></span>
               <i class="fa-solid fa-paper-plane text-xs"></i>
             </button>
           </form>
@@ -749,14 +757,14 @@
         <div class="p-3 border-b border-slate-800 flex items-center justify-between">
           <div class="flex items-center gap-2">
             <i class="fa-solid fa-folder-tree text-cyan-400 text-sm"></i>
-            <span class="font-bold text-xs sm:text-sm text-white font-sans">مستكشف الملفات</span>
+            <span class="font-bold text-xs sm:text-sm text-white font-sans" x-text="t('fileExplorer')"></span>
             <span class="badge badge-primary badge-xs font-mono" x-text="totalFilesCount"></span>
           </div>
           <div class="flex items-center gap-1">
-            <button @click="downloadFolderAsZip('')" class="btn btn-ghost btn-xs btn-circle tooltip tooltip-bottom text-amber-400 hover:text-amber-300" data-tip="تنزيل المشروع كاملاً كـ ZIP">
+            <button @click="downloadFolderAsZip('')" class="btn btn-ghost btn-xs btn-circle tooltip tooltip-bottom text-amber-400 hover:text-amber-300" :data-tip="t('downloadZipTip')">
               <i class="fa-solid fa-file-zipper text-[11px]"></i>
             </button>
-            <button @click="fetchWorkspaceTree()" class="btn btn-ghost btn-xs btn-circle tooltip tooltip-bottom text-slate-400 hover:text-white" data-tip="تحديث الملفات">
+            <button @click="fetchWorkspaceTree()" class="btn btn-ghost btn-xs btn-circle tooltip tooltip-bottom text-slate-400 hover:text-white" :data-tip="t('refreshFilesTip')">
               <i class="fa-solid fa-arrows-rotate text-[11px]" :class="{'fa-spin': fileTreeLoading}"></i>
             </button>
             <label for="file-drawer-toggle" class="btn btn-ghost btn-xs btn-circle text-slate-400 hover:text-white">
@@ -768,7 +776,7 @@
         <!-- Search Bar -->
         <div class="p-2 border-b border-slate-800">
           <div class="relative">
-            <input type="text" x-model="fileSearchQuery" placeholder="بحث في الملفات..."
+            <input type="text" x-model="fileSearchQuery" :placeholder="t('searchFilesPlaceholder')"
                    class="input input-xs input-bordered w-full bg-slate-950 border-slate-700 text-slate-200 placeholder-slate-500 pl-2 pr-7 text-xs font-arabic">
             <i class="fa-solid fa-search text-[10px] absolute right-2.5 top-2 text-slate-500"></i>
           </div>
@@ -778,14 +786,14 @@
         <div x-show="selectedTreeItems.length > 0" x-cloak class="p-2 bg-gradient-to-r from-cyan-950/80 to-blue-950/80 border-b border-cyan-500/40 flex items-center justify-between gap-2 text-xs">
           <div class="flex items-center gap-1.5 min-w-0">
             <i class="fa-solid fa-check-double text-cyan-400 text-xs"></i>
-            <span class="text-white text-[11px] font-semibold"><span x-text="selectedTreeItems.length"></span> محدد</span>
+            <span class="text-white text-[11px] font-semibold"><span x-text="selectedTreeItems.length"></span> <span x-text="t('selectedCount')"></span></span>
           </div>
           <div class="flex items-center gap-1 shrink-0">
             <button @click="downloadSelectedAsZip()" class="btn btn-xs btn-primary gap-1 text-[10px] px-2 h-6 shadow">
               <i class="fa-solid fa-file-zipper text-[10px]"></i>
-              <span>تحميل ZIP</span>
+              <span x-text="t('downloadZip')"></span>
             </button>
-            <button @click="clearTreeSelection()" class="btn btn-xs btn-ghost text-slate-400 hover:text-white px-1.5 h-6 tooltip tooltip-bottom" data-tip="إلغاء التحديد">
+            <button @click="clearTreeSelection()" class="btn btn-xs btn-ghost text-slate-400 hover:text-white px-1.5 h-6 tooltip tooltip-bottom" :data-tip="t('clearSelection')">
               <i class="fa-solid fa-xmark text-xs"></i>
             </button>
           </div>
@@ -796,14 +804,14 @@
           <template x-if="fileTreeLoading && !fileStructure">
             <div class="text-center py-10 text-slate-400 space-y-2">
               <span class="loading loading-spinner loading-sm text-cyan-400"></span>
-              <p class="text-xs">جاري فحص مجلد المشروع...</p>
+              <p class="text-xs" x-text="t('scanningProjectFolder')"></p>
             </div>
           </template>
 
           <template x-if="!fileTreeLoading && !fileStructure">
             <div class="text-center py-8 text-slate-500 space-y-2">
               <i class="fa-solid fa-folder-open text-2xl"></i>
-              <p class="text-xs">المجلد فارغ أو تعذر الوصول إليه</p>
+              <p class="text-xs" x-text="t('emptyFolder')"></p>
             </div>
           </template>
 
@@ -816,32 +824,32 @@
           <!-- Uploading Spinner Banner -->
           <div x-show="uploadingFiles" class="flex items-center gap-2 p-1.5 rounded-lg bg-cyan-950/60 border border-cyan-500/30 text-cyan-300 text-[11px]">
             <span class="loading loading-spinner loading-xs text-cyan-400"></span>
-            <span>جاري رفع ونقل الملفات إلى مجلد المشروع...</span>
+            <span x-text="t('uploadingFilesBanner')"></span>
           </div>
 
           <div class="grid grid-cols-3 gap-1">
             <!-- Upload File Button -->
             <button type="button" @click="$refs.fileInput.click()" :disabled="uploadingFiles"
                     class="btn btn-xs btn-ghost bg-slate-900 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800 text-slate-200 gap-1 tooltip tooltip-top h-7 px-1"
-                    data-tip="رفع ملفات من جهازك">
+                    :data-tip="t('uploadFileTip')">
               <i class="fa-solid fa-file-arrow-up text-cyan-400 text-xs"></i>
-              <span class="text-[10px]">ملف</span>
+              <span class="text-[10px]" x-text="t('uploadFile')"></span>
             </button>
 
             <!-- Upload Folder Button -->
             <button type="button" @click="$refs.folderInput.click()" :disabled="uploadingFiles"
                     class="btn btn-xs btn-ghost bg-slate-900 border border-slate-800 hover:border-amber-500/50 hover:bg-slate-800 text-slate-200 gap-1 tooltip tooltip-top h-7 px-1"
-                    data-tip="رفع مجلد كامل بمحتوياته">
+                    :data-tip="t('uploadFolderTip')">
               <i class="fa-solid fa-folder-plus text-amber-400 text-xs"></i>
-              <span class="text-[10px]">مجلد</span>
+              <span class="text-[10px]" x-text="t('uploadFolder')"></span>
             </button>
 
             <!-- Fetch URL Button -->
             <button type="button" @click="showUrlFetchModal = true"
                     class="btn btn-xs btn-ghost bg-slate-900 border border-slate-800 hover:border-purple-500/50 hover:bg-slate-800 text-slate-200 gap-1 tooltip tooltip-top h-7 px-1"
-                    data-tip="جلب صورة أو ملف عبر رابط URL">
+                    :data-tip="t('fetchUrlTip')">
               <i class="fa-solid fa-cloud-arrow-down text-purple-400 text-xs"></i>
-              <span class="text-[10px]">رابط</span>
+              <span class="text-[10px]" x-text="t('fetchUrlBtn')"></span>
             </button>
           </div>
 
@@ -852,7 +860,7 @@
           <!-- Target Dir summary -->
           <div class="text-[10px] text-slate-500 font-mono truncate flex items-center justify-between pt-0.5">
             <span class="text-slate-400 truncate" x-text="session?.targetDir"></span>
-            <span class="text-[9px] text-cyan-400 shrink-0">ساندبوكس</span>
+            <span class="text-[9px] text-cyan-400 shrink-0" x-text="t('sandboxBadge')"></span>
           </div>
         </div>
 
@@ -870,8 +878,8 @@
             <i class="fa-solid fa-cloud-arrow-down text-sm"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm text-white">جلب ملف أو صورة عبر رابط URL</h3>
-            <p class="text-[10px] text-purple-300/70">تحميل ملف من الإنترنت وحفظه مباشرة في مجلد المشروع</p>
+            <h3 class="font-bold text-sm text-white" x-text="t('fetchUrlModalTitle')"></h3>
+            <p class="text-[10px] text-purple-300/70" x-text="t('fetchUrlModalDesc')"></p>
           </div>
         </div>
         <button @click="showUrlFetchModal = false" class="btn btn-xs btn-circle btn-ghost text-slate-400 hover:text-white">✕</button>
@@ -879,40 +887,40 @@
 
       <form @submit.prevent="executeFetchUrl()" class="p-5 space-y-3.5 text-xs">
         <div class="form-control">
-          <label class="label pb-1"><span class="label-text text-xs text-slate-300 font-semibold">رابط الملف أو الصورة (URL): *</span></label>
+          <label class="label pb-1"><span class="label-text text-xs text-slate-300 font-semibold" x-text="t('fetchUrlLabel')"></span></label>
           <input type="url" x-model="fetchUrlInput" required placeholder="https://example.com/images/sample.png"
                  class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs focus:border-purple-500">
         </div>
 
         <div class="grid grid-cols-2 gap-2.5">
           <div class="form-control">
-            <label class="label pb-1"><span class="label-text text-[11px] text-slate-300">اسم الملف (اختياري):</span></label>
-            <input type="text" x-model="fetchFilenameInput" placeholder="مثال: banner.png"
+            <label class="label pb-1"><span class="label-text text-[11px] text-slate-300" x-text="t('fetchFilenameLabel')"></span></label>
+            <input type="text" x-model="fetchFilenameInput" placeholder="banner.png"
                    class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs">
           </div>
           <div class="form-control">
-            <label class="label pb-1"><span class="label-text text-[11px] text-slate-300">مجلد فرعي (اختياري):</span></label>
-            <input type="text" x-model="fetchSubdirInput" placeholder="مثال: assets/images"
+            <label class="label pb-1"><span class="label-text text-[11px] text-slate-300" x-text="t('fetchSubdirLabel')"></span></label>
+            <input type="text" x-model="fetchSubdirInput" placeholder="assets/images"
                    class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 font-mono text-xs">
           </div>
         </div>
 
         <div class="text-[11px] text-slate-400 bg-slate-950 p-2.5 rounded-lg border border-slate-800 space-y-1">
-          <div><i class="fa-solid fa-folder-tree text-amber-400 ml-1"></i> مجلد الحفظ: <code class="text-cyan-300 font-mono" x-text="session?.targetDir"></code></div>
+          <div><i class="fa-solid fa-folder-tree text-amber-400 ml-1"></i> <span x-text="t('saveDir')"></span> <code class="text-cyan-300 font-mono" x-text="session?.targetDir"></code></div>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
-          <button type="button" @click="showUrlFetchModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إلغاء</button>
+          <button type="button" @click="showUrlFetchModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('cancel')"></button>
           <button type="submit" :disabled="fetchingUrl || !fetchUrlInput.trim()" class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-none text-white text-xs px-4 gap-1.5 shadow-md shadow-purple-600/20">
             <span x-show="fetchingUrl" class="loading loading-spinner loading-xs"></span>
             <i x-show="!fetchingUrl" class="fa-solid fa-download text-xs"></i>
-            <span>جلب وحفظ في المشروع</span>
+            <span x-text="t('fetchAndSave')"></span>
           </button>
         </div>
       </form>
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showUrlFetchModal = false">إغلاق</button>
+      <button @click="showUrlFetchModal = false" x-text="t('close')"></button>
     </form>
   </dialog>
 
@@ -937,15 +945,15 @@
         <div class="flex items-center gap-1.5 shrink-0">
           <button @click="insertPathIntoChat(previewFilePath); closeFilePreview();" class="btn btn-xs btn-outline btn-primary gap-1 text-[11px]">
             <i class="fa-solid fa-plus text-[10px]"></i>
-            <span class="hidden sm:inline">إدراج بالدردشة</span>
+            <span class="hidden sm:inline" x-text="t('insertInChat')"></span>
           </button>
           <button @click="downloadFile(previewFilePath)" class="btn btn-xs btn-outline btn-accent gap-1 text-[11px]">
             <i class="fa-solid fa-download text-[10px]"></i>
-            <span>تنزيل</span>
+            <span x-text="t('download')"></span>
           </button>
           <button x-show="previewFileType === 'code'" @click="copyMessageText(previewFileContent)" class="btn btn-xs btn-ghost text-slate-300 gap-1 text-[11px]">
             <i class="fa-solid fa-copy text-[10px]"></i>
-            <span class="hidden sm:inline">نسخ</span>
+            <span class="hidden sm:inline" x-text="t('copy')"></span>
           </button>
           <button @click="closeFilePreview()" class="btn btn-xs btn-circle btn-ghost text-slate-400 hover:text-white">
             <i class="fa-solid fa-xmark text-sm"></i>
@@ -958,7 +966,7 @@
         <template x-if="previewLoading">
           <div class="text-center py-12 text-slate-400 space-y-2">
             <span class="loading loading-spinner loading-md text-cyan-400"></span>
-            <p class="text-xs font-sans">جاري تحميل الملف...</p>
+            <p class="text-xs font-sans" x-text="t('loading')"></p>
           </div>
         </template>
 
@@ -970,7 +978,7 @@
               <span x-text="previewFilePath?.split('/').pop()"></span>
               <a :href="previewFileRawUrl" target="_blank" class="text-cyan-400 hover:underline flex items-center gap-1 font-sans text-xs">
                 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
-                <span>فتح بالحجم الكامل</span>
+                <span x-text="t('openFullscreen')"></span>
               </a>
             </div>
           </div>
@@ -980,7 +988,7 @@
         <template x-if="!previewLoading && previewFileType === 'video'">
           <div class="flex flex-col items-center justify-center min-h-[320px] p-2 bg-black rounded-xl border border-slate-800">
             <video controls autoplay class="w-full max-h-[62vh] rounded-lg shadow-2xl bg-black" :src="previewFileRawUrl">
-              متصفحك لا يدعم تشغيل الفيديو المباشر.
+              <span x-text="t('videoNotSupported')"></span>
             </video>
             <div class="mt-2 text-center text-[11px] text-slate-400 font-mono" x-text="previewFilePath?.split('/').pop()"></div>
           </div>
@@ -1015,13 +1023,13 @@
 
       <!-- Modal Footer -->
       <div class="bg-slate-950 px-4 py-2.5 border-t border-slate-800 flex justify-between items-center shrink-0 text-xs">
-        <span class="text-[11px] text-slate-500 font-arabic">معاينة مباشرة للملفات</span>
-        <button @click="closeFilePreview()" class="btn btn-xs btn-ghost text-slate-400">إغلاق</button>
+        <span class="text-[11px] text-slate-500 font-arabic" x-text="t('liveFilePreview')"></span>
+        <button @click="closeFilePreview()" class="btn btn-xs btn-ghost text-slate-400" x-text="t('close')"></button>
       </div>
 
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="closeFilePreview()">إغلاق</button>
+      <button @click="closeFilePreview()" x-text="t('close')"></button>
     </form>
   </dialog>
 
@@ -1037,10 +1045,10 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <span>ذاكرة المعرفة السحابية (MemoryZ MCP)</span>
+              <span x-text="t('memoryzModalTitle')"></span>
               <span class="badge badge-xs badge-secondary font-mono text-[10px]">MCP Active</span>
             </h3>
-            <p class="text-xs text-purple-300/70">استرجاع وحفظ الذاكرة المعرفية للوكيل وربط سياق النماذج عبر بروتوكول MCP</p>
+            <p class="text-xs text-purple-300/70" x-text="t('memoryzModalDesc')"></p>
           </div>
         </div>
         <button @click="showMemoryModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">
@@ -1055,25 +1063,25 @@
                   class="tab tab-sm transition-all rounded-lg gap-2 text-xs font-semibold"
                   :class="memoryActiveTab === 'recall' ? 'tab-active bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'">
             <i class="fa-solid fa-magnifying-glass text-[11px]"></i>
-            <span>استرجاع الذكريات (Recall)</span>
+            <span x-text="t('tabRecall')"></span>
           </button>
           <button @click="memoryActiveTab = 'store'" 
                   class="tab tab-sm transition-all rounded-lg gap-2 text-xs font-semibold"
                   :class="memoryActiveTab === 'store' ? 'tab-active bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'">
             <i class="fa-solid fa-plus text-[11px]"></i>
-            <span>حفظ ذاكرة جديدة (Store)</span>
+            <span x-text="t('tabStore')"></span>
           </button>
           <button @click="memoryActiveTab = 'status'; fetchMcpStatus();" 
                   class="tab tab-sm transition-all rounded-lg gap-2 text-xs font-semibold"
                   :class="memoryActiveTab === 'status' ? 'tab-active bg-purple-600 text-white shadow-md' : 'text-slate-400 hover:text-white'">
             <i class="fa-solid fa-network-wired text-[11px]"></i>
-            <span>حالة خادم MCP</span>
+            <span x-text="t('tabStatus')"></span>
           </button>
         </div>
 
         <div class="text-[11px] text-slate-400 flex items-center gap-2">
           <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span>خادم الذاكرة متصل ومربوط بالوكيل</span>
+          <span x-text="t('memoryServerConnected')"></span>
         </div>
       </div>
 
@@ -1083,7 +1091,7 @@
         <form @submit.prevent="recallMemories()" class="flex gap-2">
           <div class="relative flex-1">
             <input type="text" x-model="memorySearchQuery" 
-                   placeholder="ابحث دلالياً في الذاكرة (مثلاً: تفضيلات، مشاريع، أسلوب الكود، قرارات)..."
+                   :placeholder="t('memorySearchPlaceholder')"
                    class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-purple-500 pl-3 pr-9 text-xs">
             <i class="fa-solid fa-search absolute right-3 top-2.5 text-slate-500 text-xs"></i>
           </div>
@@ -1091,17 +1099,17 @@
                   class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-none text-white text-xs px-4 gap-1.5 shadow-md shadow-purple-600/20">
             <span x-show="memoryLoading" class="loading loading-spinner loading-xs"></span>
             <i x-show="!memoryLoading" class="fa-solid fa-bolt text-xs"></i>
-            <span>استرجاع</span>
+            <span x-text="t('recallBtn')"></span>
           </button>
         </form>
 
         <!-- Quick Filters -->
         <div class="flex items-center gap-2 flex-wrap text-xs">
-          <span class="text-slate-400 text-[11px]">اقتراحات سريعة:</span>
-          <button type="button" @click="memorySearchQuery = 'تفضيلات المطور'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">تفضيلات المطور</button>
-          <button type="button" @click="memorySearchQuery = 'معمارية الواجهة alpine daisyui'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">Alpine & DaisyUI</button>
-          <button type="button" @click="memorySearchQuery = 'mcp connector architecture'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">معمارية MCP</button>
-          <button type="button" @click="memorySearchQuery = 'all'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">عرض الكل (All)</button>
+          <span class="text-slate-400 text-[11px]" x-text="t('quickSuggestions')"></span>
+          <button type="button" @click="memorySearchQuery = t('chipDevPreferences'); recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]" x-text="t('chipDevPreferences')"></button>
+          <button type="button" @click="memorySearchQuery = 'Alpine & DaisyUI'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]">Alpine & DaisyUI</button>
+          <button type="button" @click="memorySearchQuery = t('chipMcpArch'); recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]" x-text="t('chipMcpArch')"></button>
+          <button type="button" @click="memorySearchQuery = 'all'; recallMemories();" class="badge badge-sm badge-neutral hover:badge-primary cursor-pointer text-[10px]" x-text="t('chipShowAll')"></button>
         </div>
 
         <!-- Memories Results List -->
@@ -1109,14 +1117,14 @@
           <template x-if="memoryLoading">
             <div class="text-center py-8 space-y-2 text-slate-400 text-xs">
               <span class="loading loading-spinner loading-md text-purple-400"></span>
-              <p>جاري الاسترجاع الدلالي للذكريات عبر التضمينات المتجهة (Gemini Embeddings)...</p>
+              <p x-text="t('retrievingEmbeddings')"></p>
             </div>
           </template>
 
           <template x-if="!memoryLoading && memoriesList.length === 0">
             <div class="text-center py-8 space-y-2 border border-dashed border-slate-800 rounded-xl p-6 text-slate-500 text-xs">
               <i class="fa-solid fa-box-open text-2xl text-slate-600"></i>
-              <p>لا توجد ذكريات تطابق بحثك حالياً. يمكنك الضغط على "عرض الكل" أو حفظ ذاكرة جديدة.</p>
+              <p x-text="t('noMemoriesFound')"></p>
             </div>
           </template>
 
@@ -1137,11 +1145,11 @@
                 <div class="flex items-center gap-2 text-[10px] font-mono text-slate-400">
                   <span x-show="item.recall_count" class="text-purple-300 flex items-center gap-1">
                     <i class="fa-solid fa-arrows-rotate text-[9px]"></i>
-                    <span x-text="item.recall_count + ' استرجاع'"></span>
+                    <span x-text="item.recall_count + ' ' + t('recallsCount')"></span>
                   </span>
                   <span x-show="item.score" class="text-emerald-400 flex items-center gap-1">
                     <i class="fa-solid fa-bullseye text-[9px]"></i>
-                    <span x-text="'تطابق ' + (item.score * 100).toFixed(0) + '%'"></span>
+                    <span x-text="t('matchPercent') + ' ' + (item.score * 100).toFixed(0) + '%'"></span>
                   </span>
                 </div>
               </div>
@@ -1153,11 +1161,11 @@
               <div class="flex items-center justify-end gap-2 pt-1">
                 <button type="button" @click="copyMessageText(item.content)" class="btn btn-xs btn-ghost text-slate-400 hover:text-white gap-1 text-[11px]">
                   <i class="fa-solid fa-copy text-[10px]"></i>
-                  <span>نسخ</span>
+                  <span x-text="t('copy')"></span>
                 </button>
                 <button type="button" @click="insertMemoryToPrompt(item)" class="btn btn-xs btn-outline btn-secondary hover:bg-purple-600 border-purple-500/40 text-purple-200 gap-1 text-[11px]">
                   <i class="fa-solid fa-arrow-down-left-and-up-right-to-center text-[10px]"></i>
-                  <span>إدراج في المحادثة</span>
+                  <span x-text="t('insertIntoChat')"></span>
                 </button>
               </div>
             </div>
@@ -1170,40 +1178,40 @@
         <form @submit.prevent="storeNewMemory()" class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div class="space-y-1">
-              <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold">نوع الذاكرة (Type)</span></label>
+              <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold" x-text="t('memoryType')"></span></label>
               <select x-model="newMemory.type" class="select select-sm select-bordered w-full bg-slate-950 border-slate-700 text-xs">
-                <option value="note">ملاحظة عامة (Note)</option>
-                <option value="preference">تفضيل عمل أو أسلوب (Preference)</option>
-                <option value="skill">خبرة أو مهارة (Skill)</option>
-                <option value="decision">قرار معماري أو تقني (Decision)</option>
-                <option value="env">بيئة تشغيل أو سيرفر (Environment)</option>
-                <option value="fact">حقيقة ثابتة (Fact)</option>
+                <option value="note">Note</option>
+                <option value="preference">Preference</option>
+                <option value="skill">Skill</option>
+                <option value="decision">Decision</option>
+                <option value="env">Environment</option>
+                <option value="fact">Fact</option>
               </select>
             </div>
             <div class="space-y-1">
-              <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold">عنوان الذاكرة (Title)</span></label>
-              <input type="text" x-model="newMemory.title" placeholder="مثلاً: تفضيل استخدام Tailwind مع DaisyUI" class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-xs">
+              <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold" x-text="t('memoryTitle')"></span></label>
+              <input type="text" x-model="newMemory.title" placeholder="Tailwind with DaisyUI" class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-xs">
             </div>
           </div>
 
           <div class="space-y-1">
-            <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold">محتوى الذاكرة والمعرفة (Content) *</span></label>
-            <textarea x-model="newMemory.content" rows="4" placeholder="اكتب التفاصيل بدقة حتى يتمكن الوكيل من فهمها وتطبيقها تلقائياً عند استدعائه..." class="textarea textarea-bordered w-full bg-slate-950 border-slate-700 text-xs leading-relaxed font-arabic" required></textarea>
+            <label class="label p-0"><span class="label-text text-xs text-slate-300 font-semibold" x-text="t('memoryContent')"></span></label>
+            <textarea x-model="newMemory.content" rows="4" placeholder="..." class="textarea textarea-bordered w-full bg-slate-950 border-slate-700 text-xs leading-relaxed font-arabic" required></textarea>
           </div>
 
           <div class="bg-purple-950/30 border border-purple-500/20 rounded-xl p-3 text-[11px] text-purple-300/80 flex items-start gap-2">
             <i class="fa-solid fa-lightbulb text-purple-400 mt-0.5"></i>
             <div>
-              <span>سيتم تخزين الذاكرة في خادم <strong>MemoryZ</strong> السحابي وتوليد متجهات التضمين دلالياً، لتكون متاحة للوكيل عبر بروتوكول MCP تلقائياً.</span>
+              <span x-text="t('memoryCloudNote')"></span>
             </div>
           </div>
 
           <div class="flex justify-end gap-2 pt-2">
-            <button type="button" @click="showMemoryModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إلغاء</button>
+            <button type="button" @click="showMemoryModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('cancel')"></button>
             <button type="submit" :disabled="memoryStoring || !newMemory.content.trim()" class="btn btn-sm bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 border-none text-white text-xs px-5 gap-1.5 shadow-md shadow-purple-600/20">
               <span x-show="memoryStoring" class="loading loading-spinner loading-xs"></span>
               <i x-show="!memoryStoring" class="fa-solid fa-cloud-arrow-up text-xs"></i>
-              <span>حفظ في MemoryZ MCP</span>
+              <span x-text="t('saveInMemoryz')"></span>
             </button>
           </div>
         </form>
@@ -1213,33 +1221,33 @@
       <div x-show="memoryActiveTab === 'status'" class="p-6 space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
-            <span class="text-slate-400 text-[11px]">اسم خادم MCP:</span>
+            <span class="text-slate-400 text-[11px]" x-text="t('mcpServerName')"></span>
             <div class="font-mono font-bold text-purple-300">memoryz</div>
           </div>
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
-            <span class="text-slate-400 text-[11px]">بروتوكول الاتصال:</span>
+            <span class="text-slate-400 text-[11px]" x-text="t('mcpProtocol')"></span>
             <div class="font-bold text-emerald-400 flex items-center gap-1.5">
               <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
               <span>Model Context Protocol (Stdio / SSE)</span>
             </div>
           </div>
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1 sm:col-span-2">
-            <span class="text-slate-400 text-[11px]">نقطة النهاية السحابية (Endpoint):</span>
+            <span class="text-slate-400 text-[11px]" x-text="t('mcpCloudEndpoint')"></span>
             <div class="font-mono text-slate-200 truncate">https://memoryz.wino.deno.net/mcp</div>
           </div>
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
-            <span class="text-slate-400 text-[11px]">محرك التضمينات الدلالية:</span>
+            <span class="text-slate-400 text-[11px]" x-text="t('mcpEmbedEngine')"></span>
             <div class="text-slate-200">Google Gemini 768-dim Embeddings</div>
           </div>
           <div class="bg-slate-950/80 border border-slate-800 rounded-xl p-3.5 space-y-1">
-            <span class="text-slate-400 text-[11px]">الأدوات المتاحة للوكيل:</span>
+            <span class="text-slate-400 text-[11px]" x-text="t('mcpAvailableTools')"></span>
             <div class="font-mono text-cyan-300 text-[11px]">recall, store, reflect, context</div>
           </div>
         </div>
 
         <!-- CLI / Integration Command Hint -->
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2">
-          <span class="text-[11px] font-semibold text-slate-400">أمر تسجيل خادم MCP في الوكيل (مسجل تلقائياً):</span>
+          <span class="text-[11px] font-semibold text-slate-400" x-text="t('mcpCliCommandHint')"></span>
           <div class="bg-black/80 rounded-lg p-2.5 font-mono text-[11px] text-purple-300 select-all flex items-center justify-between">
             <code>agy mcp add memoryz npx -y memoryz mcp</code>
             <button type="button" @click="copyMessageText('agy mcp add memoryz npx -y memoryz mcp')" class="btn btn-ghost btn-xs text-slate-400 hover:text-white">
@@ -1249,13 +1257,13 @@
         </div>
 
         <div class="flex justify-end pt-2">
-          <button @click="showMemoryModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+          <button @click="showMemoryModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('close')"></button>
         </div>
       </div>
 
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showMemoryModal = false">إغلاق</button>
+      <button @click="showMemoryModal = false" x-text="t('close')"></button>
     </form>
   </dialog>
 
@@ -1271,10 +1279,10 @@
           </div>
           <div>
             <h3 class="text-base font-bold text-white flex items-center gap-2">
-              <span>ربط الجلسة مع Claude و ChatGPT (Remote MCP)</span>
+              <span x-text="t('remoteMcpModalTitle')"></span>
               <span class="badge badge-xs badge-info font-mono text-[10px]">MCP Active</span>
             </h3>
-            <p class="text-xs text-cyan-300/70">تحكم بالوكيل ومساحة المشروع مباشرة من داخل محادثات ChatGPT أو Claude برابط موحد</p>
+            <p class="text-xs text-cyan-300/70" x-text="t('remoteMcpModalDesc')"></p>
           </div>
         </div>
         <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-circle btn-ghost text-slate-400 hover:text-white">
@@ -1293,9 +1301,7 @@
               <span x-text="session?.targetDir"></span>
             </div>
           </div>
-          <span class="badge badge-sm badge-success bg-emerald-950 text-emerald-300 border-emerald-500/30 py-1 font-mono text-[10px]">
-            ساندبوكس مقيّد ونشط
-          </span>
+          <span class="badge badge-sm badge-success bg-emerald-950 text-emerald-300 border-emerald-500/30 py-1 font-mono text-[10px]" x-text="t('sandboxActive')"></span>
         </div>
 
         <!-- Link 1: Claude & Cursor Remote MCP -->
@@ -1303,7 +1309,7 @@
           <div class="flex items-center justify-between">
             <span class="font-bold text-purple-300 flex items-center gap-1.5">
               <i class="fa-solid fa-bolt text-xs"></i>
-              <span>1. رابط Remote MCP لـ Claude و Cursor و Windsurf:</span>
+              <span x-text="t('linkClaude')"></span>
             </span>
             <span class="text-[10px] text-slate-500 font-mono">Streamable HTTP / SSE</span>
           </div>
@@ -1313,12 +1319,10 @@
             <button @click="copyRemoteMcpUrl()" 
                     class="btn btn-sm bg-purple-600 hover:bg-purple-500 border-none text-white join-item px-4 gap-1">
               <i class="fa-solid fa-copy text-xs"></i>
-              <span>نسخ الرابط</span>
+              <span x-text="t('copyLink')"></span>
             </button>
           </div>
-          <p class="text-[11px] text-slate-400">
-            في تطبيق <strong>Claude Desktop</strong> أو <strong>Claude Web</strong> أو <strong>Cursor</strong>: أضف خادم MCP واختر النوع URL وضع هذا الرابط مباشرة.
-          </p>
+          <p class="text-[11px] text-slate-400" x-text="t('claudeHelp')"></p>
         </div>
 
         <!-- Link 2: ChatGPT OpenAPI Schema -->
@@ -1326,7 +1330,7 @@
           <div class="flex items-center justify-between">
             <span class="font-bold text-cyan-300 flex items-center gap-1.5">
               <i class="fa-solid fa-wand-magic-sparkles text-xs"></i>
-              <span>2. رابط OpenAPI 3.1 Schema لـ ChatGPT Actions (Custom GPTs):</span>
+              <span x-text="t('linkChatGpt')"></span>
             </span>
             <span class="text-[10px] text-slate-500 font-mono">OpenAPI 3.1.0</span>
           </div>
@@ -1336,38 +1340,36 @@
             <button @click="copyOpenApiUrl()" 
                     class="btn btn-sm bg-cyan-600 hover:bg-cyan-500 border-none text-white join-item px-4 gap-1">
               <i class="fa-solid fa-copy text-xs"></i>
-              <span>نسخ الرابط</span>
+              <span x-text="t('copyLink')"></span>
             </button>
           </div>
-          <p class="text-[11px] text-slate-400">
-            في <strong>ChatGPT (Create a GPT)</strong>: اذهب إلى <strong>Configure → Actions → Import from URL</strong> وضع هذا الرابط لاستيراد الأدوات فوراً!
-          </p>
+          <p class="text-[11px] text-slate-400" x-text="t('chatGptHelp')"></p>
         </div>
 
         <!-- Quick Guide -->
         <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-4 space-y-2.5">
           <div class="font-semibold text-slate-200 flex items-center gap-1.5 text-xs">
             <i class="fa-solid fa-circle-info text-cyan-400"></i>
-            <span>الأدوات المتاحة لـ Claude و ChatGPT للتحكم في مشروعك:</span>
+            <span x-text="t('remoteToolsHeader')"></span>
           </div>
           <ul class="list-disc list-inside space-y-1 text-slate-400 text-[11px] leading-relaxed">
-            <li><code>ask_agent</code>: إرسال مهام برمجية وأوامر للوكيل لينفذها ويعدل الملفات داخل المشروع.</li>
-            <li><code>list_workspace_files</code>: تصفح هيكلية المجلدات والملفات.</li>
-            <li><code>read_workspace_file</code>: قراءة محتوى أي كود أو ملف.</li>
-            <li><code>write_workspace_file</code>: إنشاء أو تعديل ملفات الكود مباشرة.</li>
-            <li><code>run_shell_command</code>: تشغيل أوامر تيرمنال داخل مجلد المشروع.</li>
+            <li><code>ask_agent</code>: <span x-text="currentLang === 'ar' ? 'إرسال مهام برمجية وأوامر للوكيل لينفذها ويعدل الملفات داخل المشروع.' : 'Dispatch coding tasks and instructions for the agent to execute inside the project.'"></span></li>
+            <li><code>list_workspace_files</code>: <span x-text="currentLang === 'ar' ? 'تصفح هيكلية المجلدات والملفات.' : 'Browse directory and file hierarchy.'"></span></li>
+            <li><code>read_workspace_file</code>: <span x-text="currentLang === 'ar' ? 'قراءة محتوى أي كود أو ملف.' : 'Read source code or file contents.'"></span></li>
+            <li><code>write_workspace_file</code>: <span x-text="currentLang === 'ar' ? 'إنشاء أو تعديل ملفات الكود مباشرة.' : 'Create or edit code files directly.'"></span></li>
+            <li><code>run_shell_command</code>: <span x-text="currentLang === 'ar' ? 'تشغيل أوامر تيرمنال داخل مجلد المشروع.' : 'Run shell terminal commands inside project workspace.'"></span></li>
           </ul>
         </div>
 
       </div>
 
       <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-end">
-        <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+        <button @click="showRemoteMcpModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('close')"></button>
       </div>
 
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showRemoteMcpModal = false">إغلاق</button>
+      <button @click="showRemoteMcpModal = false" x-text="t('close')"></button>
     </form>
   </dialog>
 
@@ -1382,8 +1384,8 @@
             <i class="fa-solid fa-code-fork text-sm"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm text-white">تفريع جلسة عمل جديدة (Fork Session)</h3>
-            <p class="text-[10px] text-slate-400">تفرّع من هذه النقطة لتخفيض التوكنز وتفادي تكدس الذاكرة</p>
+            <h3 class="font-bold text-sm text-white" x-text="t('forkModalTitle')"></h3>
+            <p class="text-[10px] text-slate-400" x-text="t('forkModalDesc')"></p>
           </div>
         </div>
         <button @click="showForkModal = false" class="btn btn-ghost btn-xs btn-circle text-slate-400 hover:text-white">✕</button>
@@ -1400,11 +1402,9 @@
             <div class="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-cyan-200 leading-relaxed space-y-1">
               <div class="font-bold flex items-center gap-1.5 text-white">
                 <i class="fa-solid fa-wand-magic-sparkles text-cyan-400"></i>
-                <span>عزل السياق وتوفير التوكنز:</span>
+                <span x-text="t('isolateContextTitle')"></span>
               </div>
-              <p class="text-[11px] text-slate-300">
-                سيتم إنشاء جلسة متفرعة تبدأ من هذه النقطة، محتفظة بكامل الحوار والأحداث حتى هذا الرد فقط، مع استبعاد كافة الردود والبيانات اللاحقة حتى لا تستهلك توكنز إضافية.
-              </p>
+              <p class="text-[11px] text-slate-300" x-text="t('isolateContextDesc')"></p>
             </div>
 
             <!-- Preview of Target Message -->
@@ -1412,11 +1412,11 @@
               <div class="flex items-center justify-between text-slate-400 text-[11px]">
                 <span class="font-semibold flex items-center gap-1">
                   <i class="fa-solid fa-quote-right text-cyan-400 text-[10px]"></i>
-                  <span>نقطة التفريع (الرد المختار):</span>
+                  <span x-text="t('forkPoint')"></span>
                 </span>
                 <span class="badge badge-xs text-[9px]"
                       :class="forkTargetMsg?.role === 'user' ? 'badge-primary' : 'badge-neutral'"
-                      x-text="forkTargetMsg?.role === 'user' ? 'طلب المستخدم' : 'رد الوكيل الذكي'"></span>
+                      x-text="forkTargetMsg?.role === 'user' ? t('userPrompt') : t('assistantReply')"></span>
               </div>
               <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-slate-300 max-h-28 overflow-y-auto font-mono text-[11px] whitespace-pre-wrap select-text leading-relaxed"
                    x-text="forkTargetMsg?.content"></div>
@@ -1425,9 +1425,9 @@
             <!-- Branch Name Input -->
             <div class="form-control space-y-1">
               <label class="label p-0">
-                <span class="label-text text-xs text-slate-300 font-bold">اسم الجلسة المتفرعة (Branch Name):</span>
+                <span class="label-text text-xs text-slate-300 font-bold" x-text="t('branchNameLabel')"></span>
               </label>
-              <input type="text" x-model="forkNameInput" placeholder="أدخل اسماً مميزاً للفرع الجديد..."
+              <input type="text" x-model="forkNameInput" :placeholder="t('branchNamePlaceholder')"
                      class="input input-sm input-bordered w-full bg-slate-950 border-slate-700 text-slate-100 text-xs focus:border-cyan-500 font-arabic">
             </div>
 
@@ -1435,12 +1435,12 @@
             <div class="grid grid-cols-2 gap-2 p-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-[11px] text-slate-400">
               <div class="flex items-center gap-1.5">
                 <i class="fa-solid fa-layer-group text-slate-500"></i>
-                <span>الرسائل المحتفظ بها:</span>
-                <strong class="text-white" x-text="(forkTargetIdx + 1) + ' رسائل'"></strong>
+                <span x-text="t('preservedMessages')"></span>
+                <strong class="text-white" x-text="(forkTargetIdx + 1) + ' ' + t('messagesCountSuffix')"></strong>
               </div>
               <div class="flex items-center gap-1.5">
                 <i class="fa-solid fa-microchip text-slate-500"></i>
-                <span>المحرك:</span>
+                <span x-text="t('engine')"></span>
                 <strong class="text-cyan-400 uppercase font-mono" x-text="session?.engine || 'agy'"></strong>
               </div>
             </div>
@@ -1455,20 +1455,18 @@
               <div class="w-12 h-12 rounded-full bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 mx-auto text-xl shadow-lg shadow-emerald-500/10">
                 <i class="fa-solid fa-check"></i>
               </div>
-              <h4 class="font-bold text-sm text-white">تم تفريع الجلسة بنجاح!</h4>
-              <p class="text-[11px] text-slate-300">
-                أصبحت الجلسة المتفرعة الجديدة جاهزة للعمل ابتداءً من هذه النقطة وبسياق خفيف وخالٍ من تراكم التوكنز.
-              </p>
+              <h4 class="font-bold text-sm text-white" x-text="t('forkSuccessTitle')"></h4>
+              <p class="text-[11px] text-slate-300" x-text="t('forkSuccessDesc')"></p>
             </div>
 
             <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl space-y-2 text-xs">
               <div class="flex items-center justify-between">
-                <span class="text-slate-400">اسم الفرع الجديد:</span>
+                <span class="text-slate-400" x-text="t('newBranchName')"></span>
                 <span class="font-bold text-white font-arabic" x-text="forkCreatedSession?.session?.name"></span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-slate-400">عدد الرسائل المستنسخة:</span>
-                <span class="badge badge-sm bg-cyan-950 text-cyan-300 border border-cyan-500/30" x-text="forkCreatedSession?.session?.forkedFrom?.totalMessages + ' رسائل'"></span>
+                <span class="text-slate-400" x-text="t('clonedMessagesCount')"></span>
+                <span class="badge badge-sm bg-cyan-950 text-cyan-300 border border-cyan-500/30" x-text="forkCreatedSession?.session?.forkedFrom?.totalMessages + ' ' + t('messagesCountSuffix')"></span>
               </div>
             </div>
 
@@ -1477,16 +1475,16 @@
               <a :href="forkCreatedSession?.url" target="_blank"
                  class="btn btn-sm w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white font-bold gap-2 text-xs shadow-lg shadow-cyan-500/20">
                 <i class="fa-solid fa-arrow-up-right-from-square"></i>
-                <span>فتح الجلسة المتفرعة في نافذة جديدة</span>
+                <span x-text="t('openBranchNewTab')"></span>
               </a>
               <button @click="switchToBranch(forkCreatedSession?.session?.token)"
                       class="btn btn-sm btn-outline btn-info w-full text-xs gap-2">
                 <i class="fa-solid fa-arrow-right"></i>
-                <span>الانتقال إليها في هذه الصفحة مباشرة</span>
+                <span x-text="t('switchBranchHere')"></span>
               </button>
               <button @click="copyForkUrl()" class="btn btn-sm btn-ghost text-slate-400 hover:text-white w-full text-xs gap-1.5">
                 <i class="fa-solid fa-copy"></i>
-                <span>نسخ رابط الجلسة المتفرعة</span>
+                <span x-text="t('copyBranchUrl')"></span>
               </button>
             </div>
           </div>
@@ -1497,7 +1495,7 @@
       <!-- Modal Footer -->
       <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex items-center justify-between">
         <button @click="showForkModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">
-          <span x-text="forkCreatedSession ? 'إغلاق ومتابعة العمل هنا' : 'إلغاء'"></span>
+          <span x-text="forkCreatedSession ? t('closeAndStay') : t('cancel')"></span>
         </button>
 
         <template x-if="!forkCreatedSession">
@@ -1505,14 +1503,14 @@
                   class="btn btn-sm bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 border-none text-white font-bold text-xs gap-1.5 shadow-md shadow-cyan-500/20">
             <span x-show="forkLoading" class="loading loading-spinner loading-xs"></span>
             <i x-show="!forkLoading" class="fa-solid fa-code-fork"></i>
-            <span>تأكيد وإنشاء الفرع</span>
+            <span x-text="t('confirmFork')"></span>
           </button>
         </template>
       </div>
 
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showForkModal = false">إغلاق</button>
+      <button @click="showForkModal = false" x-text="t('close')"></button>
     </form>
   </dialog>
 
@@ -1526,8 +1524,8 @@
             <i class="fa-solid fa-pen-to-square text-sm"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm text-white">تعديل الرسالة واستئناف الدردشة</h3>
-            <p class="text-[10px] text-slate-400">تعديل النص وحذف ما بعده لاستئناف مسار العمل من هذه النقطة</p>
+            <h3 class="font-bold text-sm text-white" x-text="t('editModalTitle')"></h3>
+            <p class="text-[10px] text-slate-400" x-text="t('editModalDesc')"></p>
           </div>
         </div>
         <button @click="showEditModal = false" class="btn btn-ghost btn-xs btn-circle text-slate-400 hover:text-white">✕</button>
@@ -1539,10 +1537,10 @@
         <div class="p-3 rounded-xl bg-amber-950/40 border border-amber-500/30 text-amber-200 leading-relaxed space-y-1">
           <div class="font-bold flex items-center gap-1.5 text-white">
             <i class="fa-solid fa-triangle-exclamation text-amber-400"></i>
-            <span>تنبيه حذف الردود والرسائل اللاحقة:</span>
+            <span x-text="t('editWarningTitle')"></span>
           </div>
           <p class="text-[11px] text-slate-300">
-            سيتم استئناف الجلسة من هذا التعليق بعد تعديله، وحذف كافة التعليقات والردود التي كانت أسفله (<span class="text-amber-400 font-bold" x-text="Math.max(0, chatMessages.length - 1 - editTargetIdx)"></span> رسائل سابقة). ولن يتعرف الذكاء الاصطناعي على تلك الردود المحذوفة لضمان عدم تراكم الذاكرة والتوكنز.
+            <span x-text="t('editWarningDesc')"></span> (<span class="text-amber-400 font-bold" x-text="Math.max(0, chatMessages.length - 1 - editTargetIdx)"></span> <span x-text="t('messagesPrevious')"></span>). <span x-text="t('editWarningContextNote')"></span>
           </p>
         </div>
 
@@ -1550,12 +1548,12 @@
         <div class="flex items-center justify-between text-slate-400 text-[11px]">
           <span class="font-semibold flex items-center gap-1">
             <i class="fa-solid fa-message text-amber-400 text-[10px]"></i>
-            <span>نص الرسالة المراد تعديلها:</span>
+            <span x-text="t('messageTextToEdit')"></span>
           </span>
           <div class="flex items-center gap-2">
             <span class="badge badge-xs text-[9px]"
                   :class="editTargetMsg?.role === 'user' ? 'badge-primary' : 'badge-neutral'"
-                  x-text="editTargetMsg?.role === 'user' ? 'طلب المستخدم' : 'رد الوكيل الذكي'"></span>
+                  x-text="editTargetMsg?.role === 'user' ? t('userPrompt') : t('assistantReply')"></span>
             <span class="font-mono text-slate-500" x-text="'#' + (editTargetIdx + 1)"></span>
           </div>
         </div>
@@ -1567,33 +1565,29 @@
                     rows="7"
                     @keydown.ctrl.enter="editTargetMsg?.role === 'user' ? executeEditAndResend() : executeEditAndSaveOnly()"
                     @keydown.meta.enter="editTargetMsg?.role === 'user' ? executeEditAndResend() : executeEditAndSaveOnly()"
-                    placeholder="أدخل النص المعدل هنا..."
+                    :placeholder="t('editContentPlaceholder')"
                     class="textarea textarea-bordered w-full bg-slate-950 border-slate-700 text-slate-100 text-xs focus:border-amber-500 font-arabic leading-relaxed resize-y select-text"></textarea>
-          <div class="text-[10px] text-slate-500 text-left dir-ltr">
-            اضغط <kbd class="kbd kbd-xs bg-slate-800 text-slate-300">Ctrl + Enter</kbd> للحفظ والإرسال السريع
-          </div>
+          <div class="text-[10px] text-slate-500 text-left dir-ltr" x-text="t('ctrlEnterToSave')"></div>
         </div>
 
         <!-- Specs Recap -->
         <div class="grid grid-cols-2 gap-2 p-2.5 bg-slate-950/70 border border-slate-800 rounded-xl text-[11px] text-slate-400">
           <div class="flex items-center gap-1.5">
             <i class="fa-solid fa-layer-group text-slate-500"></i>
-            <span>الرسائل المحتفظ بها قبل هذه النقطة:</span>
-            <strong class="text-white" x-text="editTargetIdx + ' رسائل'"></strong>
+            <span x-text="t('preservedBefore')"></span>
+            <strong class="text-white" x-text="editTargetIdx + ' ' + t('messagesCountSuffix')"></strong>
           </div>
           <div class="flex items-center gap-1.5">
             <i class="fa-solid fa-trash-can text-rose-400"></i>
-            <span>الرسائل التي ستُحذف:</span>
-            <strong class="text-rose-400" x-text="Math.max(0, chatMessages.length - 1 - editTargetIdx) + ' رسائل'"></strong>
+            <span x-text="t('messagesToBeDeleted')"></span>
+            <strong class="text-rose-400" x-text="Math.max(0, chatMessages.length - 1 - editTargetIdx) + ' ' + t('messagesCountSuffix')"></strong>
           </div>
         </div>
       </div>
 
       <!-- Modal Footer -->
       <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex items-center justify-between">
-        <button @click="showEditModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">
-          إلغاء
-        </button>
+        <button @click="showEditModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('cancel')"></button>
 
         <div class="flex items-center gap-2">
           <!-- If Assistant Message: Save and truncate only -->
@@ -1602,7 +1596,7 @@
                     class="btn btn-sm bg-amber-600 hover:bg-amber-500 border-none text-white font-bold text-xs gap-1.5 shadow-md shadow-amber-600/20">
               <span x-show="editLoading" class="loading loading-spinner loading-xs"></span>
               <i x-show="!editLoading" class="fa-solid fa-check"></i>
-              <span>حفظ التعديل وحذف اللاحق</span>
+              <span x-text="t('saveAndTruncate')"></span>
             </button>
           </template>
 
@@ -1611,14 +1605,14 @@
             <div class="flex items-center gap-2">
               <button @click="executeEditAndSaveOnly()" :disabled="editLoading || !editContentInput.trim()"
                       class="btn btn-sm btn-ghost text-slate-300 hover:text-white text-xs gap-1"
-                      title="حفظ التعديل وحذف الردود اللاحقة دون إرسال طلب جديد للذكاء الاصطناعي الآن">
-                <span>حفظ دون إرسال</span>
+                      :title="t('saveWithoutSendingTitle')">
+                <span x-text="t('saveWithoutSending')"></span>
               </button>
               <button @click="executeEditAndResend()" :disabled="editLoading || !editContentInput.trim()"
                       class="btn btn-sm bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-400 hover:to-orange-500 border-none text-white font-bold text-xs gap-1.5 shadow-md shadow-amber-500/20">
                 <span x-show="editLoading" class="loading loading-spinner loading-xs"></span>
                 <i x-show="!editLoading" class="fa-solid fa-paper-plane"></i>
-                <span>تعديل واستئناف الدردشة</span>
+                <span x-text="t('editAndResumeChat')"></span>
               </button>
             </div>
           </template>
@@ -1626,7 +1620,7 @@
       </div>
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showEditModal = false">إغلاق</button>
+      <button @click="showEditModal = false" x-text="t('close')"></button>
     </form>
   </dialog>
 
@@ -1641,8 +1635,8 @@
             <i class="fa-solid fa-diagram-project text-sm"></i>
           </div>
           <div>
-            <h3 class="font-bold text-sm text-white">شجرة الفروع والجلسات (Session Branches)</h3>
-            <p class="text-[10px] text-slate-400">استعراض كافة مسارات وتفريعات هذه الجلسة والتنقل بينها بسهولة</p>
+            <h3 class="font-bold text-sm text-white" x-text="t('branchesFamilyTitle')"></h3>
+            <p class="text-[10px] text-slate-400" x-text="t('branchesFamilyDesc')"></p>
           </div>
         </div>
         <button @click="showBranchesModal = false" class="btn btn-ghost btn-xs btn-circle text-slate-400 hover:text-white">✕</button>
@@ -1664,11 +1658,11 @@
                 <div class="space-y-1.5 flex-1 min-w-0">
                   <div class="flex items-center gap-2 flex-wrap">
                     <span class="font-bold text-sm text-white" x-text="br.name"></span>
-                    <span x-show="br.isCurrent" class="badge badge-xs bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[9px] py-1 px-1.5">الجلسة الحالية</span>
-                    <span x-show="!br.parentId" class="badge badge-xs bg-slate-800 text-slate-300 border-none text-[9px]">الجلسة الأصلية (Root)</span>
+                    <span x-show="br.isCurrent" class="badge badge-xs bg-cyan-950 text-cyan-300 border border-cyan-500/40 text-[9px] py-1 px-1.5" x-text="t('currentSessionBadge')"></span>
+                    <span x-show="!br.parentId" class="badge badge-xs bg-slate-800 text-slate-300 border-none text-[9px]" x-text="t('rootSessionBadge')"></span>
                     <span x-show="br.forkedFrom" class="badge badge-xs bg-purple-950 text-purple-300 border border-purple-500/30 text-[9px] gap-1">
                       <i class="fa-solid fa-code-fork text-[8px]"></i>
-                      <span>فرع</span>
+                      <span x-text="t('branchBadge')"></span>
                     </span>
                   </div>
 
@@ -1676,11 +1670,11 @@
                   <div class="text-[11px] text-slate-400 flex items-center gap-3 flex-wrap font-mono">
                     <span class="flex items-center gap-1">
                       <i class="fa-solid fa-comments text-slate-500 text-[10px]"></i>
-                      <span x-text="(br.messagesCount || 0) + ' طلبات'"></span>
+                      <span x-text="(br.messagesCount || 0) + ' ' + t('promptsCount')"></span>
                     </span>
                     <span class="flex items-center gap-1">
                       <i class="fa-solid fa-clock text-slate-500 text-[10px]"></i>
-                      <span x-text="new Date(br.lastActive || br.createdAt).toLocaleString('ar-EG', { dateStyle: 'short', timeStyle: 'short' })"></span>
+                      <span x-text="new Date(br.lastActive || br.createdAt).toLocaleString(currentLang === 'ar' ? 'ar-EG' : 'en-US', { dateStyle: 'short', timeStyle: 'short' })"></span>
                     </span>
                     <span class="flex items-center gap-1">
                       <i class="fa-solid fa-microchip text-cyan-400 text-[10px]"></i>
@@ -1690,7 +1684,7 @@
 
                   <!-- Snippet if forked -->
                   <div x-show="br.forkedFrom?.messageSnippet" class="text-[11px] text-slate-400/90 italic bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-800/80 truncate">
-                    نقطة التفريع: "<span x-text="br.forkedFrom?.messageSnippet"></span>"
+                    <span x-text="t('forkPointLabel')"></span> "<span x-text="br.forkedFrom?.messageSnippet"></span>"
                   </div>
                 </div>
 
@@ -1699,12 +1693,12 @@
                   <template x-if="!br.isCurrent">
                     <button @click="switchToBranch(br.token)"
                             class="btn btn-xs btn-outline btn-info gap-1 text-[11px]">
-                      <span>انتقال</span>
+                      <span x-text="t('switchBtn')"></span>
                       <i class="fa-solid fa-arrow-left text-[9px]"></i>
                     </button>
                   </template>
                   <template x-if="br.isCurrent">
-                    <span class="badge badge-sm badge-ghost text-slate-400 text-[10px]">أنت هنا</span>
+                    <span class="badge badge-sm badge-ghost text-slate-400 text-[10px]" x-text="t('youAreHere')"></span>
                   </template>
                 </div>
               </div>
@@ -1713,8 +1707,8 @@
 
           <div x-show="!branchFamily || branchFamily.length <= 1" class="text-center py-8 text-slate-400 space-y-2">
             <i class="fa-solid fa-code-fork text-2xl text-slate-600"></i>
-            <p class="text-xs">لم يتم تفريع أي جلسات إضافية من هذه الجلسة حتى الآن.</p>
-            <p class="text-[11px] text-slate-500">يمكنك النقر على زر "فورك" بجانب أي رد داخل المحادثة لإنشاء فرع جديد بسهولة!</p>
+            <p class="text-xs" x-text="t('noBranchesYet')"></p>
+            <p class="text-[11px] text-slate-500" x-text="t('noBranchesHint')"></p>
           </div>
 
         </div>
@@ -1723,12 +1717,12 @@
 
       <!-- Modal Footer -->
       <div class="bg-slate-950 px-6 py-3 border-t border-slate-800 flex justify-end">
-        <button @click="showBranchesModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs">إغلاق</button>
+        <button @click="showBranchesModal = false" class="btn btn-sm btn-ghost text-slate-400 text-xs" x-text="t('close')"></button>
       </div>
 
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
-      <button @click="showBranchesModal = false">إغلاق</button>
+      <button @click="showBranchesModal = false" x-text="t('close')"></button>
     </form>
   </dialog>
 

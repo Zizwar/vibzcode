@@ -8,19 +8,22 @@ Vibz.createAgentApp = function() {
     toasts: [],
     theme: localStorage.getItem('vibz_theme') || localStorage.getItem('agyz_theme') || 'dark',
     isFullscreen: !!document.fullscreenElement,
+    lang: (typeof localStorage !== 'undefined' && localStorage.getItem('vibz_lang')) || 'ar',
 
     // i18n Helpers
     t(key) {
+      const _ = this.lang;
       return Vibz.i18n ? Vibz.i18n.t(key) : key;
     },
 
     get currentLang() {
-      return Vibz.i18n ? Vibz.i18n.currentLang : 'ar';
+      return this.lang;
     },
 
     toggleLang() {
       if (Vibz.i18n) {
         Vibz.i18n.toggleLang();
+        this.lang = Vibz.i18n.currentLang;
       }
     },
 
@@ -29,6 +32,17 @@ Vibz.createAgentApp = function() {
       this.applyTheme();
       if (typeof this.initMarkedParser === 'function') this.initMarkedParser();
       if (typeof this.setupLocalFileInteractions === 'function') this.setupLocalFileInteractions();
+
+      const updateTitle = () => {
+        const prefix = (this.session && this.session.name) ? this.session.name + ' - ' : '';
+        document.title = prefix + 'VibzCode (' + (this.lang === 'ar' ? 'مساحة عمل الوكيل' : 'Agent Workspace') + ')';
+      };
+      updateTitle();
+
+      document.addEventListener('vibz-lang-changed', (e) => {
+        this.lang = e.detail;
+        updateTitle();
+      });
 
       document.addEventListener('fullscreenchange', () => {
         this.isFullscreen = !!document.fullscreenElement;
