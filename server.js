@@ -1182,12 +1182,20 @@ async function dispatchSessionChatTask({
   isFirstForkTurn = false,
   isEditedTurn = false,
   isAdmin = false,
+  model = null,
+  effort = null,
   source = 'web',
   telegramMeta = null
 }) {
   const userPrompt = (prompt || '').trim();
   if (!userPrompt) {
     throw new Error('نص البرومبت فارغ');
+  }
+
+  const TAINTED_ID = 'a04fae20-6df7-4954-aff2-a9d6147fdbcd';
+  let effectiveConvId = (conversationId && conversationId !== TAINTED_ID) ? conversationId : null;
+  if (!effectiveConvId && continueSession && session.conversationId && session.conversationId !== TAINTED_ID) {
+    effectiveConvId = session.conversationId;
   }
 
   // 1. Attach MemoryZ memories if provided
@@ -1265,10 +1273,12 @@ ${contextTurns}
   const startTime = Date.now();
 
   // 3. Register job in persistent jobs manager
+  const chosenModel = model || session.model || '';
+  const chosenEffort = effort || session.effort || '';
   const job = await jobsManager.createJob({
     sessionId: session.id,
     engine: session.engine || 'agy',
-    model: session.model || '',
+    model: chosenModel,
     targetDir: session.targetDir,
     prompt: userPrompt,
     memoryRefs
@@ -1294,8 +1304,10 @@ ${contextTurns}
 
   return new Promise((resolve, reject) => {
     executeEngineTask(session, finalPrompt, {
-      conversationId,
+      conversationId: isEditedTurn ? null : effectiveConvId,
       continueSession,
+      model: chosenModel,
+      effort: chosenEffort,
       timeout: configuredTimeout,
       systemPrompt: session.systemPrompt,
       onSpawn: (child) => {
@@ -1342,10 +1354,19 @@ ${contextTurns}
     }).then(async (result) => {
       activeChatProcesses.delete(session.token);
 
-      // Update Session Stats
+      // Update Session Stats & Persist Isolated Conversation ID
       if (!isAdmin) {
         session.lastActive = new Date().toISOString();
         session.stats.messagesCount = (session.stats.messagesCount || 0) + 1;
+        if (result.conversationId && result.conversationId !== 'a04fae20-6df7-4954-aff2-a9d6147fdbcd') {
+          session.conversationId = result.conversationId;
+        }
+        if (chosenModel && chosenModel !== session.model) {
+          session.model = chosenModel;
+        }
+        if (chosenEffort && chosenEffort !== session.effort) {
+          session.effort = chosenEffort;
+        }
         saveSessions(sessions);
       }
 
@@ -1372,6 +1393,9 @@ ${contextTurns}
           conversationId: result.conversationId,
           duration: result.duration,
           isError: result.isError,
+          usage: result.usage || null,
+          model: chosenModel || result.model || null,
+          effort: chosenEffort || result.effort || null,
           steps: jobRecord.steps && jobRecord.steps.length > 0 ? jobRecord.steps : undefined,
           time: new Date().toLocaleTimeString('ar-EG', { hour: '2-digit', minute: '2-digit' })
         };
@@ -1384,7 +1408,10 @@ ${contextTurns}
         conversationId: result.conversationId,
         duration: result.duration,
         isError: result.isError,
-        usage: result.usage
+        error: result.error,
+        usage: result.usage,
+        model: chosenModel || result.model,
+        effort: chosenEffort || result.effort
       });
 
       // Update memory job record for legacy polling
@@ -1418,7 +1445,9 @@ ${contextTurns}
         conversationId: result.conversationId,
         duration: result.duration,
         status: 'completed',
-        usage: result.usage,
+        usage: result.usage || null,
+        model: chosenModel || result.model || null,
+        effort: chosenEffort || result.effort || null,
         isError: result.isError,
         steps: jobRecord.steps
       });
@@ -1511,7 +1540,7 @@ app.post('/api/session/chat', async (req, res) => {
   req.setTimeout(0);
   res.setTimeout(0);
 
-  const { prompt, conversationId, continueSession, isFirstForkTurn, isEditedTurn } = req.body;
+  const { prompt, conversationId, continueSession, isFirstForkTurn, isEditedTurn, model, effort } = req.body;
   if (!prompt || typeof prompt !== 'string' || !prompt.trim()) {
     return res.status(400).json({ success: false, error: 'نص البرومبت فارغ' });
   }
@@ -1523,6 +1552,8 @@ app.post('/api/session/chat', async (req, res) => {
       memoryRefs: req.body.memoryRefs || req.body.memory_refs || [],
       conversationId: isEditedTurn ? null : conversationId,
       continueSession: isEditedTurn ? false : continueSession,
+      model,
+      effort,
       isFirstForkTurn,
       isEditedTurn: !!isEditedTurn,
       isAdmin,
@@ -1544,7 +1575,9 @@ app.post('/api/session/chat', async (req, res) => {
       conversationId: outcome.conversationId,
       duration: outcome.duration,
       status: 'completed',
-      usage: outcome.usage
+      usage: outcome.usage,
+      model: outcome.model,
+      effort: outcome.effort
     });
   } catch (err) {
     return res.status(500).json({ success: false, error: err.message || 'خطأ أثناء تنفيذ العملية' });
@@ -2103,6 +2136,17 @@ app.delete('/api/orchestrator/master/history', (req, res) => {
   }
   saveSessionChatMessages(req.query.sessionId || MASTER_SESSION_ID, []);
   return res.json({ success: true, message: 'تم مسح سجل الوكيل العام' });
+});
+
+// Serve VibzCode Agent Skill File ($BASE_URL/vibzcode.skill.md)
+app.get('/vibzcode.skill.md', (req, res) => {
+  const skillFile = path.join(__dirname, 'public', 'vibzcode.skill.md');
+  if (fs.existsSync(skillFile)) {
+    res.setHeader('Content-Type', 'text/markdown; charset=utf-8');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.sendFile(skillFile);
+  }
+  return res.status(404).type('text/plain').send('Skill file not found');
 });
 
 // Serve Static Assets

@@ -9,6 +9,22 @@ Vibz.agentChat = {
   chatTimerInterval: null,
   chatConversationId: null,
   chatContinue: true,
+  selectedModel: (typeof localStorage !== 'undefined' && localStorage.getItem('vibz_agent_model')) || 'gemini-3.8-flash-medium',
+  selectedEffort: (typeof localStorage !== 'undefined' && localStorage.getItem('vibz_agent_effort')) || 'medium',
+  availableModels: [
+    { id: 'gemini-3.8-flash-medium', name: 'Gemini 3.8 Flash (Medium)', defaultEffort: 'medium' },
+    { id: 'gemini-3.8-flash-high', name: 'Gemini 3.8 Flash (High)', defaultEffort: 'high' },
+    { id: 'gemini-3.8-flash-low', name: 'Gemini 3.8 Flash (Low)', defaultEffort: 'low' },
+    { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6 (Thinking)', defaultEffort: 'high' },
+    { id: 'claude-opus-4-6-thinking', name: 'Claude Opus 4.6 (Thinking)', defaultEffort: 'high' },
+    { id: 'gpt-oss-120b-medium', name: 'GPT-OSS 120B (Medium)', defaultEffort: 'medium' }
+  ],
+  availableEfforts: [
+    { id: 'low', name: 'Low (منخفض)' },
+    { id: 'medium', name: 'Medium (متوسط)' },
+    { id: 'high', name: 'High (عالي)' },
+    { id: 'max', name: 'Max (أقصى)' }
+  ],
   activePollTimer: null,
   activeStep: null,
   activeStepsHistory: [],
@@ -16,6 +32,33 @@ Vibz.agentChat = {
   syncChatInterval: null,
   _markedInitialized: false,
   _localFileInteractionsInitialized: false,
+
+  onModelChange() {
+    if (typeof localStorage !== 'undefined') localStorage.setItem('vibz_agent_model', this.selectedModel);
+    const m = (this.availableModels || []).find(x => x.id === this.selectedModel);
+    if (m && m.defaultEffort) {
+      this.selectedEffort = m.defaultEffort;
+      if (typeof localStorage !== 'undefined') localStorage.setItem('vibz_agent_effort', this.selectedEffort);
+    }
+  },
+
+  onEffortChange() {
+    if (typeof localStorage !== 'undefined') localStorage.setItem('vibz_agent_effort', this.selectedEffort);
+  },
+
+  insertSlashCommand(cmd) {
+    if (!this.chatInputText) {
+      this.chatInputText = cmd;
+    } else if (!this.chatInputText.startsWith(cmd)) {
+      this.chatInputText = cmd + this.chatInputText;
+    }
+    const el = document.getElementById('agent-input-textarea');
+    if (el) {
+      el.focus();
+      const len = this.chatInputText.length;
+      el.setSelectionRange(len, len);
+    }
+  },
 
   isNearChatBottom() {
     const el = document.getElementById('agent-chat-container');
@@ -45,10 +88,12 @@ Vibz.agentChat = {
         }
 
         // Recover conversationId from last assistant message if not set
-        if (!this.chatConversationId) {
+        if (!this.chatConversationId || this.chatConversationId === 'a04fae20-6df7-4954-aff2-a9d6147fdbcd') {
+          this.chatConversationId = null;
           for (let i = data.messages.length - 1; i >= 0; i--) {
-            if (data.messages[i].role === 'assistant' && data.messages[i].conversationId) {
-              this.chatConversationId = data.messages[i].conversationId;
+            const cid = data.messages[i].conversationId;
+            if (data.messages[i].role === 'assistant' && cid && cid !== 'a04fae20-6df7-4954-aff2-a9d6147fdbcd') {
+              this.chatConversationId = cid;
               break;
             }
           }
@@ -182,7 +227,9 @@ Vibz.agentChat = {
           conversationId: isEditedTurn ? null : (this.chatContinue ? this.chatConversationId : null),
           continueSession: !isEditedTurn && this.chatContinue,
           isEditedTurn: !!isEditedTurn,
-          useMemoryz: this.useMemoryzMcp
+          useMemoryz: this.useMemoryzMcp,
+          model: this.selectedModel,
+          effort: this.selectedEffort
         })
       });
 
@@ -199,7 +246,7 @@ Vibz.agentChat = {
           return;
         }
 
-        if (data.conversationId) {
+        if (data.conversationId && data.conversationId !== 'a04fae20-6df7-4954-aff2-a9d6147fdbcd') {
           this.chatConversationId = data.conversationId;
         }
 

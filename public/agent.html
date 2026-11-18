@@ -339,9 +339,30 @@
 
         </div>
 
-        <!-- Right Group: Chat Context Controls -->
+        <!-- Right Group: Chat Context Controls & Model / Thinking Selection -->
         <div class="flex items-center gap-2 flex-wrap">
           
+          <!-- Model Selection Dropdown -->
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom" data-tip="اختيار نموذج الذكاء الاصطناعي">
+            <i class="fa-solid fa-microchip text-cyan-400 text-xs"></i>
+            <select x-model="selectedModel" @change="onModelChange()" class="bg-transparent text-slate-200 text-[11px] font-mono focus:outline-none cursor-pointer border-none py-0 pr-4 pl-0">
+              <template x-for="m in availableModels" :key="m.id">
+                <option :value="m.id" x-text="m.name" class="bg-slate-900 text-slate-100"></option>
+              </template>
+            </select>
+          </div>
+
+          <!-- Thinking Effort Selector -->
+          <div class="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom" data-tip="مستوى التفكير والتعمق (Thinking Effort)">
+            <i class="fa-solid fa-brain text-amber-400 text-xs"></i>
+            <span class="text-slate-400 text-[10px] hidden sm:inline">تفكير:</span>
+            <select x-model="selectedEffort" @change="onEffortChange()" class="bg-transparent text-amber-300 font-semibold text-[11px] font-mono focus:outline-none cursor-pointer border-none py-0 pr-4 pl-0">
+              <template x-for="ef in availableEfforts" :key="ef.id">
+                <option :value="ef.id" x-text="ef.name" class="bg-slate-900 text-slate-100"></option>
+              </template>
+            </select>
+          </div>
+
           <!-- Continue context toggle -->
           <label class="cursor-pointer flex items-center gap-1.5 px-2 py-1 rounded-lg bg-slate-950/80 border border-slate-800 text-[11px] tooltip tooltip-bottom select-none" data-tip="متابعة سياق المحادثة السابقة">
             <input type="checkbox" x-model="chatContinue" class="checkbox checkbox-xs checkbox-accent">
@@ -484,6 +505,15 @@
                         <i class="fa-solid fa-stopwatch text-slate-500 text-[9px]"></i>
                         <span x-text="msg.duration + 's'"></span>
                       </span>
+                      <span x-show="msg.model" class="badge badge-xs bg-slate-900 border border-cyan-500/30 font-mono text-[9px] text-cyan-300 gap-1" :title="'النموذج: ' + msg.model + (msg.effort ? ' (تفكير: ' + msg.effort + ')' : '')">
+                        <i class="fa-solid fa-microchip text-[8px] text-cyan-400"></i>
+                        <span x-text="msg.model.replace('gemini-', '').replace('claude-', '')"></span>
+                      </span>
+                      <span x-show="msg.usage && msg.usage.total_tokens" class="badge badge-xs bg-emerald-950/70 border border-emerald-500/30 font-mono text-[9px] text-emerald-300 gap-1 tooltip tooltip-bottom cursor-help"
+                            :data-tip="`إجمالي التوكنز: ${(msg.usage.total_tokens || 0).toLocaleString()} | إدخال: ${(msg.usage.input_tokens || 0).toLocaleString()} | إخراج: ${(msg.usage.output_tokens || 0).toLocaleString()} | تفكير: ${(msg.usage.thinking_tokens || 0).toLocaleString()}`">
+                        <i class="fa-solid fa-coins text-[8px] text-emerald-400"></i>
+                        <span x-text="(msg.usage.total_tokens || 0).toLocaleString() + ' tok'"></span>
+                      </span>
                     </div>
                     <div class="flex items-center gap-2">
                       <span x-show="forkCountByMsgId[msg.id]" @click="openBranchesModal()" class="badge badge-xs bg-purple-950 text-purple-300 border border-purple-500/40 text-[9px] px-1.5 py-0 cursor-pointer gap-1 tooltip tooltip-bottom" :data-tip="forkCountByMsgId[msg.id] + ' فروع متفرعة من هذا الرد'">
@@ -507,6 +537,39 @@
                   </div>
                   <!-- Rendered Markdown -->
                   <div class="chat-prose text-sm select-text font-arabic" x-html="renderMarkdown(msg.content)"></div>
+
+                  <!-- Token & Thinking Usage Breakdown Card -->
+                  <div x-show="msg.usage && msg.usage.total_tokens" class="mt-2.5 pt-2 border-t border-slate-800/60 flex items-center justify-between text-[10px] font-mono text-slate-400 flex-wrap gap-2">
+                    <div class="flex items-center gap-3 flex-wrap">
+                      <span class="flex items-center gap-1 text-emerald-400 font-semibold">
+                        <i class="fa-solid fa-coins text-[9px]"></i>
+                        <span>إجمالي التوكنز:</span>
+                        <span class="text-emerald-300 font-bold" x-text="(msg.usage.total_tokens || 0).toLocaleString()"></span>
+                      </span>
+                      <span x-show="msg.usage.input_tokens" class="flex items-center gap-1 text-slate-400">
+                        <span class="text-slate-500">إدخال:</span>
+                        <span class="text-slate-300" x-text="(msg.usage.input_tokens || 0).toLocaleString()"></span>
+                      </span>
+                      <span x-show="msg.usage.output_tokens" class="flex items-center gap-1 text-slate-400">
+                        <span class="text-slate-500">إخراج:</span>
+                        <span class="text-slate-300" x-text="(msg.usage.output_tokens || 0).toLocaleString()"></span>
+                      </span>
+                      <span x-show="msg.usage.thinking_tokens" class="flex items-center gap-1 text-amber-400">
+                        <i class="fa-solid fa-brain text-[8px]"></i>
+                        <span class="text-amber-500">تفكير:</span>
+                        <span class="text-amber-300 font-bold" x-text="(msg.usage.thinking_tokens || 0).toLocaleString()"></span>
+                      </span>
+                      <span x-show="msg.usage.cache_read_tokens" class="flex items-center gap-1 text-cyan-400">
+                        <i class="fa-solid fa-database text-[8px]"></i>
+                        <span class="text-cyan-500">كاش:</span>
+                        <span class="text-cyan-300" x-text="(msg.usage.cache_read_tokens || 0).toLocaleString()"></span>
+                      </span>
+                    </div>
+                    <div x-show="msg.model" class="flex items-center gap-1.5 text-slate-500 text-[9px]">
+                      <span class="text-slate-400" x-text="msg.model"></span>
+                      <span x-show="msg.effort" class="badge badge-xs bg-amber-950 text-amber-300 border-amber-600/30 text-[8px]" x-text="'effort: ' + msg.effort"></span>
+                    </div>
+                  </div>
 
                   <!-- Workflow Steps Summary -->
                   <div x-show="msg.steps && msg.steps.length > 0" class="mt-3 pt-2.5 border-t border-slate-800/80">
@@ -596,6 +659,34 @@
         <!-- Bottom Floating Input -->
         <div class="bg-slate-900/95 border-t border-slate-800/80 p-3 sm:p-4 shrink-0 backdrop-blur-xl">
           <form @submit.prevent="sendChatMessage()" class="max-w-4xl mx-auto space-y-2">
+            <!-- Quick Slash Commands Bar -->
+            <div class="flex items-center gap-1.5 flex-wrap px-1 text-xs">
+              <span class="text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                <i class="fa-solid fa-terminal text-[9px]"></i>
+                <span>أوامر سريعة:</span>
+              </span>
+              <button type="button" @click="insertSlashCommand('/browser ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-cyan-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="تشغيل المتصفح والبحث بالإنترنت مع أخذ لقطات شاشة">
+                <i class="fa-solid fa-globe text-[10px] text-cyan-400"></i>
+                <span>/browser</span>
+              </button>
+              <button type="button" @click="insertSlashCommand('/plan ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-amber-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="تخطيط استراتيجي خطوة بخطوة قبل التنفيذ">
+                <i class="fa-solid fa-list-check text-[10px] text-amber-400"></i>
+                <span>/plan</span>
+              </button>
+              <button type="button" @click="insertSlashCommand('/boost ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-purple-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="تحليل وتفكير عميق وتخطيط متعدد الزوايا">
+                <i class="fa-solid fa-bolt text-[10px] text-purple-400"></i>
+                <span>/boost</span>
+              </button>
+              <button type="button" @click="insertSlashCommand('/grill-me ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-emerald-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="مقابلة تفاعلية لتحديد القرارات المعمارية والتصميمية">
+                <i class="fa-solid fa-comments text-[10px] text-emerald-400"></i>
+                <span>/grill-me</span>
+              </button>
+              <button type="button" @click="insertSlashCommand('/teamwork ')" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-blue-300 rounded-lg gap-1 font-mono text-[11px] py-0 h-6 min-h-6" title="توزيع العمل على فريق من الوكلاء المستقلين المتوازيين">
+                <i class="fa-solid fa-people-group text-[10px] text-blue-400"></i>
+                <span>/teamwork</span>
+              </button>
+            </div>
+
             <div class="relative flex items-end gap-2 bg-slate-950 border border-slate-800 rounded-2xl p-2 focus-within:border-cyan-500/60 shadow-lg">
               <textarea id="agent-input-textarea"
                         x-model="chatInputText"
