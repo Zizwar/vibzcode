@@ -48,7 +48,19 @@ html[dir="ltr"] .font-arabic {
   scrollbar-width: none;
 }
 
-/* Terminal Screen Styling */
+/* Terminal Screen Styling & Robust Arabic Text Rendering */
+#terminal-container,
+#terminal,
+.xterm,
+.xterm-viewport,
+.xterm-screen,
+.xterm-rows,
+.xterm-rows > div {
+  direction: ltr !important;
+  text-align: left !important;
+  unicode-bidi: isolate !important;
+}
+
 #terminal-container {
   user-select: text !important;
   -webkit-user-select: text !important;
@@ -62,15 +74,55 @@ html[dir="ltr"] .font-arabic {
 }
 
 .xterm {
-  font-family: 'Noto Sans Arabic', 'JetBrains Mono', monospace !important;
+  font-family: 'JetBrains Mono', 'Noto Sans Arabic', 'DejaVu Sans Mono', monospace !important;
   user-select: text !important;
   -webkit-user-select: text !important;
 }
 
-.xterm-screen {
+.xterm .xterm-screen {
+  direction: ltr !important;
+  text-align: left !important;
+  font-feature-settings: "liga" 1, "calt" 1, "dlig" 1, "kern" 1 !important;
+  font-variant-ligatures: contextual normal !important;
+  letter-spacing: normal !important;
+}
+
+.xterm .xterm-rows > div {
+  direction: ltr !important;
+  text-align: left !important;
+  white-space: pre !important;
+}
+
+.xterm .xterm-rows span {
   font-feature-settings: "liga" 1, "calt" 1, "dlig" 1 !important;
-  letter-spacing: 0px !important;
-  font-variant-ligatures: normal !important;
+  font-variant-ligatures: contextual normal !important;
+  letter-spacing: normal !important;
+}
+
+/* Custom Visible Scrollbar for Virtual Terminal Controls Dock */
+.term-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(56, 189, 248, 0.45) rgba(15, 23, 42, 0.7) !important;
+}
+
+.term-scrollbar::-webkit-scrollbar {
+  height: 6px !important;
+  width: 6px !important;
+  display: block !important;
+}
+
+.term-scrollbar::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.7) !important;
+  border-radius: 4px !important;
+}
+
+.term-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(56, 189, 248, 0.45) !important;
+  border-radius: 4px !important;
+}
+
+.term-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(56, 189, 248, 0.8) !important;
 }
 
 /* Chat Markdown Formatting */

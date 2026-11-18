@@ -814,11 +814,11 @@
           </form>
         </div>
 
-        <!-- Virtual Controls & Keypad Dock (Collapsible) -->
-        <div x-show="showVirtualKeypad" class="bg-slate-950/95 border-t border-slate-800/80 p-2 flex flex-col gap-1.5 shrink-0 max-h-48 overflow-y-auto">
+        <!-- Virtual Controls & Keypad Dock (Collapsible & Responsive) -->
+        <div x-show="showVirtualKeypad" class="bg-slate-950/95 border-t border-slate-800/80 p-2 sm:p-2.5 flex flex-col gap-2 shrink-0 max-h-64 sm:max-h-52 overflow-y-auto term-scrollbar">
           
           <!-- Row 1: Navigation, Modifiers & Paste -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" dir="ltr">
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 term-scrollbar shrink-0" dir="ltr">
             <button @click="ctrlActive = !ctrlActive"
                     class="btn btn-xs font-mono font-bold"
                     :class="ctrlActive ? 'btn-accent text-black shadow-lg shadow-cyan-500/30' : 'btn-neutral bg-slate-800 text-cyan-400 border-slate-700'"
@@ -868,79 +868,85 @@
             </button>
           </div>
 
-          <!-- Row 2: Signals & Slash Commands Shortcuts -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" dir="ltr">
-            <button @click="sendKey('\x03')" class="btn btn-xs btn-error bg-rose-950 text-rose-300 border-rose-800/40 font-mono gap-1" :title="t('termStopProcess')">
-              <i class="fa-solid fa-hand text-[10px]"></i>
-              <span>Ctrl+C</span>
-            </button>
+          <!-- Row 2: Signals & Fluid Slash Commands (Responsive Wrap - 3-4 per line on mobile) -->
+          <div class="flex flex-wrap items-center gap-1.5" dir="ltr">
+            <!-- System Signals -->
+            <div class="flex items-center gap-1 shrink-0">
+              <button @click="sendKey('\x03')" class="btn btn-xs btn-error bg-rose-950 text-rose-300 border-rose-800/40 font-mono gap-1" :title="t('termStopProcess')">
+                <i class="fa-solid fa-hand text-[10px]"></i>
+                <span>Ctrl+C</span>
+              </button>
 
-            <button @click="sendKey('\x04')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono">Ctrl+D</button>
-            <button @click="sendKey('\x0c')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono gap-1" title="Clear (Ctrl+L)">
-              <i class="fa-solid fa-eraser text-[10px]"></i>
-              <span>Ctrl+L</span>
-            </button>
-            <button @click="sendKey('\x1a')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono">Ctrl+Z</button>
+              <button @click="sendKey('\x04')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono">Ctrl+D</button>
+              <button @click="sendKey('\x0c')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono gap-1" title="Clear (Ctrl+L)">
+                <i class="fa-solid fa-eraser text-[10px]"></i>
+                <span>Ctrl+L</span>
+              </button>
+              <button @click="sendKey('\x1a')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono">Ctrl+Z</button>
+            </div>
 
-            <div class="divider divider-horizontal mx-0.5 my-0"></div>
+            <!-- Quick Confirmations -->
+            <div class="flex items-center gap-1 shrink-0">
+              <button @click="sendCommand('yes')" class="btn btn-xs btn-success bg-emerald-950 text-emerald-300 border-emerald-800/40 gap-1 font-mono">
+                <i class="fa-solid fa-check text-[10px]"></i>
+                <span>yes</span>
+              </button>
+              <button @click="sendCommand('no')" class="btn btn-xs btn-error bg-rose-950 text-rose-300 border-rose-800/40 gap-1 font-mono">
+                <i class="fa-solid fa-xmark text-[10px]"></i>
+                <span>no</span>
+              </button>
+            </div>
 
-            <button @click="sendCommand('/plan')" class="btn btn-xs btn-ghost bg-indigo-950/80 text-indigo-300 border border-indigo-800/40 gap-1 font-mono">
-              <i class="fa-solid fa-list-check text-[10px]"></i>
-              <span>/plan</span>
-            </button>
+            <!-- Slash Commands (Fluidly wrapped so they don't stretch into an endless hidden line) -->
+            <div class="flex flex-wrap items-center gap-1.5 grow">
+              <button @click="sendCommand('/plan')" class="btn btn-xs btn-ghost bg-indigo-950/80 text-indigo-300 border border-indigo-800/40 gap-1 font-mono hover:bg-indigo-900">
+                <i class="fa-solid fa-list-check text-[10px]"></i>
+                <span>/plan</span>
+              </button>
 
-            <button @click="sendCommand('/goal')" class="btn btn-xs btn-ghost bg-amber-950/80 text-amber-300 border border-amber-800/40 gap-1 font-mono">
-              <i class="fa-solid fa-bolt text-[10px]"></i>
-              <span>/goal</span>
-            </button>
+              <button @click="sendCommand('/goal')" class="btn btn-xs btn-ghost bg-amber-950/80 text-amber-300 border border-amber-800/40 gap-1 font-mono hover:bg-amber-900">
+                <i class="fa-solid fa-bolt text-[10px]"></i>
+                <span>/goal</span>
+              </button>
 
-            <button @click="sendCommand('/browser')" class="btn btn-xs btn-ghost bg-cyan-950/80 text-cyan-300 border border-cyan-800/40 gap-1 font-mono">
-              <i class="fa-solid fa-globe text-[10px]"></i>
-              <span>/browser</span>
-            </button>
+              <button @click="sendCommand('/browser')" class="btn btn-xs btn-ghost bg-cyan-950/80 text-cyan-300 border border-cyan-800/40 gap-1 font-mono hover:bg-cyan-900">
+                <i class="fa-solid fa-globe text-[10px]"></i>
+                <span>/browser</span>
+              </button>
 
-            <button @click="sendCommand('/boost')" class="btn btn-xs btn-ghost bg-purple-950/80 text-purple-300 border border-purple-800/40 gap-1 font-mono">
-              <i class="fa-solid fa-rocket text-[10px]"></i>
-              <span>/boost</span>
-            </button>
+              <button @click="sendCommand('/boost')" class="btn btn-xs btn-ghost bg-purple-950/80 text-purple-300 border border-purple-800/40 gap-1 font-mono hover:bg-purple-900">
+                <i class="fa-solid fa-rocket text-[10px]"></i>
+                <span>/boost</span>
+              </button>
 
-            <button @click="sendCommand('/grill-me')" class="btn btn-xs btn-ghost bg-purple-950/80 text-purple-300 border border-purple-800/40 gap-1 font-mono">
-              <i class="fa-solid fa-comments text-[10px]"></i>
-              <span>/grill-me</span>
-            </button>
+              <button @click="sendCommand('/grill-me')" class="btn btn-xs btn-ghost bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-800/40 gap-1 font-mono hover:bg-fuchsia-900">
+                <i class="fa-solid fa-comments text-[10px]"></i>
+                <span>/grill-me</span>
+              </button>
 
-            <button @click="sendCommand('/teamwork')" class="btn btn-xs btn-ghost bg-teal-950/80 text-teal-300 border border-teal-800/40 gap-1 font-mono">
-              <i class="fa-solid fa-users-gear text-[10px]"></i>
-              <span>/teamwork</span>
-            </button>
+              <button @click="sendCommand('/teamwork')" class="btn btn-xs btn-ghost bg-teal-950/80 text-teal-300 border border-teal-800/40 gap-1 font-mono hover:bg-teal-900">
+                <i class="fa-solid fa-users-gear text-[10px]"></i>
+                <span>/teamwork</span>
+              </button>
 
-            <button @click="sendCommand('/learn')" class="btn btn-xs btn-ghost bg-pink-950/80 text-pink-300 border border-pink-800/40 gap-1 font-mono">
-              <i class="fa-solid fa-brain text-[10px]"></i>
-              <span>/learn</span>
-            </button>
+              <button @click="sendCommand('/learn')" class="btn btn-xs btn-ghost bg-pink-950/80 text-pink-300 border border-pink-800/40 gap-1 font-mono hover:bg-pink-900">
+                <i class="fa-solid fa-brain text-[10px]"></i>
+                <span>/learn</span>
+              </button>
 
-            <button @click="sendCommand('/schedule')" class="btn btn-xs btn-ghost bg-blue-950/80 text-blue-300 border border-blue-800/40 gap-1 font-mono">
-              <i class="fa-solid fa-clock text-[10px]"></i>
-              <span>/schedule</span>
-            </button>
-
-            <button @click="sendCommand('yes')" class="btn btn-xs btn-success bg-emerald-950 text-emerald-300 border-emerald-800/40 gap-1">
-              <i class="fa-solid fa-check text-[10px]"></i>
-              <span>yes</span>
-            </button>
-
-            <button @click="sendCommand('no')" class="btn btn-xs btn-error bg-rose-950 text-rose-300 border-rose-800/40 gap-1">
-              <i class="fa-solid fa-xmark text-[10px]"></i>
-              <span>no</span>
-            </button>
+              <button @click="sendCommand('/schedule')" class="btn btn-xs btn-ghost bg-blue-950/80 text-blue-300 border border-blue-800/40 gap-1 font-mono hover:bg-blue-900">
+                <i class="fa-solid fa-clock text-[10px]"></i>
+                <span>/schedule</span>
+              </button>
+            </div>
           </div>
 
-          <!-- Row 3: Custom Actions & Add Button -->
-          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" dir="ltr">
+          <!-- Row 3: Custom Actions & Add Button (Fluid Responsive Wrap) -->
+          <div class="flex flex-wrap items-center gap-1.5 pt-0.5" dir="ltr">
             <template x-for="(btn, idx) in customButtons" :key="idx">
               <div class="join border border-slate-700/60 rounded-btn">
                 <button @click="sendCommand(btn.cmd, btn.autoEnter !== false)"
-                        class="btn btn-xs btn-neutral join-item bg-slate-800 text-amber-300 hover:bg-slate-700 gap-1"
+                        class="btn btn-xs btn-neutral join-item bg-slate-800 text-amber-300 hover:bg-slate-700 gap-1 font-mono text-[11px]"
                         :title="'Command: ' + btn.cmd">
                   <i class="fa-solid fa-terminal text-[10px]"></i>
                   <span x-text="btn.label"></span>
@@ -953,7 +959,7 @@
               </div>
             </template>
 
-            <button @click="showCustomModal = true" class="btn btn-xs btn-warning bg-amber-950 text-amber-300 border-amber-800/40 hover:bg-amber-900 gap-1">
+            <button @click="showCustomModal = true" class="btn btn-xs btn-warning bg-amber-950 text-amber-300 border-amber-800/40 hover:bg-amber-900 gap-1 text-[11px]">
               <i class="fa-solid fa-plus text-[10px]"></i>
               <span x-text="t('termAddCustomBtn')"></span>
             </button>

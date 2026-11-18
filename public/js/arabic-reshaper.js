@@ -161,11 +161,6 @@
     return output.join('');
   }
 
-  // Reverse Arabic segment for LTR visual terminal display
-  function reverseArabicSegment(str) {
-    return Array.from(str).reverse().join('');
-  }
-
   // Process a line of text: shapes Arabic words and adjusts visual BiDi order
   function processBidi(line, reorderBidi = false) {
     if (!line || typeof line !== 'string') return line;
@@ -178,10 +173,9 @@
       return reshaped;
     }
 
-    // BiDi visual reordering: reverse Arabic chunks so they read correctly in LTR terminal
-    return reshaped.replace(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g, (match) => {
-      return reverseArabicSegment(match);
-    });
+    // BiDi visual word reordering: reorder Arabic word sequences for LTR terminals,
+    // without reversing characters inside individual words (which would invert words into nonsense)
+    return reshaped.split(/(\s+)/).reverse().join('');
   }
 
   function hasArabic(text) {

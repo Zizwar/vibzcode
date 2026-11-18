@@ -4,11 +4,11 @@ window.Vibz = window.Vibz || {};
 Vibz.agentTerminal = {
   connected: false,
   currentFontSize: parseInt(localStorage.getItem('vibz_term_font_size') || '14', 10),
-  arabicModeIndex: parseInt(localStorage.getItem('vibz_arabic_mode') || localStorage.getItem('agyz_arabic_mode') || '1', 10),
+  arabicModeIndex: parseInt(localStorage.getItem('vibz_arabic_mode_v2') ?? '0', 10),
   arabicModes: [
-    { id: 0, name: 'raw', label: 'بدون معالجة', labelEn: 'Raw (No Shaping)', icon: 'fa-solid fa-font' },
-    { id: 1, name: 'shaped', label: 'عربي متصل', labelEn: 'Arabic Shaped', icon: 'fa-solid fa-language' },
-    { id: 2, name: 'bidi', label: 'عربي + BiDi', labelEn: 'Arabic + BiDi', icon: 'fa-solid fa-align-right' }
+    { id: 0, name: 'raw', label: 'عربي طبيعي متصل (مستحسن)', labelEn: 'Native Connected (Recommended)', icon: 'fa-solid fa-language' },
+    { id: 1, name: 'shaped', label: 'تشكيل الحروف (Forms-B)', labelEn: 'Reshaped (Forms-B)', icon: 'fa-solid fa-font' },
+    { id: 2, name: 'bidi', label: 'عكس الكلمات (BiDi)', labelEn: 'BiDi Words', icon: 'fa-solid fa-align-right' }
   ],
   terminalInputText: '',
   ctrlActive: false,
@@ -97,10 +97,11 @@ Vibz.agentTerminal = {
     this.initTerminalPreferences();
 
     const term = new Terminal({
+      allowProposedApi: true,
       cursorBlink: true,
       cursorStyle: 'block',
       fontSize: this.currentFontSize,
-      fontFamily: "'Noto Sans Arabic', 'JetBrains Mono', 'Fira Code', monospace",
+      fontFamily: "'JetBrains Mono', 'Noto Sans Arabic', 'DejaVu Sans Mono', monospace",
       theme: this.getTerminalTheme(),
       scrollback: 10000,
       convertEol: true,
@@ -121,14 +122,14 @@ Vibz.agentTerminal = {
       }
     } catch (e) {}
 
-    // Arabic Character Joiner
+    // Arabic Character Joiner (Groups Arabic words so browser engine connects ligatures natively)
     try {
       term.registerCharacterJoiner((text) => {
         const ranges = [];
-        const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF\s]+/g;
+        const arabicRegex = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]+/g;
         let match;
         while ((match = arabicRegex.exec(text)) !== null) {
-          if (match[0].trim().length > 0) {
+          if (match[0].length > 0) {
             ranges.push([match.index, match.index + match[0].length]);
           }
         }
@@ -350,6 +351,7 @@ Vibz.agentTerminal = {
 
   toggleArabicMode() {
     this.arabicModeIndex = (this.arabicModeIndex + 1) % 3;
+    localStorage.setItem('vibz_arabic_mode_v2', this.arabicModeIndex);
     localStorage.setItem('vibz_arabic_mode', this.arabicModeIndex);
     localStorage.setItem('agyz_arabic_mode', this.arabicModeIndex);
     const isAr = Vibz.i18n ? Vibz.i18n.currentLang === 'ar' : true;
