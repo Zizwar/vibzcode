@@ -31,8 +31,14 @@ Vibz.agentAuth = {
         localStorage.setItem('vibz_session_token', token);
         localStorage.setItem('agyz_session_token', token);
 
-        // Configure allowed modes
-        if (this.session.allowedModes === 'terminal') {
+        // Configure allowed modes and URL requested view (?view=terminal or ?view=chat)
+        const urlParams = new URLSearchParams(window.location.search);
+        const requestedView = urlParams.get('view');
+        if (requestedView === 'terminal' && this.session.allowedModes !== 'chat') {
+          this.activeView = 'terminal';
+        } else if (requestedView === 'chat' && this.session.allowedModes !== 'terminal') {
+          this.activeView = 'chat';
+        } else if (this.session.allowedModes === 'terminal') {
           this.activeView = 'terminal';
         } else {
           this.activeView = 'chat';

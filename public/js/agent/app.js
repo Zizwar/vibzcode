@@ -53,6 +53,11 @@ Vibz.createAgentApp = function() {
       const urlToken = urlParams.get('token');
       const savedToken = localStorage.getItem('vibz_session_token') || localStorage.getItem('agyz_session_token');
 
+      const urlView = urlParams.get('view');
+      if (urlView === 'terminal') {
+        this.activeView = 'terminal';
+      }
+
       const tokenToVerify = urlToken || savedToken;
       if (tokenToVerify) {
         this.token = tokenToVerify;

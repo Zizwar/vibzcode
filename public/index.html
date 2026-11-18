@@ -804,11 +804,16 @@
                   </button>
                 </div>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5">
                   <button @click="openRemoteMcpModal(sess)" class="btn btn-xs bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 gap-1.5" title="Remote MCP">
                     <i class="fa-solid fa-satellite-dish text-[11px] text-purple-400"></i>
                     <span>Remote MCP</span>
                   </button>
+                  <a :href="`/agent.html?token=${sess.token}&view=terminal`" target="_blank"
+                     class="btn btn-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-300 gap-1 text-xs" :title="t('openTerminalMode')">
+                    <i class="fa-solid fa-terminal text-[10px]"></i>
+                    <span class="hidden sm:inline" x-text="t('viewTerminal')"></span>
+                  </a>
                   <a :href="`/agent.html?token=${sess.token}`" target="_blank"
                      class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1.5 text-xs shadow-md shadow-cyan-600/20">
                     <span x-text="t('open')"></span>
@@ -1021,11 +1026,16 @@
                     </button>
                   </div>
 
-                  <div class="flex items-center gap-2">
+                  <div class="flex items-center gap-1.5">
                     <button @click="openRemoteMcpModal(root)" class="btn btn-xs bg-purple-950/80 hover:bg-purple-900 border border-purple-500/40 text-purple-200 gap-1.5">
                       <i class="fa-solid fa-satellite-dish text-[11px] text-purple-400"></i>
                       <span>Remote MCP</span>
                     </button>
+                    <a :href="`/agent.html?token=${root.token}&view=terminal`" target="_blank"
+                       class="btn btn-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-300 gap-1 text-xs" :title="t('openTerminalMode')">
+                      <i class="fa-solid fa-terminal text-[10px]"></i>
+                      <span class="hidden sm:inline" x-text="t('viewTerminal')"></span>
+                    </a>
                     <a :href="`/agent.html?token=${root.token}`" target="_blank"
                        class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1.5 text-xs shadow-md shadow-cyan-600/20">
                       <span x-text="t('open')"></span>
@@ -1140,11 +1150,17 @@
                               <span x-text="t('copyDirectLink')"></span>
                             </button>
                           </div>
-                          <a :href="`/agent.html?token=${child.token}`" target="_blank"
-                             class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1 text-[11px] px-2.5">
-                            <span x-text="t('open')"></span>
-                            <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
-                          </a>
+                          <div class="flex items-center gap-1">
+                            <a :href="`/agent.html?token=${child.token}&view=terminal`" target="_blank"
+                               class="btn btn-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 text-cyan-300 gap-1 text-[11px] px-2" :title="t('openTerminalMode')">
+                              <i class="fa-solid fa-terminal text-[9px]"></i>
+                            </a>
+                            <a :href="`/agent.html?token=${child.token}`" target="_blank"
+                               class="btn btn-xs bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1 text-[11px] px-2.5">
+                              <span x-text="t('open')"></span>
+                              <i class="fa-solid fa-arrow-up-right-from-square text-[9px]"></i>
+                            </a>
+                          </div>
                         </div>
 
                       </div>

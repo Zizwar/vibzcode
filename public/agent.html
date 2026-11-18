@@ -723,27 +723,244 @@
 
       </div>
 
-      <!-- ==================== VIEW 2: TERMINAL CONSOLE ==================== -->
+      <!-- ==================== VIEW 2: ADVANCED TERMINAL CONSOLE ==================== -->
       <div x-show="activeView === 'terminal'" class="flex-1 flex flex-col h-full overflow-hidden">
+        
+        <!-- Terminal Sub-Header Toolbar -->
+        <div class="bg-slate-900/90 border-b border-slate-800/80 px-3 sm:px-4 py-1.5 flex items-center justify-between gap-2 shrink-0 backdrop-blur-md z-10 flex-wrap">
+          
+          <!-- Left: Live Connection Badge & Zoom / Font Size -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="badge text-xs gap-1.5 py-2 px-2.5 font-semibold"
+                 :class="connected ? 'badge-success bg-emerald-950/80 border-emerald-500/30 text-emerald-400' : 'badge-error bg-rose-950/80 border-rose-500/30 text-rose-400'">
+              <i class="fa-solid fa-circle text-[7px]" :class="connected ? 'text-emerald-400 animate-pulse' : 'text-rose-400'"></i>
+              <span class="text-[11px]" x-text="connected ? t('termLiveStatus') : t('termConnectingStatus')"></span>
+            </div>
+
+            <!-- Zoom Controls -->
+            <div class="join border border-slate-700/80 bg-slate-950/60 rounded-lg">
+              <button @click="zoomOut()" class="btn btn-xs btn-ghost join-item px-2 text-slate-300 hover:text-white" :title="t('termZoomOut')">
+                <i class="fa-solid fa-magnifying-glass-minus text-[10px]"></i>
+              </button>
+              <button @click="resetZoom()" class="btn btn-xs btn-ghost join-item px-2 font-mono text-[10px] text-cyan-300" :title="t('termResetZoom')">
+                <span x-text="currentFontSize + 'px'"></span>
+              </button>
+              <button @click="zoomIn()" class="btn btn-xs btn-ghost join-item px-2 text-slate-300 hover:text-white" :title="t('termZoomIn')">
+                <i class="fa-solid fa-magnifying-glass-plus text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Right: Tools, Modals, Arabic Mode & Controls Toggle -->
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <!-- Copy Screen -->
+            <button @click="copyAllTerminal()" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 gap-1" :title="t('termCopyScreen')">
+              <i class="fa-solid fa-copy text-cyan-400 text-[10px]"></i>
+              <span class="text-[11px] hidden sm:inline" x-text="t('copy')"></span>
+            </button>
+
+            <!-- Log / Code Viewer Modal Trigger -->
+            <button @click="openLogViewer()" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 gap-1" :title="t('termLogViewerTitle')">
+              <i class="fa-solid fa-file-lines text-blue-400 text-[10px]"></i>
+              <span class="text-[11px] hidden sm:inline" x-text="t('termLogViewer')"></span>
+            </button>
+
+            <!-- Arabic Mode Switcher -->
+            <button @click="toggleArabicMode()" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 gap-1"
+                    :class="arabicModeIndex > 0 ? 'border-cyan-500/40 text-cyan-300' : ''" :title="t('switchArabicMode')">
+              <i :class="arabicModes[arabicModeIndex].icon" class="text-[10px]"></i>
+              <span class="text-[11px]" x-text="lang === 'ar' ? arabicModes[arabicModeIndex].label : arabicModes[arabicModeIndex].labelEn"></span>
+            </button>
+
+            <!-- Clear Screen / Restart -->
+            <button @click="restartTerminalSession()" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2" :title="t('termClearScreen')">
+              <i class="fa-solid fa-arrows-rotate text-amber-400 text-[10px]"></i>
+            </button>
+
+            <!-- Toggle Virtual Keypad / Dock -->
+            <button @click="toggleVirtualKeypad()" class="btn btn-xs btn-ghost border border-slate-700 gap-1"
+                    :class="showVirtualKeypad ? 'bg-cyan-950/60 text-cyan-300 border-cyan-500/40' : 'bg-slate-800/60 text-slate-400'"
+                    :title="t('termToggleControls')">
+              <i class="fa-solid fa-keyboard text-[10px]"></i>
+              <span class="text-[11px] hidden md:inline" x-text="showVirtualKeypad ? (lang === 'ar' ? 'إخفاء الأزرار' : 'Hide Keys') : (lang === 'ar' ? 'الأزرار' : 'Show Keys')"></span>
+            </button>
+
+            <!-- Fullscreen -->
+            <button @click="toggleFullscreen()" class="btn btn-xs btn-ghost bg-slate-800/80 hover:bg-slate-700 text-slate-200 border border-slate-700 px-2" :title="t('enterFullscreen')">
+              <i class="fa-solid fa-expand text-[10px]"></i>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Terminal Screen Body -->
         <main id="terminal-container" class="flex-1 w-full relative bg-slate-950 p-2 overflow-hidden" dir="ltr">
           <div id="terminal" class="w-full h-full"></div>
         </main>
 
-        <!-- Terminal Input Box -->
-        <div class="bg-slate-900/90 border-t border-slate-800/80 p-2.5 shrink-0 backdrop-blur-md">
+        <!-- Smart Input Box -->
+        <div class="bg-slate-900/90 border-t border-slate-800/80 p-2 shrink-0 backdrop-blur-md">
           <form @submit.prevent="submitTerminalInput" class="join w-full">
             <div class="relative flex-1">
               <input type="text" id="terminal-input" x-model="terminalInputText"
-                     :placeholder="t('terminalInputPlaceholder')"
+                     :placeholder="t('termSmartInputPlaceholder')"
                      class="input input-bordered join-item w-full bg-slate-950 border-slate-700 text-slate-100 placeholder-slate-500 focus:border-cyan-500 text-sm font-arabic"
                      autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" dir="auto">
             </div>
-            <button type="submit" class="btn btn-primary join-item bg-gradient-to-r from-cyan-600 to-blue-600 border-none text-white px-5 gap-2 font-bold text-xs">
+            <button type="submit" class="btn btn-primary join-item bg-gradient-to-r from-cyan-600 to-blue-600 border-none text-white px-5 gap-1.5 font-bold text-xs">
               <span x-text="t('send')"></span>
               <i class="fa-solid fa-paper-plane text-xs"></i>
             </button>
           </form>
         </div>
+
+        <!-- Virtual Controls & Keypad Dock (Collapsible) -->
+        <div x-show="showVirtualKeypad" class="bg-slate-950/95 border-t border-slate-800/80 p-2 flex flex-col gap-1.5 shrink-0 max-h-48 overflow-y-auto">
+          
+          <!-- Row 1: Navigation, Modifiers & Paste -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" dir="ltr">
+            <button @click="ctrlActive = !ctrlActive"
+                    class="btn btn-xs font-mono font-bold"
+                    :class="ctrlActive ? 'btn-accent text-black shadow-lg shadow-cyan-500/30' : 'btn-neutral bg-slate-800 text-cyan-400 border-slate-700'"
+                    :title="t('termCtrlTip')">
+              CTRL
+            </button>
+
+            <button @click="altActive = !altActive"
+                    class="btn btn-xs font-mono font-bold"
+                    :class="altActive ? 'btn-accent text-black' : 'btn-neutral bg-slate-800 text-cyan-400 border-slate-700'"
+                    :title="t('termAltTip')">
+              ALT
+            </button>
+
+            <button @click="handlePaste" class="btn btn-xs btn-info bg-cyan-950 text-cyan-300 border-cyan-800/50 gap-1 font-mono font-bold" :title="t('termPasteTip')">
+              <i class="fa-solid fa-paste text-[10px]"></i>
+              <span x-text="t('termPasteBtn')"></span>
+            </button>
+
+            <button @click="sendKey('\x1b')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700 font-mono">ESC</button>
+            <button @click="sendKey('\t')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700 font-mono">TAB</button>
+            <button @click="sendKey('\x7f')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700" title="Backspace">
+              <i class="fa-solid fa-delete-left text-[11px]"></i>
+            </button>
+
+            <div class="divider divider-horizontal mx-0.5 my-0"></div>
+
+            <button @click="sendKey('\x1b[A')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700" title="Up">
+              <i class="fa-solid fa-arrow-up text-[10px]"></i>
+            </button>
+            <button @click="sendKey('\x1b[B')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700" title="Down">
+              <i class="fa-solid fa-arrow-down text-[10px]"></i>
+            </button>
+            <button @click="sendKey('\x1b[D')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700" title="Left">
+              <i class="fa-solid fa-arrow-left text-[10px]"></i>
+            </button>
+            <button @click="sendKey('\x1b[C')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700" title="Right">
+              <i class="fa-solid fa-arrow-right text-[10px]"></i>
+            </button>
+
+            <button @click="sendKey('\x1b[H')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700 font-mono text-[10px]">HOME</button>
+            <button @click="sendKey('\x1b[F')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-200 border-slate-700 font-mono text-[10px]">END</button>
+            
+            <button @click="sendKey('\r')" class="btn btn-xs btn-success bg-emerald-600 hover:bg-emerald-500 text-white font-bold gap-1 px-3">
+              <i class="fa-solid fa-arrow-turn-down text-[10px]"></i>
+              <span>ENTER</span>
+            </button>
+          </div>
+
+          <!-- Row 2: Signals & Slash Commands Shortcuts -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" dir="ltr">
+            <button @click="sendKey('\x03')" class="btn btn-xs btn-error bg-rose-950 text-rose-300 border-rose-800/40 font-mono gap-1" :title="t('termStopProcess')">
+              <i class="fa-solid fa-hand text-[10px]"></i>
+              <span>Ctrl+C</span>
+            </button>
+
+            <button @click="sendKey('\x04')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono">Ctrl+D</button>
+            <button @click="sendKey('\x0c')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono gap-1" title="Clear (Ctrl+L)">
+              <i class="fa-solid fa-eraser text-[10px]"></i>
+              <span>Ctrl+L</span>
+            </button>
+            <button @click="sendKey('\x1a')" class="btn btn-xs btn-neutral bg-slate-800 text-slate-300 border-slate-700 font-mono">Ctrl+Z</button>
+
+            <div class="divider divider-horizontal mx-0.5 my-0"></div>
+
+            <button @click="sendCommand('/plan')" class="btn btn-xs btn-ghost bg-indigo-950/80 text-indigo-300 border border-indigo-800/40 gap-1 font-mono">
+              <i class="fa-solid fa-list-check text-[10px]"></i>
+              <span>/plan</span>
+            </button>
+
+            <button @click="sendCommand('/goal')" class="btn btn-xs btn-ghost bg-amber-950/80 text-amber-300 border border-amber-800/40 gap-1 font-mono">
+              <i class="fa-solid fa-bolt text-[10px]"></i>
+              <span>/goal</span>
+            </button>
+
+            <button @click="sendCommand('/browser')" class="btn btn-xs btn-ghost bg-cyan-950/80 text-cyan-300 border border-cyan-800/40 gap-1 font-mono">
+              <i class="fa-solid fa-globe text-[10px]"></i>
+              <span>/browser</span>
+            </button>
+
+            <button @click="sendCommand('/boost')" class="btn btn-xs btn-ghost bg-purple-950/80 text-purple-300 border border-purple-800/40 gap-1 font-mono">
+              <i class="fa-solid fa-rocket text-[10px]"></i>
+              <span>/boost</span>
+            </button>
+
+            <button @click="sendCommand('/grill-me')" class="btn btn-xs btn-ghost bg-purple-950/80 text-purple-300 border border-purple-800/40 gap-1 font-mono">
+              <i class="fa-solid fa-comments text-[10px]"></i>
+              <span>/grill-me</span>
+            </button>
+
+            <button @click="sendCommand('/teamwork')" class="btn btn-xs btn-ghost bg-teal-950/80 text-teal-300 border border-teal-800/40 gap-1 font-mono">
+              <i class="fa-solid fa-users-gear text-[10px]"></i>
+              <span>/teamwork</span>
+            </button>
+
+            <button @click="sendCommand('/learn')" class="btn btn-xs btn-ghost bg-pink-950/80 text-pink-300 border border-pink-800/40 gap-1 font-mono">
+              <i class="fa-solid fa-brain text-[10px]"></i>
+              <span>/learn</span>
+            </button>
+
+            <button @click="sendCommand('/schedule')" class="btn btn-xs btn-ghost bg-blue-950/80 text-blue-300 border border-blue-800/40 gap-1 font-mono">
+              <i class="fa-solid fa-clock text-[10px]"></i>
+              <span>/schedule</span>
+            </button>
+
+            <button @click="sendCommand('yes')" class="btn btn-xs btn-success bg-emerald-950 text-emerald-300 border-emerald-800/40 gap-1">
+              <i class="fa-solid fa-check text-[10px]"></i>
+              <span>yes</span>
+            </button>
+
+            <button @click="sendCommand('no')" class="btn btn-xs btn-error bg-rose-950 text-rose-300 border-rose-800/40 gap-1">
+              <i class="fa-solid fa-xmark text-[10px]"></i>
+              <span>no</span>
+            </button>
+          </div>
+
+          <!-- Row 3: Custom Actions & Add Button -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 no-scrollbar" dir="ltr">
+            <template x-for="(btn, idx) in customButtons" :key="idx">
+              <div class="join border border-slate-700/60 rounded-btn">
+                <button @click="sendCommand(btn.cmd, btn.autoEnter !== false)"
+                        class="btn btn-xs btn-neutral join-item bg-slate-800 text-amber-300 hover:bg-slate-700 gap-1"
+                        :title="'Command: ' + btn.cmd">
+                  <i class="fa-solid fa-terminal text-[10px]"></i>
+                  <span x-text="btn.label"></span>
+                </button>
+                <button @click="deleteCustomButton(idx)"
+                        class="btn btn-xs btn-neutral join-item bg-slate-800 hover:bg-rose-900 text-slate-400 hover:text-rose-300 px-1.5"
+                        :title="t('delete')">
+                  <i class="fa-solid fa-xmark text-[9px]"></i>
+                </button>
+              </div>
+            </template>
+
+            <button @click="showCustomModal = true" class="btn btn-xs btn-warning bg-amber-950 text-amber-300 border-amber-800/40 hover:bg-amber-900 gap-1">
+              <i class="fa-solid fa-plus text-[10px]"></i>
+              <span x-text="t('termAddCustomBtn')"></span>
+            </button>
+          </div>
+
+        </div>
+
       </div>
 
     </div>
@@ -1723,6 +1940,72 @@
     </div>
     <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
       <button @click="showBranchesModal = false" x-text="t('close')"></button>
+    </form>
+  </dialog>
+
+  <!-- MODAL: Add Custom Terminal Button -->
+  <dialog class="modal" :class="{ 'modal-open': showCustomModal }">
+    <div class="modal-box bg-slate-900 border border-slate-800 text-slate-100 max-w-md shadow-2xl">
+      <h3 class="font-bold text-base text-cyan-400 flex items-center gap-2 mb-4">
+        <i class="fa-solid fa-circle-plus"></i>
+        <span x-text="t('termCustomBtnModalTitle')"></span>
+      </h3>
+      
+      <div class="space-y-4 text-xs">
+        <div class="form-control">
+          <label class="label pb-1">
+            <span class="label-text text-slate-300 font-semibold" x-text="t('termBtnLabel')"></span>
+          </label>
+          <input type="text" x-model="newBtnLabel" :placeholder="t('termBtnLabelPlaceholder')"
+                 class="input input-bordered input-sm bg-slate-950 border-slate-700 text-slate-100 focus:border-cyan-500 font-sans">
+        </div>
+
+        <div class="form-control">
+          <label class="label pb-1">
+            <span class="label-text text-slate-300 font-semibold" x-text="t('termBtnCmd')"></span>
+          </label>
+          <input type="text" x-model="newBtnCmd" :placeholder="t('termBtnCmdPlaceholder')"
+                 class="input input-bordered input-sm bg-slate-950 border-slate-700 text-slate-100 focus:border-cyan-500 font-mono" dir="ltr">
+        </div>
+      </div>
+
+      <div class="modal-action mt-6">
+        <button @click="showCustomModal = false" class="btn btn-sm btn-ghost text-slate-400" x-text="t('cancel')"></button>
+        <button @click="saveCustomButton()" class="btn btn-sm btn-primary bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1.5 shadow-md shadow-cyan-600/20">
+          <i class="fa-solid fa-check text-xs"></i>
+          <span x-text="t('termSaveBtn')"></span>
+        </button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+      <button @click="showCustomModal = false" x-text="t('close')"></button>
+    </form>
+  </dialog>
+
+  <!-- MODAL: Terminal Log & Output Viewer -->
+  <dialog class="modal" :class="{ 'modal-open': showViewerModal }">
+    <div class="modal-box bg-slate-900 border border-slate-800 text-slate-100 max-w-4xl h-[85vh] flex flex-col p-6 shadow-2xl">
+      
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3 mb-3">
+        <h3 class="font-bold text-base text-cyan-400 flex items-center gap-2">
+          <i class="fa-solid fa-file-code"></i>
+          <span x-text="t('termLogViewerTitle')"></span>
+        </h3>
+        <button @click="copyViewerContent()" class="btn btn-xs btn-primary bg-cyan-600 hover:bg-cyan-500 border-none text-white gap-1.5 shadow-sm">
+          <i class="fa-solid fa-copy text-[10px]"></i>
+          <span x-text="t('copy')"></span>
+        </button>
+      </div>
+
+      <div class="flex-1 bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-y-auto font-mono text-xs text-slate-200 whitespace-pre-wrap select-text leading-relaxed"
+           dir="ltr" x-text="viewerContent"></div>
+
+      <div class="modal-action mt-3">
+        <button @click="showViewerModal = false" class="btn btn-sm btn-ghost text-slate-400" x-text="t('close')"></button>
+      </div>
+    </div>
+    <form method="dialog" class="modal-backdrop bg-black/60 backdrop-blur-sm">
+      <button @click="showViewerModal = false" x-text="t('close')"></button>
     </form>
   </dialog>
 
